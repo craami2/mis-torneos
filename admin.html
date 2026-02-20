@@ -2,223 +2,172 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Master Admin | Injective</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel | Injective Ninja Hub</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { --neon: #00f2ff; --bg: #000; --panel: #111; }
-        body { background: var(--bg); color: #fff; font-family: 'Segoe UI', sans-serif; margin: 0; display: none; }
+        :root { --neon: #00f2ff; --bg: #020204; --panel: #0a0a0c; --border: rgba(0, 242, 255, 0.2); }
+        body { background: var(--bg); color: #fff; font-family: 'Inter', sans-serif; margin: 0; padding: 20px; }
+        .container { max-width: 900px; margin: auto; }
         
-        /* Navbar con Pestañas */
-        nav { background: #0a0a0a; border-bottom: 2px solid var(--neon); padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
-        .menu-tabs { display: flex; gap: 10px; }
-        .tab-btn { background: transparent; color: #888; border: none; padding: 10px 20px; cursor: pointer; font-weight: bold; text-transform: uppercase; transition: 0.3s; }
-        .tab-btn.active { color: var(--neon); border-bottom: 2px solid var(--neon); }
-        
-        /* Contenedores */
-        .container { padding: 30px; max-width: 1000px; margin: auto; }
-        .page { display: none; animation: fadeIn 0.3s ease; }
-        .page.active { display: block; }
-        .panel { background: var(--panel); border: 1px solid #222; padding: 25px; border-radius: 12px; }
-        
-        /* Tablas */
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #222; }
-        th { color: var(--neon); font-size: 0.8rem; }
-        
-        /* Inputs y Botones */
-        input, select, button { padding: 12px; border-radius: 6px; border: 1px solid #333; background: #1a1a1a; color: #fff; }
-        button { background: var(--neon); color: #000; font-weight: bold; border: none; cursor: pointer; }
-        .btn-delete { background: #ff4444; color: white; padding: 5px 10px; font-size: 0.8rem; }
-        .btn-logout { background: #333; color: #fff; font-size: 0.8rem; }
+        /* Navegación por pestañas */
+        .tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid #222; padding-bottom: 10px; }
+        .tab-btn { background: none; border: 1px solid #333; color: #888; padding: 10px 20px; border-radius: 8px; cursor: pointer; transition: 0.3s; font-weight: bold; }
+        .tab-btn.active { border-color: var(--neon); color: var(--neon); background: rgba(0, 242, 255, 0.05); }
 
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 15px; padding: 25px; display: none; }
+        .panel.active { display: block; }
+
+        /* Estilos de Formulario y Tablas */
+        h2 { color: var(--neon); margin-top: 0; font-size: 1.2rem; text-transform: uppercase; }
+        input, select { background: #111; border: 1px solid #333; color: #fff; padding: 12px; border-radius: 8px; width: 100%; margin-bottom: 15px; box-sizing: border-box; }
+        button.primary { background: var(--neon); color: #000; border: none; padding: 12px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; transition: 0.3s; }
+        button.primary:hover { box-shadow: 0 0 15px var(--neon); opacity: 0.9; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 0.9rem; }
+        th { text-align: left; color: #555; padding: 10px; border-bottom: 1px solid #222; }
+        td { padding: 12px 10px; border-bottom: 1px solid #111; }
+
+        /* Botones de acción */
+        .btn-edit { background: #f1c40f; color: #000; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-weight: bold; margin-right: 5px; }
+        .btn-del { background: #e74c3c; color: #fff; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; }
     </style>
 </head>
 <body>
 
-    <nav>
-        <div class="menu-tabs">
-            <button class="tab-btn active" onclick="showPage('page-usuarios')">Ninjas</button>
-            <button class="tab-btn" onclick="showPage('page-eventos')">Eventos</button>
-            <button class="tab-btn" onclick="showPage('page-ganadores')">Registrar Premios</button>
-            <button class="tab-btn" onclick="showPage('page-logs')">Auditoría</button>
-        </div>
-        <button class="btn-logout" onclick="cerrarSesion()">Salir</button>
-    </nav>
-
-    <div class="container">
-        
-        <div id="page-usuarios" class="page active">
-            <h2>Gestión de Ninjas</h2>
-            <div class="panel">
-                <div style="display: flex; gap: 10px;">
-                    <input type="text" id="nuevo_usuario_nombre" placeholder="Nombre del Ninja" style="flex:1">
-                    <button onclick="crearUsuario()">+ Añadir</button>
-                </div>
-                <table>
-                    <thead><tr><th>Ninja</th><th>Puntos</th><th>Acción</th></tr></thead>
-                    <tbody id="tabla-usuarios"></tbody>
-                </table>
-            </div>
-        </div>
-
-        <div id="page-eventos" class="page">
-            <h2>Gestión de Calendario</h2>
-            <div class="panel">
-                <div style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 10px;">
-                    <input type="text" id="nombre_torneo" placeholder="Nombre Torneo">
-                    <input type="date" id="fecha_torneo">
-                    <button onclick="addEvento()">Publicar</button>
-                </div>
-                <table>
-                    <thead><tr><th>Fecha</th><th>Torneo</th><th>Acción</th></tr></thead>
-                    <tbody id="tabla-gestion-eventos"></tbody>
-                </table>
-            </div>
-        </div>
-
-        <div id="page-ganadores" class="page">
-            <h2>Asignar Puntos</h2>
-            <div class="panel">
-                <div style="display: flex; flex-direction: column; gap: 15px;">
-                    <select id="select_torneo_ganador"></select>
-                    <select id="select_usuario_ganador"></select>
-                    <input type="number" id="puntos_a_sumar" placeholder="Puntos a sumar">
-                    <button onclick="registrarResultado()">REGISTRAR Y GUARDAR LOG</button>
-                </div>
-            </div>
-        </div>
-
-        <div id="page-logs" class="page">
-            <h2>Historial de Auditoría</h2>
-            <div class="panel">
-                <table>
-                    <thead><tr><th>Fecha</th><th>Ninja</th><th>Movimiento</th><th>PTS</th></tr></thead>
-                    <tbody id="tabla-logs-admin"></tbody>
-                </table>
-            </div>
-        </div>
-
+<div class="container">
+    <div style="display:flex; justify-content: space-between; align-items: center;">
+        <h1>Ninja Admin Console</h1>
+        <a href="index.html" style="color: #555; text-decoration: none; font-size: 0.8rem;">Ver Web Principal</a>
     </div>
 
-    <script>
-        // --- CONFIGURACIÓN ---
-        const SUPABASE_URL = 'https://ekaiwrnvbpwaaoenwnnp.supabase.co'; 
-        const SUPABASE_KEY = 'sb_publishable_YvgUfE8sAXfAUGvXMcNB4Q_aGC2GUMP'; 
-        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    <div class="tabs">
+        <button class="tab-btn active" onclick="showTab('ninjas')">NINJAS</button>
+        <button class="tab-btn" onclick="showTab('eventos')">EVENTOS</button>
+        <button class="tab-btn" onclick="showTab('ganadores')">ASIGNAR GANADORES</button>
+    </div>
 
-        // --- SEGURIDAD ---
-        async function checkSession() {
-            const { data: { session } } = await _supabase.auth.getSession();
-            if (!session) { window.location.href = 'login.html'; }
-            else { document.body.style.display = 'block'; init(); }
+    <div id="tab-ninjas" class="panel active">
+        <h2>Añadir Nuevo Ninja</h2>
+        <div style="display: flex; gap: 10px;">
+            <input type="text" id="ninja-nombre" placeholder="Nombre del Ninja">
+            <input type="number" id="ninja-puntos" placeholder="Puntos Iniciales" value="0">
+        </div>
+        <button class="primary" onclick="crearNinja()">REGISTRAR NINJA</button>
+
+        <table>
+            <thead><tr><th>NINJA</th><th>PUNTOS</th><th>ACCIONES</th></tr></thead>
+            <tbody id="lista-ninjas"></tbody>
+        </table>
+    </div>
+
+    <div id="tab-eventos" class="panel">
+        <h2>Crear Evento/Torneo</h2>
+        <input type="text" id="ev-nombre" placeholder="Nombre del Torneo">
+        <input type="date" id="ev-fecha">
+        <button class="primary" onclick="crearEvento()">CREAR EVENTO</button>
+        
+        <table id="lista-eventos"></table>
+    </div>
+
+    <div id="tab-ganadores" class="panel">
+        <h2>Asignar Ganadores</h2>
+        <select id="select-evento"><option>Cargando eventos...</option></select>
+        <input type="text" id="ganador-nombre" placeholder="Nombre del Ganador">
+        <input type="text" id="ganador-premio" placeholder="Premio (ej: 100 USDT, NFT...)">
+        <button class="primary" onclick="asignarGanador()">GUARDAR RESULTADO</button>
+    </div>
+</div>
+
+<script>
+    const _supabase = supabase.createClient('https://ekaiwrnvbpwaaoenwnnp.supabase.co', 'sb_publishable_YvgUfE8sAXfAUGvXMcNB4Q_aGC2GUMP');
+
+    function showTab(tab) {
+        document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('tab-' + tab).classList.add('active');
+        event.currentTarget.classList.add('active');
+    }
+
+    // --- LÓGICA DE NINJAS ---
+
+    async function cargarNinjas() {
+        const { data } = await _supabase.from('ranking').select('*').order('nombre', { ascending: true });
+        const tbody = document.getElementById('lista-ninjas');
+        tbody.innerHTML = data.map(n => `
+            <tr>
+                <td>${n.nombre}</td>
+                <td style="color:var(--neon); font-weight:bold;">${n.puntos} PTS</td>
+                <td>
+                    <button class="btn-edit" onclick="editarPuntos(${n.id}, '${n.nombre}', ${n.puntos})">EDITAR</button>
+                    <button class="btn-del" onclick="eliminarNinja(${n.id})">ELIMINAR</button>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    async function crearNinja() {
+        const nombre = document.getElementById('ninja-nombre').value;
+        const puntos = document.getElementById('ninja-puntos').value;
+        if(!nombre) return alert("Pon un nombre");
+        
+        await _supabase.from('ranking').insert([{ nombre, puntos: parseInt(puntos) }]);
+        document.getElementById('ninja-nombre').value = "";
+        cargarNinjas();
+    }
+
+    async function editarPuntos(id, nombre, puntosActuales) {
+        const nuevo = prompt(`Nuevo puntaje para ${nombre}:`, puntosActuales);
+        if (nuevo !== null && nuevo !== "") {
+            await _supabase.from('ranking').update({ puntos: parseInt(nuevo) }).eq('id', id);
+            // Opcional: Registrar log
+            await _supabase.from('logs').insert([{ nombre_ninja: nombre, puntos: parseInt(nuevo) - puntosActuales }]);
+            cargarNinjas();
         }
-        async function cerrarSesion() { await _supabase.auth.signOut(); window.location.href = 'login.html'; }
-        checkSession();
+    }
 
-        // --- NAVEGACIÓN ---
-        function showPage(pageId) {
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById(pageId).classList.add('active');
-            event.currentTarget.classList.add('active');
-            if(pageId === 'page-logs') cargarLogs(); // Recarga logs al entrar
+    async function eliminarNinja(id) {
+        if(confirm("¿Seguro que quieres borrar a este ninja?")) {
+            await _supabase.from('ranking').delete().eq('id', id);
+            cargarNinjas();
         }
+    }
 
-        async function init() {
-            await cargarUsuarios();
-            await cargarTorneos();
-            await cargarLogs();
-        }
+    // --- LÓGICA DE EVENTOS ---
 
-        // --- LÓGICA USUARIOS ---
-        async function cargarUsuarios() {
-            const { data } = await _supabase.from('ranking').select('*').order('nombre');
-            const tbody = document.getElementById('tabla-usuarios');
-            const selectU = document.getElementById('select_usuario_ganador');
-            tbody.innerHTML = '';
-            selectU.innerHTML = '<option value="">-- Seleccionar Ninja --</option>';
-            data.forEach(u => {
-                tbody.innerHTML += `<tr><td>${u.nombre}</td><td>${u.puntos}</td><td><button class="btn-delete" onclick="borrarU('${u.nombre}')">X</button></td></tr>`;
-                selectU.innerHTML += `<option value="${u.nombre}">${u.nombre}</option>`;
-            });
-        }
+    async function crearEvento() {
+        const nombre = document.getElementById('ev-nombre').value;
+        const fecha = document.getElementById('ev-fecha').value;
+        await _supabase.from('eventos').insert([{ nombre, fecha }]);
+        alert("Evento creado");
+        cargarSelectEventos();
+    }
 
-        async function crearUsuario() {
-            const n = document.getElementById('nuevo_usuario_nombre').value;
-            if(!n) return;
-            await _supabase.from('ranking').insert([{ nombre: n, puntos: 0 }]);
-            document.getElementById('nuevo_usuario_nombre').value = '';
-            cargarUsuarios();
-        }
+    async function cargarSelectEventos() {
+        const { data } = await _supabase.from('eventos').select('*').order('fecha', { ascending: false });
+        const select = document.getElementById('select-evento');
+        select.innerHTML = data.map(e => `<option value="${e.id}">${e.nombre} (${e.fecha})</option>`).join('');
+    }
 
-        async function borrarU(nombre) {
-            if(confirm("¿Borrar?")) { await _supabase.from('ranking').delete().eq('nombre', nombre); cargarUsuarios(); }
-        }
+    async function asignarGanador() {
+        const evento_id = document.getElementById('select-evento').value;
+        const nombre_jugador = document.getElementById('ganador-nombre').value;
+        const premio = document.getElementById('ganador-premio').value;
+        
+        await _supabase.from('ganadores').insert([{ evento_id, nombre_jugador, premio }]);
+        alert("Ganador asignado");
+        document.getElementById('ganador-nombre').value = "";
+        document.getElementById('ganador-premio').value = "";
+    }
 
-        // --- LÓGICA EVENTOS ---
-        async function cargarTorneos() {
-            const { data } = await _supabase.from('eventos').select('*').order('fecha', { ascending: false });
-            const tbody = document.getElementById('tabla-gestion-eventos');
-            const selectT = document.getElementById('select_torneo_ganador');
-            tbody.innerHTML = '';
-            selectT.innerHTML = '<option value="">-- Seleccionar Torneo --</option>';
-            data.forEach(e => {
-                tbody.innerHTML += `<tr><td>${e.fecha}</td><td>${e.nombre}</td><td><button class="btn-delete" onclick="borrarE(${e.id})">Borrar</button></td></tr>`;
-                selectT.innerHTML += `<option value="${e.id}">${e.nombre} (${e.fecha})</option>`;
-            });
-        }
+    // Inicializar
+    window.onload = () => {
+        cargarNinjas();
+        cargarSelectEventos();
+    };
+</script>
 
-        async function addEvento() {
-            const n = document.getElementById('nombre_torneo').value;
-            const f = document.getElementById('fecha_torneo').value;
-            if(!n || !f) return;
-            await _supabase.from('eventos').insert([{ nombre: n, fecha: f }]);
-            cargarTorneos();
-        }
-
-        async function borrarE(id) {
-            if(confirm("¿Borrar?")) { await _supabase.from('eventos').delete().eq('id', id); cargarTorneos(); }
-        }
-
-        // --- LÓGICA GANADORES + LOGS ---
-        async function registrarResultado() {
-            const idT = document.getElementById('select_torneo_ganador').value;
-            const nomU = document.getElementById('select_usuario_ganador').value;
-            const pts = parseInt(document.getElementById('puntos_a_sumar').value);
-            const nombreTorneo = document.getElementById('select_torneo_ganador').options[document.getElementById('select_torneo_ganador').selectedIndex].text;
-
-            if(!idT || !nomU || !pts) return alert("Faltan datos");
-
-            // 1. Guardar en Ganadores (para el calendario)
-            await _supabase.from('ganadores').insert([{ evento_id: idT, nombre_jugador: nomU, premio: pts + " PTS" }]);
-
-            // 2. Sumar al Ranking
-            const { data: user } = await _supabase.from('ranking').select('puntos').eq('nombre', nomU).single();
-            await _supabase.from('ranking').update({ puntos: (user.puntos || 0) + pts }).eq('nombre', nomU);
-
-            // 3. Guardar en Auditoría (LOGS)
-            await _supabase.from('logs').insert([{ nombre_ninja: nomU, accion: "Gano Torneo: " + nombreTorneo, puntos: pts }]);
-
-            alert("Puntos registrados y Auditoría actualizada");
-            document.getElementById('puntos_a_sumar').value = '';
-            cargarUsuarios();
-            cargarLogs();
-        }
-
-        async function cargarLogs() {
-            const { data } = await _supabase.from('logs').select('*').order('created_at', { ascending: false }).limit(20);
-            const tbody = document.getElementById('tabla-logs-admin');
-            tbody.innerHTML = data.map(l => `
-                <tr>
-                    <td style="font-size:0.7rem; color:#888;">${new Date(l.created_at).toLocaleString()}</td>
-                    <td>${l.nombre_ninja}</td>
-                    <td>${l.accion}</td>
-                    <td style="color:var(--neon)">+${l.puntos}</td>
-                </tr>
-            `).join('');
-        }
-    </script>
 </body>
 </html>
+
 
