@@ -9,18 +9,25 @@
 <body>
 
 <div class="container">
-    <h1>INJECTIVE <span style="color:var(--neon)">NINJA</span></h1>
-    
+    <h1 style="text-align: center; letter-spacing: 5px;">INJECTIVE <span style="color:var(--neon)">NINJA</span></h1>
+
+    <div class="top-three" id="podio">
+        </div>
+
     <div class="card">
         <h2>LEADERBOARD</h2>
         <table>
-            <thead><tr><th>NINJA</th><th>PUNTOS</th></tr></thead>
             <tbody id="leaderboard"></tbody>
         </table>
     </div>
 
     <div class="card">
-        <h2>TORNEOS RECIENTES</h2>
+        <h2 id="mes-nombre">CALENDARIO DE TORNEOS</h2>
+        <div class="grid-calendario" id="calendario"></div>
+    </div>
+
+    <div class="card">
+        <h2>HISTORIAL DE PREMIOS</h2>
         <div id="lista-ganadores"></div>
     </div>
 </div>
@@ -28,30 +35,57 @@
 <script>
     const _supabase = supabase.createClient('https://ekaiwrnvbpwaaoenwnnp.supabase.co', 'sb_publishable_YvgUfE8sAXfAUGvXMcNB4Q_aGC2GUMP');
 
-    async function mostrarDatos() {
-        // Cargar Ranking
-        const { data: ranking } = await _supabase.from('ranking').select('*').order('puntos', { ascending: false });
-        document.getElementById('leaderboard').innerHTML = ranking.map(n => `
-            <tr><td>${n.nombre}</td><td style="color:var(--neon); font-weight:bold;">${n.puntos} PTS</td></tr>
+    async function cargarTodo() {
+        // 1. RANKING Y PODIO
+        const { data: ninjas } = await _supabase.from('ranking').select('*').order('puntos', { ascending: false });
+        
+        // Dibujar Podio
+        if(ninjas.length >= 3) {
+            document.getElementById('podio').innerHTML = `
+                <div class="spot spot-2"><span>🥈</span><strong>${ninjas[1].nombre}</strong><span style="color:cyan">${ninjas[1].puntos}</span></div>
+                <div class="spot spot-1"><span>👑</span><strong>${ninjas[0].nombre}</strong><span style="color:cyan">${ninjas[0].puntos}</span></div>
+                <div class="spot spot-3"><span>🥉</span><strong>${ninjas[2].nombre}</strong><span style="color:cyan">${ninjas[2].puntos}</span></div>
+            `;
+        }
+
+        // Dibujar Tabla
+        document.getElementById('leaderboard').innerHTML = ninjas.map((n, i) => `
+            <tr><td>#${i+1} ${n.nombre}</td><td style="text-align:right; color:var(--neon); font-weight:bold;">${n.puntos} PTS</td></tr>
         `).join('');
 
-        // Cargar Ganadores
+        // 2. CALENDARIO
+        const { data: eventos } = await _supabase.from('eventos').select('*');
+        dibujarCalendario(eventos);
+
+        // 3. GANADORES
         const { data: ganadores } = await _supabase.from('ganadores').select('*, eventos(nombre)').order('id', { ascending: false });
         document.getElementById('lista-ganadores').innerHTML = ganadores.map(g => `
-            <div style="border-bottom:1px solid #333; padding:10px 0;">
-                <strong>${g.nombre_jugador}</strong> ganó 🏆 ${g.eventos.nombre} - Premio: ${g.premio}
+            <div style="padding:10px; border-bottom:1px solid #222">
+                <strong>${g.nombre_jugador}</strong> ganó 🏆 ${g.eventos?.nombre || 'Torneo'} (${g.premio})
             </div>
         `).join('');
     }
 
-    window.onload = mostrarDatos;
+    function dibujarCalendario(eventos) {
+        const ahora = new Date();
+        const contenedor = document.getElementById('calendario');
+        const diasMes = new Date(ahora.getFullYear(), ahora.getMonth() + 1, 0).getDate();
+        
+        let html = '';
+        for(let i=1; i<=diasMes; i++) {
+            const fechaLoop = `${ahora.getFullYear()}-${String(ahora.getMonth()+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
+            const esHoy = i === ahora.getDate() ? 'hoy' : '';
+            const evHoy = eventos.filter(e => e.fecha === fechaLoop);
+            
+            html += `<div class="dia ${esHoy}">${i} ${evHoy.map(e => `<div class="evento-tag">${e.nombre}</div>`).join('')}</div>`;
+        }
+        contenedor.innerHTML = html;
+    }
+
+    window.onload = cargarTodo;
 </script>
 </body>
 </html>
-
-
-
-
 
 
 
