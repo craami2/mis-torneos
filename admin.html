@@ -131,11 +131,28 @@
             else cargarGestionRanking();
         }
 
-        async function addEvento() {
-            const n = document.getElementById('nombre_torneo').value;
-            const f = document.getElementById('fecha_torneo').value;
-            const { error } = await _supabase.from('eventos').insert([{ nombre: n, fecha: f }]);
-            if(!error) { alert("¡Torneo publicado!"); cargarTorneos(); }
+   async function addEvento() {
+    const n = document.getElementById('nombre_torneo').value;
+    const f = document.getElementById('fecha_torneo').value;
+    
+    if(!n || !f) return alert("Por favor, llena el nombre y la fecha");
+
+    console.log("Intentando enviar:", { nombre: n, fecha: f });
+
+    const { data, error } = await _supabase
+        .from('eventos')
+        .insert([{ nombre: n, fecha: f }]);
+
+    if (error) {
+        console.error("Error de Supabase:", error);
+        // Esto te dirá exactamente qué falta (si es RLS, nombre de tabla, etc.)
+        alert("Error al publicar: " + error.message);
+    } else {
+        alert("¡Torneo publicado con éxito!");
+        document.getElementById('nombre_torneo').value = ""; // Limpia el campo
+        cargarTorneos(); // Actualiza la lista de abajo
+    }
+}
         }
 
         async function guardarGanadorYSumar() {
@@ -166,3 +183,4 @@
     </script>
 </body>
 </html>
+
