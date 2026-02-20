@@ -1,40 +1,28 @@
-:root {
-    --neon: #00f2ff;
-    --bg: #020204;
-    --panel: rgba(20, 20, 25, 0.9);
-    --border: rgba(0, 242, 255, 0.15);
-    --text: #ffffff;
-}
+body { font-family: Arial, sans-serif; background-color: #1a1a1a; color: white; margin: 0; padding: 0; }
+.container { padding: 20px; max-width: 1000px; margin: auto; }
 
-body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'Inter', sans-serif;
-    margin: 0;
-    background-image: radial-gradient(circle at 50% -20%, #003a3d 0%, #020204 60%);
-    background-attachment: fixed;
-}
-
-.container { max-width: 1000px; margin: auto; padding: 20px; }
-
-/* PODIO */
-.top-three { display: flex; justify-content: center; align-items: flex-end; gap: 15px; margin: 40px 0; }
-.spot { background: var(--panel); border: 1px solid var(--border); width: 120px; border-radius: 15px; display: flex; flex-direction: column; align-items: center; padding: 20px 10px; }
-.spot-1 { height: 160px; border-color: #ffd700; }
+/* El Podio Original */
+.top-three { display: flex; justify-content: center; align-items: flex-end; gap: 10px; margin: 30px 0; }
+.spot { background-color: #2a2a2a; border: 1px solid #444; width: 120px; border-radius: 10px; display: flex; flex-direction: column; align-items: center; padding: 15px; }
+.spot-1 { height: 160px; border-color: #00f2ff; box-shadow: 0 0 15px #00f2ff; }
 .spot-2 { height: 130px; }
 .spot-3 { height: 110px; }
 
-/* CALENDARIO */
-.grid-calendario { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; margin-top: 20px; }
-.dia { background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 10px; min-height: 80px; padding: 8px; font-size: 0.8rem; }
-.dia.hoy { border-color: var(--neon); background: rgba(0,242,255,0.05); }
-.evento-tag { background: var(--neon); color: #000; font-size: 0.6rem; font-weight: bold; padding: 3px; border-radius: 4px; margin-top: 4px; text-align: center; }
+/* El Calendario Original */
+.grid-calendario { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-top: 15px; }
+.dia { background-color: #2a2a2a; border: 1px solid #444; min-height: 70px; padding: 5px; font-size: 0.8rem; border-radius: 5px; }
+.dia.hoy { border-color: #00f2ff; background-color: #333; }
+.evento-tag { background-color: #00f2ff; color: black; font-size: 0.7rem; padding: 2px; margin-top: 3px; border-radius: 3px; font-weight: bold; text-align: center; }
 
-/* TABLAS Y BOTONES */
-.card, .tab-content { background: var(--panel); border: 1px solid var(--border); border-radius: 15px; padding: 25px; margin-bottom: 25px; }
+/* Secciones y Tablas */
+.section, .card, .tab-content { background-color: #2a2a2a; padding: 20px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #444; }
+h1, h2 { color: #00f2ff; }
 table { width: 100%; border-collapse: collapse; }
-td { padding: 12px; border-bottom: 1px solid #111; }
-.navbar { background: #000; padding: 15px; display: flex; gap: 10px; border-bottom: 2px solid var(--neon); position: sticky; top: 0; z-index: 100; }
-.nav-btn { background: none; border: 1px solid #444; color: #888; padding: 8px 15px; border-radius: 6px; cursor: pointer; }
-.nav-btn.active { border-color: var(--neon); color: var(--neon); }
-button.main-action { background: var(--neon); color: #000; border: none; padding: 12px; border-radius: 8px; font-weight: bold; width: 100%; cursor: pointer; }
+th, td { text-align: left; padding: 10px; border-bottom: 1px solid #444; }
+
+/* Botones y Navegación */
+.navbar { background-color: #111; padding: 10px; display: flex; gap: 10px; border-bottom: 1px solid #00f2ff; }
+.nav-btn { background: none; border: 1px solid #444; color: #888; padding: 8px 15px; border-radius: 5px; cursor: pointer; }
+.nav-btn.active { background-color: #00f2ff; color: black; border-color: #00f2ff; }
+button { background-color: #00f2ff; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+input, select { padding: 10px; background: #333; color: white; border: 1px solid #555; border-radius: 5px; margin-bottom: 10px; width: 100%; box-sizing: border-box; }
