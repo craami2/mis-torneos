@@ -20,6 +20,14 @@
         <input type="number" id="up" placeholder="Puntos">
         <button onclick="addR()">Guardar Puntos</button>
     </div>
+    <div class="panel">
+        <h3>Registrar Ganador de Torneo</h3>
+        <p style="font-size: 0.8rem; color: #888;">El ID del torneo lo ves en tu tabla 'eventos' de Supabase.</p>
+        <input type="number" id="id_torneo" placeholder="ID del Torneo">
+        <input type="text" id="nombre_ganador" placeholder="Nombre del Jugador">
+        <input type="number" id="puntos_a_sumar" placeholder="Puntos ganados">
+        <button onclick="guardarGanador()">Registrar y Sumar Puntos</button>
+    </div>
     <script>
         const SUPABASE_URL = 'https://ekaiwrnvbpwaaoenwnnp.supabase.co'; 
         const SUPABASE_KEY = 'sb_publishable_YvgUfE8sAXfAUGvXMcNB4Q_aGC2GUMP';
@@ -38,5 +46,6 @@
     </script>
 </body>
 </html>
+
 
 
