@@ -2,87 +2,85 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Admin - Ninja Hub</title>
+    <title>Admin Ninja Hub</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
     <div class="navbar">
-        <button class="nav-btn active" onclick="ver('ninjas', event)">NINJAS</button>
-        <button class="nav-btn" onclick="ver('eventos', event)">EVENTOS</button>
-        <button class="nav-btn" onclick="ver('ganadores', event)">PREMIOS</button>
+        <button class="nav-btn active" onclick="tab('n', event)">USUARIOS</button>
+        <button class="nav-btn" onclick="tab('e', event)">TORNEOS</button>
+        <button class="nav-btn" onclick="tab('g', event)">RESULTADOS</button>
     </div>
 
     <div class="container">
-        <div id="ninjas" class="tab-content" style="display:block">
-            <h2>Gestión de Ninjas</h2>
-            <input type="text" id="n-nom" placeholder="Nombre">
-            <input type="number" id="n-pts" value="0">
-            <button onclick="addNinja()">Añadir Ninja</button>
-            <table border="1" style="margin-top:10px">
-                <tbody id="list-n"></tbody>
-            </table>
+        <div id="n" class="tab-content" style="display:block">
+            <h2>Usuarios</h2>
+            <input type="text" id="nn" placeholder="Nombre Ninja">
+            <input type="number" id="np" value="0">
+            <button class="primary" onclick="addN()">REGISTRAR NINJA</button>
+            <table style="margin-top:20px"><tbody id="ln"></tbody></table>
         </div>
 
-        <div id="eventos" class="tab-content" style="display:none">
+        <div id="e" class="tab-content" style="display:none">
             <h2>Torneos</h2>
-            <input type="text" id="e-nom" placeholder="Evento">
-            <input type="date" id="e-fec">
-            <button onclick="addEvento()">Crear Evento</button>
-            <table border="1" style="margin-top:10px">
-                <tbody id="list-e"></tbody>
-            </table>
+            <input type="text" id="en" placeholder="Nombre Evento">
+            <input type="date" id="ef">
+            <button class="primary" onclick="addE()">CREAR EVENTO</button>
+            <table style="margin-top:20px"><tbody id="le"></tbody></table>
         </div>
 
-        <div id="ganadores" class="tab-content" style="display:none">
-            <h2>Suma de Puntos y Ganadores</h2>
-            <select id="sel-e"></select>
-            <select id="sel-n"></select>
-            <input type="number" id="pts-plus" placeholder="Puntos a sumar" value="0">
-            <input type="text" id="premio" placeholder="Premio">
-            <button onclick="saveWinner()">GUARDAR Y SUMAR</button>
+        <div id="g" class="tab-content" style="display:none">
+            <h2>Ganadores y Sumar Puntos</h2>
+            <label>Evento:</label><select id="se"></select>
+            <label>Ganador:</label><select id="sn"></select>
+            <label>Puntos a sumar:</label><input type="number" id="pg" value="0">
+            <label>Premio:</label><input type="text" id="pr" placeholder="Ej: 100 USDT">
+            <button class="primary" onclick="save()">GUARDAR Y SUMAR PUNTOS</button>
         </div>
     </div>
 
     <script>
         const _supabase = supabase.createClient('https://ekaiwrnvbpwaaoenwnnp.supabase.co', 'sb_publishable_YvgUfE8sAXfAUGvXMcNB4Q_aGC2GUMP');
 
-        function ver(id, e) {
+        function tab(id, ev) {
             document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
             document.getElementById(id).style.display = 'block';
-            e.currentTarget.classList.add('active');
+            ev.currentTarget.classList.add('active');
         }
 
-        async function refresh() {
+        async function load() {
             const { data: n } = await _supabase.from('ranking').select('*').order('puntos', { ascending: false });
-            document.getElementById('list-n').innerHTML = n.map(u => `<tr><td>${u.nombre}</td><td>${u.puntos}</td><td><button onclick="editP(${u.id},${u.puntos})">EDITAR</button></td></tr>`).join('');
-            document.getElementById('sel-n').innerHTML = n.map(u => `<option value="${u.nombre}">${u.nombre}</option>`).join('');
+            document.getElementById('ln').innerHTML = n.map(u => `<tr><td>${u.nombre}</td><td>${u.puntos}</td><td><button onclick="edit(${u.id},${u.puntos})">EDITAR</button> <button onclick="delN(${u.id})" style="background:red; color:white; border:none; padding:5px;">X</button></td></tr>`).join('');
+            document.getElementById('sn').innerHTML = n.map(u => `<option value="${u.nombre}">${u.nombre}</option>`).join('');
 
             const { data: e } = await _supabase.from('eventos').select('*').order('fecha', { ascending: false });
-            document.getElementById('list-e').innerHTML = e.map(ev => `<tr><td>${ev.fecha}</td><td>${ev.nombre}</td><td><button onclick="delE(${ev.id})">X</button></td></tr>`).join('');
-            document.getElementById('sel-e').innerHTML = e.map(ev => `<option value="${ev.id}">${ev.nombre}</option>`).join('');
+            document.getElementById('le').innerHTML = e.map(ev => `<tr><td>${ev.fecha}</td><td>${ev.nombre}</td><td><button onclick="delE(${ev.id})" style="background:red; color:white; border:none; padding:5px;">ELIMINAR</button></td></tr>`).join('');
+            document.getElementById('se').innerHTML = e.map(ev => `<option value="${ev.id}">${ev.nombre}</option>`).join('');
         }
 
-        async function saveWinner() {
-            const eid = document.getElementById('sel-e').value;
-            const nom = document.getElementById('sel-n').value;
-            const pts = parseInt(document.getElementById('pts-plus').value);
-            const pre = document.getElementById('premio').value;
+        async function save() {
+            const eid = document.getElementById('se').value;
+            const nom = document.getElementById('sn').value;
+            const pts = parseInt(document.getElementById('pg').value);
+            const pre = document.getElementById('pr').value;
 
             await _supabase.from('ganadores').insert([{ evento_id: eid, nombre_jugador: nom, premio: pre }]);
             const { data: u } = await _supabase.from('ranking').select('puntos').eq('nombre', nom).single();
             await _supabase.from('ranking').update({ puntos: u.puntos + pts }).eq('nombre', nom);
-            alert("Puntos sumados!"); refresh();
+            alert("¡Puntos sumados correctamente!"); load();
         }
 
-        async function addNinja() { await _supabase.from('ranking').insert([{ nombre: document.getElementById('n-nom').value, puntos: document.getElementById('n-pts').value }]); refresh(); }
-        async function addEvento() { await _supabase.from('eventos').insert([{ nombre: document.getElementById('e-nom').value, fecha: document.getElementById('e-fec').value }]); refresh(); }
-        async function delE(id) { await _supabase.from('eventos').delete().eq('id', id); refresh(); }
-        async function editP(id, p) { const v = prompt("Pts", p); if(v) { await _supabase.from('ranking').update({ puntos: v }).eq('id', id); refresh(); } }
+        async function addN() { await _supabase.from('ranking').insert([{ nombre: document.getElementById('nn').value, puntos: document.getElementById('np').value }]); load(); }
+        async function addE() { await _supabase.from('eventos').insert([{ nombre: document.getElementById('en').value, fecha: document.getElementById('ef').value }]); load(); }
+        async function delN(id) { if(confirm('¿Borrar?')) { await _supabase.from('ranking').delete().eq('id', id); load(); } }
+        async function delE(id) { if(confirm('¿Borrar?')) { await _supabase.from('eventos').delete().eq('id', id); load(); } }
+        async function edit(id, p) { const v = prompt("Puntos:", p); if(v) { await _supabase.from('ranking').update({ puntos: v }).eq('id', id); load(); } }
 
-        window.onload = refresh;
+        window.onload = load;
     </script>
 </body>
 </html>
+
 
