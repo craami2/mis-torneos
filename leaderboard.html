@@ -2,41 +2,67 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Ranking Completo | Injective</title>
+    <title>Ninja Hub | Leaderboard</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { --neon: #00f2ff; --bg: #000; }
-        body { background: var(--bg); color: #fff; font-family: 'Segoe UI', sans-serif; padding: 40px; }
-        .container { max-width: 800px; margin: auto; }
-        h1 { color: var(--neon); text-align: center; text-transform: uppercase; }
-        table { width: 100%; border-collapse: collapse; background: #0a0a0a; border: 1px solid var(--neon); border-radius: 10px; overflow: hidden; }
-        th, td { padding: 15px; text-align: left; border-bottom: 1px solid #222; }
-        th { background: rgba(0, 242, 255, 0.1); color: var(--neon); }
-        .btn-back { display: inline-block; color: var(--neon); text-decoration: none; margin-bottom: 20px; border: 1px solid var(--neon); padding: 5px 15px; border-radius: 5px; }
+        body { font-family: Arial, sans-serif; background-color: #1a1a1a; color: white; margin: 0; padding: 0; }
+        .container { padding: 20px; max-width: 1000px; margin: auto; }
+        .btn-back { background: none; border: 1px solid #444; color: #00f2ff; padding: 10px 20px; border-radius: 8px; cursor: pointer; text-decoration: none; display: inline-block; margin-bottom: 20px; }
+        
+        .top-three { display: flex; justify-content: center; align-items: flex-end; gap: 15px; margin: 40px 0; height: 220px; }
+        .spot { background-color: #2a2a2a; border: 1px solid #444; width: 150px; border-radius: 15px; display: flex; flex-direction: column; align-items: center; padding: 20px; text-align: center; }
+        .spot-1 { height: 180px; border-color: #00f2ff; box-shadow: 0 0 20px rgba(0, 242, 255, 0.3); }
+        .spot-2 { height: 140px; }
+        .spot-3 { height: 110px; }
+        .spot span { color: #00f2ff; font-weight: bold; font-size: 1.2rem; }
+
+        .card { background-color: #2a2a2a; padding: 25px; border-radius: 15px; border: 1px solid #444; margin-bottom: 25px; }
+        table { width: 100%; border-collapse: collapse; }
+        td { padding: 15px; border-bottom: 1px solid #333; }
+        .grid-calendario { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; margin-top: 20px; }
+        .dia { background-color: #2a2a2a; border: 1px solid #444; min-height: 80px; padding: 10px; border-radius: 8px; font-size: 0.9rem; }
+        .dia.hoy { border-color: #00f2ff; background-color: #1e3a3d; }
+        .evento-tag { background-color: #00f2ff; color: black; font-size: 0.7rem; padding: 4px; border-radius: 4px; margin-top: 5px; font-weight: bold; text-align: center; }
     </style>
 </head>
 <body>
     <div class="container">
-        <a href="index.html" class="btn-back">← Volver al Inicio</a>
-        <h1>Leaderboard Completo</h1>
-        <table>
-            <thead><tr><th>Rango</th><th>Ninja</th><th>Puntos</th></tr></thead>
-            <tbody id="tabla-completa"></tbody>
-        </table>
+        <a href="index.html" class="btn-back">← VOLVER AL HUB</a>
+        <h1 style="color:#00f2ff; text-align:center;">LEADERBOARD</h1>
+        <div class="top-three" id="podio"></div>
+        <div class="card">
+            <h2>CLASIFICACIÓN</h2>
+            <table><tbody id="leaderboard"></tbody></table>
+        </div>
+        <div class="card">
+            <h2>PRÓXIMOS EVENTOS</h2>
+            <div class="grid-calendario" id="calendario"></div>
+        </div>
     </div>
-
     <script>
         const _supabase = supabase.createClient('https://ekaiwrnvbpwaaoenwnnp.supabase.co', 'sb_publishable_YvgUfE8sAXfAUGvXMcNB4Q_aGC2GUMP');
-        async function cargar() {
-            const { data } = await _supabase.from('ranking').select('*').order('puntos', { ascending: false });
-            document.getElementById('tabla-completa').innerHTML = data.map((u, i) => `
-                <tr>
-                    <td style="color:var(--neon)">#${i+1}</td>
-                    <td>${u.nombre}</td>
-                    <td>${u.puntos} PTS</td>
-                </tr>`).join('');
+        async function init() {
+            const { data: n } = await _supabase.from('ranking').select('*').order('puntos', { ascending: false });
+            if(n && n.length >= 3) {
+                document.getElementById('podio').innerHTML = `
+                    <div class="spot spot-2">🥈<strong>${n[1].nombre}</strong><span>${n[1].puntos} PTS</span></div>
+                    <div class="spot spot-1">👑<strong>${n[0].nombre}</strong><span>${n[0].puntos} PTS</span></div>
+                    <div class="spot spot-3">🥉<strong>${n[2].nombre}</strong><span>${n[2].puntos} PTS</span></div>`;
+            }
+            document.getElementById('leaderboard').innerHTML = n.map((u, i) => `<tr><td>#${i+1} ${u.nombre}</td><td style="text-align:right; color:#00f2ff; font-weight:bold;">${u.puntos} PTS</td></tr>`).join('');
+
+            const { data: e } = await _supabase.from('eventos').select('*');
+            const hoy = new Date();
+            const diasMes = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0).getDate();
+            let html = '';
+            for(let i=1; i<=diasMes; i++) {
+                const f = `${hoy.getFullYear()}-${String(hoy.getMonth()+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
+                const evs = e.filter(ev => ev.fecha === f);
+                html += `<div class="dia ${i===hoy.getDate()?'hoy':''}">${i}${evs.map(ev=>`<div class="evento-tag">${ev.nombre}</div>`).join('')}</div>`;
+            }
+            document.getElementById('calendario').innerHTML = html;
         }
-        cargar();
+        window.onload = init;
     </script>
 </body>
 </html>
