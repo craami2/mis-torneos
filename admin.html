@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard | Injective</title>
-    <link rel="stylesheet" href="estilos.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { background: #000; color: #fff; font-family: 'Segoe UI', sans-serif; padding: 20px; }
@@ -12,14 +11,12 @@
         h3 { color: #00f2ff; margin-top: 0; text-transform: uppercase; letter-spacing: 1px; }
         input, select, button { width: 100%; padding: 12px; margin: 10px 0; border-radius: 6px; border: 1px solid #333; box-sizing: border-box; }
         input, select { background: #1a1a1a; color: #fff; outline: none; }
-        input:focus { border-color: #00f2ff; }
         button { background: #00f2ff; color: #000; font-weight: bold; cursor: pointer; border: none; transition: 0.3s; }
         button:hover { background: #00c4cc; transform: translateY(-2px); }
         .gestion-tabla { width: 100%; border-collapse: collapse; margin-top: 15px; }
         .gestion-tabla th, .gestion-tabla td { border: 1px solid #222; padding: 12px; text-align: left; font-size: 0.9rem; }
         .gestion-tabla th { background: #00f2ff1a; color: #00f2ff; }
-        .btn-borrar { background: #ff4444; color: white; width: auto; padding: 6px 12px; font-size: 0.75rem; }
-        .btn-borrar:hover { background: #cc0000; }
+        .btn-borrar { background: #ff4444; color: white; width: auto; padding: 6px 12px; font-size: 0.75rem; border-radius: 4px; }
     </style>
 </head>
 <body onload="inicializarAdmin()">
@@ -28,48 +25,46 @@
 
     <div class="panel">
         <h3>1. Publicar Nuevo Torneo</h3>
-        <input type="text" id="nombre_torneo" placeholder="Nombre del Torneo (ej: Ninja Cup #1)">
+        <input type="text" id="nombre_torneo" placeholder="Nombre del Torneo">
         <input type="date" id="fecha_torneo">
-        <button onclick="addEvento()">Publicar en Calendario</button>
+        <button onclick="addEvento()">PUBLICAR EN CALENDARIO</button>
     </div>
 
     <div class="panel">
         <h3>2. Registrar Ganadores y Sumar Puntos</h3>
-        <label>Selecciona el Torneo:</label>
-        <select id="lista_torneos">
-            <option value="">Cargando torneos...</option>
-        </select>
+        <select id="lista_torneos"><option value="">Cargando torneos...</option></select>
         <input type="text" id="nombre_ganador" placeholder="Nombre exacto del Usuario">
         <input type="number" id="puntos_ganados" placeholder="Cantidad de Puntos (ej: 50)">
-        <button onclick="guardarGanadorYSumar()">Registrar y Sumar al Ranking</button>
+        <button onclick="guardarGanadorYSumar()">REGISTRAR Y SUMAR AL RANKING</button>
     </div>
 
     <div class="panel">
         <h3>3. Gestión de Torneos Activos</h3>
         <table class="gestion-tabla">
             <thead>
-                <tr><th>Torneo</th><th>Fecha</th><th>Acciones</th></tr>
+                <tr><th>TORNEO</th><th>FECHA</th><th>ACCIONES</th></tr>
             </thead>
             <tbody id="tabla-gestion-eventos"></tbody>
         </table>
     </div>
 
-    async function inicializarAdmin() {
+    <script>
+        const SUPABASE_URL = 'https://ekaiwrnvbpwaaoenwnnp.supabase.co'; 
+        const SUPABASE_KEY = 'sb_publishable_YvgUfE8sAXfAUGvXMcNB4Q_aGC2GUMP'; // <--- PEGA TU LLAVE PUBLIC ANON AQUÍ
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        async function inicializarAdmin() {
             console.log("Panel iniciado correctamente");
             await cargarTorneos();
         }
 
-        // CARGAR TORNEOS EN SELECT Y TABLA
         async function cargarTorneos() {
             const { data: eventos, error } = await _supabase
                 .from('eventos')
                 .select('*')
                 .order('fecha', { ascending: false });
 
-            if (error) {
-                console.error("Error al cargar:", error.message);
-                return;
-            }
+            if (error) { console.error("Error al cargar:", error.message); return; }
 
             const selector = document.getElementById('lista_torneos');
             const tabla = document.getElementById('tabla-gestion-eventos');
@@ -83,73 +78,47 @@
                     <tr>
                         <td>${e.nombre}</td>
                         <td>${e.fecha}</td>
-                        <td><button class="btn-borrar" onclick="borrarEvento(${e.id})">Borrar</button></td>
+                        <td><button class="btn-borrar" onclick="borrarEvento(${e.id})">BORRAR</button></td>
                     </tr>`;
             });
         }
 
-        // AÑADIR NUEVO EVENTO
         async function addEvento() {
             const n = document.getElementById('nombre_torneo').value;
             const f = document.getElementById('fecha_torneo').value;
-
             if(!n || !f) return alert("Por favor completa nombre y fecha");
 
-            const { error } = await _supabase
-                .from('eventos')
-                .insert([{ nombre: n, fecha: f }]);
-
-            if (error) {
-                alert("Error al publicar: " + error.message);
-            } else {
-                alert("¡Torneo añadido al calendario!");
-                document.getElementById('nombre_torneo').value = "";
-                cargarTorneos();
-            }
+            const { error } = await _supabase.from('eventos').insert([{ nombre: n, fecha: f }]);
+            if (error) alert("Error: " + error.message);
+            else { alert("¡Torneo añadido!"); cargarTorneos(); }
         }
 
-        // REGISTRAR GANADOR Y SUMAR PUNTOS (CORREGIDO)
         async function guardarGanadorYSumar() {
             const idT = document.getElementById('lista_torneos').value;
             const nomG = document.getElementById('nombre_ganador').value.trim();
-            const ptsNuevos = Number(document.getElementById('puntos_ganados').value);
+            const ptsNuevos = parseInt(document.getElementById('puntos_ganados').value);
 
-            if(!idT || !nomG || isNaN(ptsNuevos)) return alert("Completa todos los campos con datos válidos");
+            if(!idT || !nomG || isNaN(ptsNuevos)) return alert("Datos inválidos");
 
-            // 1. Guardar en tabla ganadores (para el calendario interactivo)
-            const { error: err1 } = await _supabase.from('ganadores').insert([
+            // 1. Guardar en historial (Calendario)
+            await _supabase.from('ganadores').insert([
                 { evento_id: idT, nombre_jugador: nomG, premio: ptsNuevos + " PTS" }
             ]);
 
-            // 2. Obtener puntos actuales del ranking para sumar
-            const { data: userExistente } = await _supabase
-                .from('ranking')
-                .select('puntos')
-                .eq('nombre', nomG)
-                .single();
+            // 2. Sumar en Ranking
+            const { data: userExistente } = await _supabase.from('ranking').select('puntos').eq('nombre', nomG).single();
+            let total = (userExistente ? parseInt(userExistente.puntos) : 0) + ptsNuevos;
 
-            let puntosPrevios = userExistente ? Number(userExistente.puntos) : 0;
-            let totalActualizado = puntosPrevios + ptsNuevos;
+            const { error: err2 } = await _supabase.from('ranking').upsert({ nombre: nomG, puntos: total }, { onConflict: 'nombre' });
 
-            // 3. Upsert en Ranking
-            const { error: err2 } = await _supabase
-                .from('ranking')
-                .upsert({ nombre: nomG, puntos: totalActualizado }, { onConflict: 'nombre' });
-
-            if(err1 || err2) {
-                alert("Error en la operación: " + (err1?.message || err2?.message));
-            } else {
-                alert(`¡Éxito! ${nomG} ahora tiene ${totalActualizado} puntos.`);
-                document.getElementById('nombre_ganador').value = "";
-                document.getElementById('puntos_ganados').value = "";
-            }
+            if(err2) alert("Error: " + err2.message);
+            else alert("¡Puntos actualizados!");
         }
 
-        // BORRAR EVENTO
         async function borrarEvento(id) {
-            if(!confirm("¿Estás seguro de borrar este torneo y sus registros?")) return;
+            if(!confirm("¿Borrar este torneo?")) return;
             const { error } = await _supabase.from('eventos').delete().eq('id', id);
-            if(error) alert("Error: " + error.message);
+            if(error) alert(error.message);
             else cargarTorneos();
         }
     </script>
