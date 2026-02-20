@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Ranking Completo | Injective</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root { --neon: #00f2ff; --bg: #000; }
+        body { background: var(--bg); color: #fff; font-family: 'Segoe UI', sans-serif; padding: 40px; }
+        .container { max-width: 800px; margin: auto; }
+        h1 { color: var(--neon); text-align: center; text-transform: uppercase; }
+        table { width: 100%; border-collapse: collapse; background: #0a0a0a; border: 1px solid var(--neon); border-radius: 10px; overflow: hidden; }
+        th, td { padding: 15px; text-align: left; border-bottom: 1px solid #222; }
+        th { background: rgba(0, 242, 255, 0.1); color: var(--neon); }
+        .btn-back { display: inline-block; color: var(--neon); text-decoration: none; margin-bottom: 20px; border: 1px solid var(--neon); padding: 5px 15px; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="index.html" class="btn-back">← Volver al Inicio</a>
+        <h1>Leaderboard Completo</h1>
+        <table>
+            <thead><tr><th>Rango</th><th>Ninja</th><th>Puntos</th></tr></thead>
+            <tbody id="tabla-completa"></tbody>
+        </table>
+    </div>
+
+    <script>
+        const _supabase = supabase.createClient('https://ekaiwrnvbpwaaoenwnnp.supabase.co', 'sb_publishable_YvgUfE8sAXfAUGvXMcNB4Q_aGC2GUMP');
+        async function cargar() {
+            const { data } = await _supabase.from('ranking').select('*').order('puntos', { ascending: false });
+            document.getElementById('tabla-completa').innerHTML = data.map((u, i) => `
+                <tr>
+                    <td style="color:var(--neon)">#${i+1}</td>
+                    <td>${u.nombre}</td>
+                    <td>${u.puntos} PTS</td>
+                </tr>`).join('');
+        }
+        cargar();
+    </script>
+</body>
+</html>
