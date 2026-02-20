@@ -1,0 +1,67 @@
+:root {
+    --neon: #00f2ff;
+    --bg: #020204;
+    --panel: rgba(20, 20, 25, 0.8);
+    --border: rgba(0, 242, 255, 0.15);
+    --text: #ffffff;
+}
+
+body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', 'Segoe UI', sans-serif;
+    margin: 0;
+    background-image: radial-gradient(circle at 50% -20%, #003a3d 0%, #020204 60%);
+    background-attachment: fixed;
+}
+
+.container { max-width: 1000px; margin: auto; padding: 20px; }
+
+/* Tarjetas Estilo Helix */
+.card, .tab-content, .section {
+    background: var(--panel);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--border);
+    border-radius: 15px;
+    padding: 25px;
+    margin-bottom: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
+/* Botones e Inputs */
+.main-btn, button {
+    background: var(--neon);
+    color: #000;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.main-btn:hover, button:hover {
+    box-shadow: 0 0 15px var(--neon);
+    transform: translateY(-2px);
+}
+
+input, select {
+    background: #111;
+    border: 1px solid #333;
+    color: #fff;
+    padding: 12px;
+    border-radius: 8px;
+    width: 100%;
+    margin-bottom: 10px;
+    box-sizing: border-box;
+}
+
+/* Tablas */
+table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+th { text-align: left; color: #555; padding: 12px; border-bottom: 2px solid #222; font-size: 0.8rem; }
+td { padding: 12px; border-bottom: 1px solid #111; }
+
+/* Pestañas para Admin */
+.navbar { background: rgba(0,0,0,0.5); padding: 15px; display: flex; gap: 10px; border-bottom: 1px solid var(--border); }
+.nav-btn { background: none; border: 1px solid #333; color: #888; }
+.nav-btn.active { border-color: var(--neon); color: var(--neon); }
