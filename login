@@ -5,26 +5,35 @@
     <title>Login Protegido | Injective</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { background: #000; color: #fff; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .login-card { background: #111; padding: 40px; border-radius: 12px; border: 1px solid #00f2ff; width: 300px; text-align: center; }
-        input { width: 100%; padding: 12px; margin: 10px 0; background: #222; border: 1px solid #333; color: #fff; border-radius: 6px; box-sizing: border-box; }
-        button { width: 100%; padding: 12px; background: #00f2ff; border: none; font-weight: bold; cursor: pointer; border-radius: 6px; }
+        body { background: #000; color: #fff; font-family: 'Segoe UI', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .login-card { background: #111; padding: 40px; border-radius: 12px; border: 1px solid #00f2ff; width: 350px; text-align: center; box-shadow: 0 0 20px rgba(0, 242, 255, 0.2); }
+        h2 { color: #00f2ff; margin-bottom: 25px; text-transform: uppercase; letter-spacing: 2px; }
+        input { width: 100%; padding: 12px; margin: 10px 0; background: #1a1a1a; border: 1px solid #333; color: #fff; border-radius: 6px; box-sizing: border-box; outline: none; }
+        input:focus { border-color: #00f2ff; }
+        button { width: 100%; padding: 12px; background: #00f2ff; border: none; color: #000; font-weight: bold; cursor: pointer; border-radius: 6px; margin-top: 15px; transition: 0.3s; }
+        button:hover { background: #00c4cc; transform: translateY(-2px); }
+        #mensaje { color: #ff4444; font-size: 0.8rem; margin-top: 10px; display: none; }
     </style>
 </head>
 <body>
     <div class="login-card">
-        <h2>Panel Injective</h2>
-        <input type="email" id="email" placeholder="Correo Electrónico">
+        <h2>Acceso Ninja</h2>
+        <input type="email" id="email" placeholder="Correo electrónico">
         <input type="password" id="pass" placeholder="Contraseña">
-        <button onclick="login()">Iniciar Sesión</button>
+        <button onclick="login()">ENTRAR AL PANEL</button>
+        <p id="mensaje">Usuario o contraseña incorrectos</p>
     </div>
 
     <script>
-        const _supabase = supabase.createClient('URL', 'KEY');
+        // REEMPLAZA CON TUS DATOS DE SUPABASE
+        const SUPABASE_URL = 'https://ekaiwrnvbpwaaoenwnnp.supabase.co'; 
+        const SUPABASE_KEY = 'sb_publishable_YvgUfE8sAXfAUGvXMcNB4Q_aGC2GUMP'; 
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         async function login() {
             const email = document.getElementById('email').value;
             const password = document.getElementById('pass').value;
+            const mensaje = document.getElementById('mensaje');
 
             const { data, error } = await _supabase.auth.signInWithPassword({
                 email: email,
@@ -32,9 +41,10 @@
             });
 
             if (error) {
-                alert("Acceso denegado: " + error.message);
+                mensaje.innerText = "Error: " + error.message;
+                mensaje.style.display = 'block';
             } else {
-                // Supabase guarda la sesión automáticamente en el LocalStorage
+                // Si es correcto, Supabase guarda la sesión y redirigimos
                 window.location.href = 'admin.html';
             }
         }
