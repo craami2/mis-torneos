@@ -1,123 +1,88 @@
 <!DOCTYPE html>
-<html lang="es">
+<html>
 <head>
     <meta charset="UTF-8">
-    <title>Admin Panel | Injective Ninja</title>
+    <title>Admin - Ninja Hub</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-
-<div class="navbar">
-    <button class="nav-btn active" onclick="openTab(event, 'usuarios')">USUARIOS</button>
-    <button class="nav-btn" onclick="openTab(event, 'eventos')">TORNEOS</button>
-    <button class="nav-btn" onclick="openTab(event, 'ganadores')">RESULTADOS Y PUNTOS</button>
-</div>
-
-<div class="container">
-    <div id="usuarios" class="tab-content" style="display:block;">
-        <h2>Gestión de Ninjas</h2>
-        <input type="text" id="ninja-nombre" placeholder="Nombre del Ninja">
-        <input type="number" id="ninja-puntos" placeholder="Puntos Iniciales" value="0">
-        <button class="main-action" onclick="crearNinja()">+ REGISTRAR</button>
-        <table>
-            <thead><tr><th>NINJA</th><th>PUNTOS</th><th>ACCIONES</th></tr></thead>
-            <tbody id="lista-ninjas"></tbody>
-        </table>
+    <div class="navbar">
+        <button class="nav-btn active" onclick="ver('ninjas', event)">NINJAS</button>
+        <button class="nav-btn" onclick="ver('eventos', event)">EVENTOS</button>
+        <button class="nav-btn" onclick="ver('ganadores', event)">PREMIOS</button>
     </div>
 
-    <div id="eventos" class="tab-content" style="display:none;">
-        <h2>Gestión de Torneos</h2>
-        <input type="text" id="ev-nombre" placeholder="Nombre del Torneo">
-        <input type="date" id="ev-fecha">
-        <button class="main-action" onclick="crearEvento()">+ CREAR EVENTO</button>
-        <table>
-            <thead><tr><th>FECHA</th><th>TORNEO</th><th>ACCIÓN</th></tr></thead>
-            <tbody id="lista-eventos-table"></tbody>
-        </table>
+    <div class="container">
+        <div id="ninjas" class="tab-content" style="display:block">
+            <h2>Gestión de Ninjas</h2>
+            <input type="text" id="n-nom" placeholder="Nombre">
+            <input type="number" id="n-pts" value="0">
+            <button onclick="addNinja()">Añadir Ninja</button>
+            <table border="1" style="margin-top:10px">
+                <tbody id="list-n"></tbody>
+            </table>
+        </div>
+
+        <div id="eventos" class="tab-content" style="display:none">
+            <h2>Torneos</h2>
+            <input type="text" id="e-nom" placeholder="Evento">
+            <input type="date" id="e-fec">
+            <button onclick="addEvento()">Crear Evento</button>
+            <table border="1" style="margin-top:10px">
+                <tbody id="list-e"></tbody>
+            </table>
+        </div>
+
+        <div id="ganadores" class="tab-content" style="display:none">
+            <h2>Suma de Puntos y Ganadores</h2>
+            <select id="sel-e"></select>
+            <select id="sel-n"></select>
+            <input type="number" id="pts-plus" placeholder="Puntos a sumar" value="0">
+            <input type="text" id="premio" placeholder="Premio">
+            <button onclick="saveWinner()">GUARDAR Y SUMAR</button>
+        </div>
     </div>
 
-    <div id="ganadores" class="tab-content" style="display:none;">
-        <h2>Asignar Ganadores y Sumar Puntos</h2>
-        <label>Selecciona Torneo:</label>
-        <select id="select-evento"></select>
-        <label>Selecciona Ninja Ganador:</label>
-        <select id="select-ninja-ganador"></select>
-        <label>Puntos a sumar:</label>
-        <input type="number" id="ganador-puntos-sumar" value="0">
-        <label>Premio adicional:</label>
-        <input type="text" id="ganador-premio" placeholder="Ej: 100 USDT">
-        <button class="main-action" onclick="asignarGanador()">GUARDAR Y ACTUALIZAR PUNTOS</button>
-    </div>
-</div>
+    <script>
+        const _supabase = supabase.createClient('https://ekaiwrnvbpwaaoenwnnp.supabase.co', 'sb_publishable_YvgUfE8sAXfAUGvXMcNB4Q_aGC2GUMP');
 
-<script>
-    const _supabase = supabase.createClient('https://ekaiwrnvbpwaaoenwnnp.supabase.co', 'sb_publishable_YvgUfE8sAXfAUGvXMcNB4Q_aGC2GUMP');
-
-    function openTab(evt, tabName) {
-        document.querySelectorAll('.tab-content').forEach(t => t.style.display = "none");
-        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById(tabName).style.display = "block";
-        evt.currentTarget.classList.add('active');
-    }
-
-    async function cargarDatos() {
-        // Cargar Ninjas
-        const { data: ninjas } = await _supabase.from('ranking').select('*').order('puntos', { ascending: false });
-        document.getElementById('lista-ninjas').innerHTML = ninjas.map(n => `
-            <tr><td>${n.nombre}</td><td>${n.puntos}</td>
-            <td><button class="btn-edit" onclick="editarPuntos(${n.id},'${n.nombre}',${n.puntos})">EDITAR</button>
-            <button class="btn-del" onclick="eliminarNinja(${n.id})">BORRAR</button></td></tr>
-        `).join('');
-        document.getElementById('select-ninja-ganador').innerHTML = ninjas.map(n => `<option value="${n.nombre}">${n.nombre}</option>`).join('');
-
-        // Cargar Eventos
-        const { data: eventos } = await _supabase.from('eventos').select('*').order('fecha', { ascending: false });
-        document.getElementById('lista-eventos-table').innerHTML = eventos.map(e => `
-            <tr><td>${e.fecha}</td><td>${e.nombre}</td>
-            <td><button class="btn-del" onclick="eliminarEvento(${e.id})">ELIMINAR</button></td></tr>
-        `).join('');
-        document.getElementById('select-evento').innerHTML = eventos.map(e => `<option value="${e.id}">${e.nombre}</option>`).join('');
-    }
-
-    async function crearNinja() {
-        const nombre = document.getElementById('ninja-nombre').value;
-        const puntos = document.getElementById('ninja-puntos').value;
-        await _supabase.from('ranking').insert([{ nombre, puntos: parseInt(puntos) }]);
-        cargarDatos();
-    }
-
-    async function crearEvento() {
-        const nombre = document.getElementById('ev-nombre').value;
-        const fecha = document.getElementById('ev-fecha').value;
-        await _supabase.from('eventos').insert([{ nombre, fecha }]);
-        cargarDatos();
-    }
-
-    async function eliminarNinja(id) { if(confirm("¿Borrar?")) { await _supabase.from('ranking').delete().eq('id', id); cargarDatos(); } }
-    async function eliminarEvento(id) { if(confirm("¿Borrar?")) { await _supabase.from('eventos').delete().eq('id', id); cargarDatos(); } }
-    
-    async function editarPuntos(id, nombre, actuales) {
-        const nuevo = prompt("Puntos para " + nombre, actuales);
-        if(nuevo) { await _supabase.from('ranking').update({ puntos: parseInt(nuevo) }).eq('id', id); cargarDatos(); }
-    }
-
-    async function asignarGanador() {
-        const ev_id = document.getElementById('select-evento').value;
-        const nombre = document.getElementById('select-ninja-ganador').value;
-        const puntosSumar = parseInt(document.getElementById('ganador-puntos-sumar').value) || 0;
-        const premio = document.getElementById('ganador-premio').value;
-
-        await _supabase.from('ganadores').insert([{ evento_id: ev_id, nombre_jugador: nombre, premio }]);
-        const { data: user } = await _supabase.from('ranking').select('puntos').eq('nombre', nombre).single();
-        if(user) {
-            await _supabase.from('ranking').update({ puntos: user.puntos + puntosSumar }).eq('nombre', nombre);
-            alert("Puntos sumados con éxito");
-            cargarDatos();
+        function ver(id, e) {
+            document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(id).style.display = 'block';
+            e.currentTarget.classList.add('active');
         }
-    }
 
-    window.onload = cargarDatos;
-</script>
+        async function refresh() {
+            const { data: n } = await _supabase.from('ranking').select('*').order('puntos', { ascending: false });
+            document.getElementById('list-n').innerHTML = n.map(u => `<tr><td>${u.nombre}</td><td>${u.puntos}</td><td><button onclick="editP(${u.id},${u.puntos})">EDITAR</button></td></tr>`).join('');
+            document.getElementById('sel-n').innerHTML = n.map(u => `<option value="${u.nombre}">${u.nombre}</option>`).join('');
+
+            const { data: e } = await _supabase.from('eventos').select('*').order('fecha', { ascending: false });
+            document.getElementById('list-e').innerHTML = e.map(ev => `<tr><td>${ev.fecha}</td><td>${ev.nombre}</td><td><button onclick="delE(${ev.id})">X</button></td></tr>`).join('');
+            document.getElementById('sel-e').innerHTML = e.map(ev => `<option value="${ev.id}">${ev.nombre}</option>`).join('');
+        }
+
+        async function saveWinner() {
+            const eid = document.getElementById('sel-e').value;
+            const nom = document.getElementById('sel-n').value;
+            const pts = parseInt(document.getElementById('pts-plus').value);
+            const pre = document.getElementById('premio').value;
+
+            await _supabase.from('ganadores').insert([{ evento_id: eid, nombre_jugador: nom, premio: pre }]);
+            const { data: u } = await _supabase.from('ranking').select('puntos').eq('nombre', nom).single();
+            await _supabase.from('ranking').update({ puntos: u.puntos + pts }).eq('nombre', nom);
+            alert("Puntos sumados!"); refresh();
+        }
+
+        async function addNinja() { await _supabase.from('ranking').insert([{ nombre: document.getElementById('n-nom').value, puntos: document.getElementById('n-pts').value }]); refresh(); }
+        async function addEvento() { await _supabase.from('eventos').insert([{ nombre: document.getElementById('e-nom').value, fecha: document.getElementById('e-fec').value }]); refresh(); }
+        async function delE(id) { await _supabase.from('eventos').delete().eq('id', id); refresh(); }
+        async function editP(id, p) { const v = prompt("Pts", p); if(v) { await _supabase.from('ranking').update({ puntos: v }).eq('id', id); refresh(); } }
+
+        window.onload = refresh;
+    </script>
 </body>
 </html>
+
