@@ -3,39 +3,55 @@
 <head>
     <meta charset="UTF-8">
     <title>Admin Ninja Hub</title>
-    <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #1a1a1a; color: white; margin: 0; padding: 0; }
+        .navbar { background-color: #000; padding: 15px; display: flex; gap: 10px; border-bottom: 2px solid #00f2ff; }
+        .nav-btn { background: none; border: 1px solid #444; color: #888; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        .nav-btn.active { background-color: #00f2ff; color: black; border-color: #00f2ff; }
+        
+        .container { padding: 20px; max-width: 800px; margin: auto; }
+        .tab-content { background-color: #2a2a2a; padding: 25px; border-radius: 15px; border: 1px solid #444; margin-top: 20px; }
+        h2 { color: #00f2ff; margin-top: 0; }
+        
+        input, select { padding: 12px; background: #111; color: white; border: 1px solid #444; border-radius: 8px; width: 100%; margin-bottom: 15px; box-sizing: border-box; display: block; }
+        button.primary { background-color: #00f2ff; border: none; padding: 15px; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; font-size: 1rem; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        td { padding: 10px; border-bottom: 1px solid #444; }
+        .btn-del { background: #ff4444; border: none; color: white; padding: 5px 10px; border-radius: 4px; cursor: pointer; }
+    </style>
 </head>
 <body>
     <div class="navbar">
         <button class="nav-btn active" onclick="tab('n', event)">USUARIOS</button>
         <button class="nav-btn" onclick="tab('e', event)">TORNEOS</button>
-        <button class="nav-btn" onclick="tab('g', event)">RESULTADOS</button>
+        <button class="nav-btn" onclick="tab('g', event)">ASIGNAR PUNTOS</button>
     </div>
 
     <div class="container">
-        <div id="n" class="tab-content" style="display:block">
-            <h2>Usuarios</h2>
+        <div id="n" class="tab-content">
+            <h2>Gestión de Usuarios</h2>
             <input type="text" id="nn" placeholder="Nombre Ninja">
-            <input type="number" id="np" value="0">
+            <input type="number" id="np" placeholder="Puntos Iniciales" value="0">
             <button class="primary" onclick="addN()">REGISTRAR NINJA</button>
-            <table style="margin-top:20px"><tbody id="ln"></tbody></table>
+            <table id="table-n"></table>
         </div>
 
         <div id="e" class="tab-content" style="display:none">
-            <h2>Torneos</h2>
+            <h2>Gestión de Torneos</h2>
             <input type="text" id="en" placeholder="Nombre Evento">
             <input type="date" id="ef">
             <button class="primary" onclick="addE()">CREAR EVENTO</button>
-            <table style="margin-top:20px"><tbody id="le"></tbody></table>
+            <table id="table-e"></table>
         </div>
 
         <div id="g" class="tab-content" style="display:none">
-            <h2>Ganadores y Sumar Puntos</h2>
-            <label>Evento:</label><select id="se"></select>
-            <label>Ganador:</label><select id="sn"></select>
-            <label>Puntos a sumar:</label><input type="number" id="pg" value="0">
-            <label>Premio:</label><input type="text" id="pr" placeholder="Ej: 100 USDT">
+            <h2>Resultados y Suma Automática</h2>
+            <label>1. Selecciona Torneo:</label><select id="se"></select>
+            <label>2. Selecciona Ganador:</label><select id="sn"></select>
+            <label>3. Puntos a SUMAR:</label><input type="number" id="pg" value="0">
+            <label>4. Premio:</label><input type="text" id="pr" placeholder="Ej: 50 USDT">
             <button class="primary" onclick="save()">GUARDAR Y SUMAR PUNTOS</button>
         </div>
     </div>
@@ -50,13 +66,13 @@
             ev.currentTarget.classList.add('active');
         }
 
-        async function load() {
+        async function refresh() {
             const { data: n } = await _supabase.from('ranking').select('*').order('puntos', { ascending: false });
-            document.getElementById('ln').innerHTML = n.map(u => `<tr><td>${u.nombre}</td><td>${u.puntos}</td><td><button onclick="edit(${u.id},${u.puntos})">EDITAR</button> <button onclick="delN(${u.id})" style="background:red; color:white; border:none; padding:5px;">X</button></td></tr>`).join('');
+            document.getElementById('table-n').innerHTML = n.map(u => `<tr><td>${u.nombre}</td><td>${u.puntos}</td><td><button class="btn-del" onclick="delN(${u.id})">ELIMINAR</button></td></tr>`).join('');
             document.getElementById('sn').innerHTML = n.map(u => `<option value="${u.nombre}">${u.nombre}</option>`).join('');
 
             const { data: e } = await _supabase.from('eventos').select('*').order('fecha', { ascending: false });
-            document.getElementById('le').innerHTML = e.map(ev => `<tr><td>${ev.fecha}</td><td>${ev.nombre}</td><td><button onclick="delE(${ev.id})" style="background:red; color:white; border:none; padding:5px;">ELIMINAR</button></td></tr>`).join('');
+            document.getElementById('table-e').innerHTML = e.map(ev => `<tr><td>${ev.fecha}</td><td>${ev.nombre}</td><td><button class="btn-del" onclick="delE(${ev.id})">X</button></td></tr>`).join('');
             document.getElementById('se').innerHTML = e.map(ev => `<option value="${ev.id}">${ev.nombre}</option>`).join('');
         }
 
@@ -69,18 +85,15 @@
             await _supabase.from('ganadores').insert([{ evento_id: eid, nombre_jugador: nom, premio: pre }]);
             const { data: u } = await _supabase.from('ranking').select('puntos').eq('nombre', nom).single();
             await _supabase.from('ranking').update({ puntos: u.puntos + pts }).eq('nombre', nom);
-            alert("¡Puntos sumados correctamente!"); load();
+            alert("Puntos sumados!"); refresh();
         }
 
-        async function addN() { await _supabase.from('ranking').insert([{ nombre: document.getElementById('nn').value, puntos: document.getElementById('np').value }]); load(); }
-        async function addE() { await _supabase.from('eventos').insert([{ nombre: document.getElementById('en').value, fecha: document.getElementById('ef').value }]); load(); }
-        async function delN(id) { if(confirm('¿Borrar?')) { await _supabase.from('ranking').delete().eq('id', id); load(); } }
-        async function delE(id) { if(confirm('¿Borrar?')) { await _supabase.from('eventos').delete().eq('id', id); load(); } }
-        async function edit(id, p) { const v = prompt("Puntos:", p); if(v) { await _supabase.from('ranking').update({ puntos: v }).eq('id', id); load(); } }
+        async function addN() { await _supabase.from('ranking').insert([{ nombre: document.getElementById('nn').value, puntos: document.getElementById('np').value }]); refresh(); }
+        async function addE() { await _supabase.from('eventos').insert([{ nombre: document.getElementById('en').value, fecha: document.getElementById('ef').value }]); refresh(); }
+        async function delN(id) { if(confirm('¿Borrar?')) { await _supabase.from('ranking').delete().eq('id', id); refresh(); } }
+        async function delE(id) { if(confirm('¿Borrar?')) { await _supabase.from('eventos').delete().eq('id', id); refresh(); } }
 
-        window.onload = load;
+        window.onload = refresh;
     </script>
 </body>
 </html>
-
-
