@@ -2,211 +2,100 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Panel Profesional - Ninja Hub</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #1a1a1a; color: white; margin: 0; padding: 0; }
-        
-        /* Barra de navegación superior */
-        .navbar { background-color: #111; padding: 15px; display: flex; gap: 10px; border-bottom: 2px solid #00f2ff; position: sticky; top: 0; z-index: 100; }
-        .nav-btn { background: none; border: 1px solid #444; color: #888; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; transition: 0.3s; }
-        .nav-btn:hover { border-color: #00f2ff; color: #fff; }
-        .nav-btn.active { background-color: #00f2ff; color: #000; border-color: #00f2ff; }
-
-        .container { padding: 30px; max-width: 900px; margin: auto; }
-        
-        /* Secciones ocultas por defecto */
-        .tab-content { display: none; background-color: #222; padding: 25px; border-radius: 10px; border: 1px solid #333; animation: fadeIn 0.3s; }
-        .tab-content.active { display: block; }
-
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-        h2 { color: #00f2ff; margin-top: 0; border-bottom: 1px solid #333; padding-bottom: 10px; }
-        input, select { padding: 12px; margin: 10px 0; border-radius: 5px; border: 1px solid #444; width: 100%; max-width: 400px; display: block; background-color: #333; color: white; }
-        
-        .main-btn { padding: 12px 25px; background-color: #00f2ff; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; margin-top: 10px; }
-        
-        /* Tablas */
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th { text-align: left; color: #00f2ff; padding: 12px; border-bottom: 2px solid #333; font-size: 0.8rem; }
-        td { padding: 12px; border-bottom: 1px solid #333; }
-
-        .btn-edit { background-color: #ffcc00; color: black; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; }
-        .btn-delete { background-color: #ff4444; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; }
-    </style>
+    <title>Admin Panel | Injective Ninja</title>
+    <link rel="stylesheet" href="style.css"> <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
-    <div class="navbar">
-        <button class="nav-btn active" onclick="openTab(event, 'usuarios')">USUARIOS</button>
-        <button class="nav-btn" onclick="openTab(event, 'eventos')">EVENTOS/TORNEOS</button>
-        <button class="nav-btn" onclick="openTab(event, 'ganadores')">RESULTADOS</button>
+<div class="navbar">
+    <button class="nav-btn active" onclick="openTab(event, 'usuarios')">USUARIOS</button>
+    <button class="nav-btn" onclick="openTab(event, 'eventos')">TORNEOS</button>
+    <button class="nav-btn" onclick="openTab(event, 'ganadores')">RESULTADOS/PUNTOS</button>
+</div>
+
+<div class="container">
+    <div id="usuarios" class="tab-content" style="display:block;">
+        <h2>Gestión de Usuarios</h2>
+        <input type="text" id="ninja-nombre" placeholder="Nombre del Ninja">
+        <input type="number" id="ninja-puntos" placeholder="Puntos" value="0">
+        <button onclick="crearNinja()">+ REGISTRAR</button>
+        <table>
+            <thead><tr><th>NINJA</th><th>PUNTOS</th><th>ACCIONES</th></tr></thead>
+            <tbody id="lista-ninjas"></tbody>
+        </table>
     </div>
 
-    <div class="container">
+    <div id="eventos" class="tab-content" style="display:none;">
+        <h2>Gestión de Torneos</h2>
+        <input type="text" id="ev-nombre" placeholder="Nombre del Torneo">
+        <input type="date" id="ev-fecha">
+        <button onclick="crearEvento()">+ CREAR EVENTO</button>
+        <tbody id="lista-eventos-table"></tbody> </div>
 
-        <div id="usuarios" class="tab-content active">
-            <h2>Gestión de Usuarios</h2>
-            <p>Agrega nuevos ninjas al sistema o modifica sus puntos actuales.</p>
-            <input type="text" id="ninja-nombre" placeholder="Nombre del Ninja">
-            <input type="number" id="ninja-puntos" placeholder="Puntos Iniciales" value="0">
-            <button class="main-btn" onclick="crearNinja()">+ REGISTRAR USUARIO</button>
-
-            <table>
-                <thead>
-                    <tr>
-                        <th>NINJA</th>
-                        <th>PUNTOS</th>
-                        <th>ACCIONES</th>
-                    </tr>
-                </thead>
-                <tbody id="lista-ninjas"></tbody>
-            </table>
-        </div>
-
-        <div id="eventos" class="tab-content">
-            <h2>Gestión de Torneos</h2>
-            <p>Crea eventos para que aparezcan en el calendario de la web.</p>
-            <input type="text" id="ev-nombre" placeholder="Nombre del Torneo">
-            <input type="date" id="ev-fecha">
-            <button class="main-btn" onclick="crearEvento()">+ CREAR EVENTO</button>
-
-            <table>
-                <thead>
-                    <tr>
-                        <th>FECHA</th>
-                        <th>TORNEO</th>
-                        <th>ACCIONES</th>
-                    </tr>
-                </thead>
-                <tbody id="lista-eventos-table"></tbody>
-            </table>
-        </div>
-
-        <div id="ganadores" class="tab-content">
-            <h2>Asignar Ganadores</h2>
-            <p>Publica quién ganó cada torneo previamente registrado.</p>
-            
-            <label>Selecciona el Torneo:</label>
-            <select id="select-evento"><option>Cargando...</option></select>
-
-            <label>Selecciona el Ganador (de la lista de usuarios):</label>
-            <select id="select-ninja-ganador"><option>Cargando...</option></select>
-
-            <label>Premio otorgado:</label>
-            <input type="text" id="ganador-premio" placeholder="Ej: 50 INJ + NFT">
-
-            <button class="main-btn" onclick="asignarGanador()">GUARDAR RESULTADO</button>
-        </div>
-
+    <div id="ganadores" class="tab-content" style="display:none;">
+        <h2>Asignar Ganadores y Sumar Puntos</h2>
+        <select id="select-evento"><option>Cargando eventos...</option></select>
+        <select id="select-ninja-ganador"><option>Cargando ninjas...</option></select>
+        <input type="number" id="ganador-puntos-sumar" placeholder="Puntos a sumar (ej: 50)" value="0">
+        <input type="text" id="ganador-premio" placeholder="Premio (ej: 100 USDT)">
+        <button onclick="asignarGanador()">GUARDAR Y SUMAR</button>
     </div>
+</div>
 
-    <script>
-        const _supabase = supabase.createClient('https://ekaiwrnvbpwaaoenwnnp.supabase.co', 'sb_publishable_YvgUfE8sAXfAUGvXMcNB4Q_aGC2GUMP');
+<script>
+    const _supabase = supabase.createClient('https://ekaiwrnvbpwaaoenwnnp.supabase.co', 'sb_publishable_YvgUfE8sAXfAUGvXMcNB4Q_aGC2GUMP');
 
-        // LÓGICA PARA CAMBIAR DE PESTAÑA
-        function openTab(evt, tabName) {
-            var i, tabcontent, tablinks;
-            tabcontent = document.getElementsByClassName("tab-content");
-            for (i = 0; i < tabcontent.length; i++) {
-                tabcontent[i].style.display = "none";
-            }
-            tablinks = document.getElementsByClassName("nav-btn");
-            for (i = 0; i < tablinks.length; i++) {
-                tablinks[i].className = tablinks[i].className.replace(" active", "");
-            }
-            document.getElementById(tabName).style.display = "block";
-            evt.currentTarget.className += " active";
-        }
+    function openTab(evt, tabName) {
+        document.querySelectorAll('.tab-content').forEach(t => t.style.display = "none");
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(tabName).style.display = "block";
+        evt.currentTarget.classList.add('active');
+    }
 
-        // FUNCIONES DE USUARIOS
-        async function cargarNinjas() {
-            const { data } = await _supabase.from('ranking').select('*').order('puntos', { ascending: false });
-            const tbody = document.getElementById('lista-ninjas');
-            tbody.innerHTML = data.map(n => `
-                <tr>
-                    <td>${n.nombre}</td>
-                    <td><strong style="color:#00f2ff">${n.puntos}</strong></td>
-                    <td>
-                        <button class="btn-edit" onclick="editarPuntos(${n.id}, '${n.nombre}', ${n.puntos})">EDITAR</button>
-                        <button class="btn-delete" onclick="eliminarNinja(${n.id})">BORRAR</button>
-                    </td>
-                </tr>
-            `).join('');
+    async function cargarNinjas() {
+        const { data } = await _supabase.from('ranking').select('*').order('puntos', { ascending: false });
+        document.getElementById('lista-ninjas').innerHTML = data.map(n => `
+            <tr><td>${n.nombre}</td><td style="color:cyan">${n.puntos}</td>
+            <td><button onclick="editarPuntos(${n.id},'${n.nombre}',${n.puntos})">EDITAR</button>
+            <button onclick="eliminarNinja(${n.id})" style="background:red">X</button></td></tr>
+        `).join('');
+        document.getElementById('select-ninja-ganador').innerHTML = data.map(n => `<option value="${n.nombre}">${n.nombre}</option>`).join('');
+    }
 
-            const selectNinja = document.getElementById('select-ninja-ganador');
-            selectNinja.innerHTML = data.map(n => `<option value="${n.nombre}">${n.nombre}</option>`).join('');
-        }
-
-        async function crearNinja() {
-            const nombre = document.getElementById('ninja-nombre').value;
-            const puntos = document.getElementById('ninja-puntos').value;
-            if(!nombre) return alert("Ingresa un nombre");
-            await _supabase.from('ranking').insert([{ nombre, puntos: parseInt(puntos) }]);
-            document.getElementById('ninja-nombre').value = "";
+    async function editarPuntos(id, nombre, actuales) {
+        const nuevo = prompt("Puntos para " + nombre, actuales);
+        if (nuevo) { 
+            await _supabase.from('ranking').update({ puntos: parseInt(nuevo) }).eq('id', id);
             cargarNinjas();
         }
+    }
 
-        async function editarPuntos(id, nombre, actuales) {
-            const nuevo = prompt("Nuevos puntos para " + nombre + ":", actuales);
-            if (nuevo !== null && nuevo !== "") {
-                await _supabase.from('ranking').update({ puntos: parseInt(nuevo) }).eq('id', id);
-                cargarNinjas();
-            }
-        }
+    async function eliminarNinja(id) {
+        if(confirm("¿Eliminar?")) { await _supabase.from('ranking').delete().eq('id', id); cargarNinjas(); }
+    }
 
-        async function eliminarNinja(id) {
-            if(confirm("¿Seguro de eliminar este ninja?")) {
-                await _supabase.from('ranking').delete().eq('id', id);
-                cargarNinjas();
-            }
-        }
+    async function asignarGanador() {
+        const ev_id = document.getElementById('select-evento').value;
+        const nombre = document.getElementById('select-ninja-ganador').value;
+        const puntos = parseInt(document.getElementById('ganador-puntos-sumar').value) || 0;
+        const premio = document.getElementById('ganador-premio').value;
 
-        // FUNCIONES DE EVENTOS
-        async function cargarEventosAdmin() {
-            const { data } = await _supabase.from('eventos').select('*').order('fecha', { ascending: false });
-            const tbody = document.getElementById('lista-eventos-table');
-            tbody.innerHTML = data.map(e => `
-                <tr>
-                    <td>${e.fecha}</td>
-                    <td>${e.nombre}</td>
-                    <td><button class="btn-delete" onclick="eliminarEvento(${e.id})">ELIMINAR</button></td>
-                </tr>
-            `).join('');
-
-            const selectEvento = document.getElementById('select-evento');
-            selectEvento.innerHTML = data.map(e => `<option value="${e.id}">${e.nombre} (${e.fecha})</option>`).join('');
-        }
-
-        async function crearEvento() {
-            const nombre = document.getElementById('ev-nombre').value;
-            const fecha = document.getElementById('ev-fecha').value;
-            if(!nombre || !fecha) return alert("Datos incompletos");
-            await _supabase.from('eventos').insert([{ nombre, fecha }]);
-            document.getElementById('ev-nombre').value = "";
-            cargarEventosAdmin();
-        }
-
-        async function eliminarEvento(id) {
-            if(confirm("¿Eliminar evento?")) {
-                await _supabase.from('eventos').delete().eq('id', id);
-                cargarEventosAdmin();
-            }
-        }
-
-        async function asignarGanador() {
-            const evento_id = document.getElementById('select-evento').value;
-            const nombre_jugador = document.getElementById('select-ninja-ganador').value;
-            const premio = document.getElementById('ganador-premio').value;
-            await _supabase.from('ganadores').insert([{ evento_id, nombre_jugador, premio }]);
-            alert("¡Resultado publicado!");
-            document.getElementById('ganador-premio').value = "";
-        }
-
-        window.onload = () => {
+        await _supabase.from('ganadores').insert([{ evento_id: ev_id, nombre_jugador: nombre, premio }]);
+        
+        const { data: user } = await _supabase.from('ranking').select('puntos').eq('nombre', nombre).single();
+        if(user) {
+            await _supabase.from('ranking').update({ puntos: user.puntos + puntos }).eq('nombre', nombre);
+            alert("Puntos sumados correctamente");
             cargarNinjas();
-            cargarEventosAdmin();
-        };
-    </script>
+        }
+    }
+
+    async function cargarEventosAdmin() {
+        const { data } = await _supabase.from('eventos').select('*').order('fecha', { ascending: false });
+        document.getElementById('select-evento').innerHTML = data.map(e => `<option value="${e.id}">${e.nombre}</option>`).join('');
+    }
+
+    window.onload = () => { cargarNinjas(); cargarEventosAdmin(); };
+</script>
 </body>
 </html>
