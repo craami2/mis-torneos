@@ -13,9 +13,13 @@
     </nav>
     <div class="container">
         <div id="cal" class="section active">
-            <h2 style="color: #00f2ff">EVENTOS INJECTIVE</h2>
-            <div class="grid-calendario" id="grid"></div>
-        </div>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <button onclick="mesAnterior()" style="width: auto; padding: 10px 20px;">◀ Ant.</button>
+        <h2 style="color: #00f2ff; margin: 0;">EVENTOS</h2>
+        <button onclick="mesSiguiente()" style="width: auto; padding: 10px 20px;">Sig. ▶</button>
+    </div>
+    <div class="grid-calendario" id="grid"></div>
+</div>
         <div id="rank" class="section">
             <h2 style="color: #00f2ff">LEADERBOARD</h2>
             <table>
@@ -107,5 +111,6 @@ setInterval(cargarRanking, 10000); // El ranking se actualiza solo, el calendari
     </script>
 </body>
 </html>
+
 
 
