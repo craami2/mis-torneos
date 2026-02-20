@@ -1,7 +1,7 @@
 :root {
     --neon: #00f2ff;
     --bg: #020204;
-    --panel: rgba(20, 20, 25, 0.8);
+    --panel: rgba(20, 20, 25, 0.9);
     --border: rgba(0, 242, 255, 0.15);
     --text: #ffffff;
 }
@@ -9,7 +9,7 @@
 body {
     background: var(--bg);
     color: var(--text);
-    font-family: 'Inter', 'Segoe UI', sans-serif;
+    font-family: 'Inter', sans-serif;
     margin: 0;
     background-image: radial-gradient(circle at 50% -20%, #003a3d 0%, #020204 60%);
     background-attachment: fixed;
@@ -17,51 +17,24 @@ body {
 
 .container { max-width: 1000px; margin: auto; padding: 20px; }
 
-/* Tarjetas Estilo Helix */
-.card, .tab-content, .section {
-    background: var(--panel);
-    backdrop-filter: blur(10px);
-    border: 1px solid var(--border);
-    border-radius: 15px;
-    padding: 25px;
-    margin-bottom: 20px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-}
+/* PODIO */
+.top-three { display: flex; justify-content: center; align-items: flex-end; gap: 15px; margin: 40px 0; }
+.spot { background: var(--panel); border: 1px solid var(--border); width: 120px; border-radius: 15px; display: flex; flex-direction: column; align-items: center; padding: 20px 10px; }
+.spot-1 { height: 160px; border-color: #ffd700; }
+.spot-2 { height: 130px; }
+.spot-3 { height: 110px; }
 
-/* Botones e Inputs */
-.main-btn, button {
-    background: var(--neon);
-    color: #000;
-    border: none;
-    padding: 12px 20px;
-    border-radius: 8px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: 0.3s;
-}
+/* CALENDARIO */
+.grid-calendario { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; margin-top: 20px; }
+.dia { background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 10px; min-height: 80px; padding: 8px; font-size: 0.8rem; }
+.dia.hoy { border-color: var(--neon); background: rgba(0,242,255,0.05); }
+.evento-tag { background: var(--neon); color: #000; font-size: 0.6rem; font-weight: bold; padding: 3px; border-radius: 4px; margin-top: 4px; text-align: center; }
 
-.main-btn:hover, button:hover {
-    box-shadow: 0 0 15px var(--neon);
-    transform: translateY(-2px);
-}
-
-input, select {
-    background: #111;
-    border: 1px solid #333;
-    color: #fff;
-    padding: 12px;
-    border-radius: 8px;
-    width: 100%;
-    margin-bottom: 10px;
-    box-sizing: border-box;
-}
-
-/* Tablas */
-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-th { text-align: left; color: #555; padding: 12px; border-bottom: 2px solid #222; font-size: 0.8rem; }
+/* TABLAS Y BOTONES */
+.card, .tab-content { background: var(--panel); border: 1px solid var(--border); border-radius: 15px; padding: 25px; margin-bottom: 25px; }
+table { width: 100%; border-collapse: collapse; }
 td { padding: 12px; border-bottom: 1px solid #111; }
-
-/* Pestañas para Admin */
-.navbar { background: rgba(0,0,0,0.5); padding: 15px; display: flex; gap: 10px; border-bottom: 1px solid var(--border); }
-.nav-btn { background: none; border: 1px solid #333; color: #888; }
+.navbar { background: #000; padding: 15px; display: flex; gap: 10px; border-bottom: 2px solid var(--neon); position: sticky; top: 0; z-index: 100; }
+.nav-btn { background: none; border: 1px solid #444; color: #888; padding: 8px 15px; border-radius: 6px; cursor: pointer; }
 .nav-btn.active { border-color: var(--neon); color: var(--neon); }
+button.main-action { background: var(--neon); color: #000; border: none; padding: 12px; border-radius: 8px; font-weight: bold; width: 100%; cursor: pointer; }
