@@ -2,124 +2,146 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard | Injective</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { background: #000; color: #fff; font-family: 'Segoe UI', sans-serif; padding: 20px; }
-        .panel { background: #111; border: 1px solid #00f2ff; padding: 25px; border-radius: 12px; margin-bottom: 25px; box-shadow: 0 0 15px rgba(0, 242, 255, 0.1); }
-        h3 { color: #00f2ff; margin-top: 0; text-transform: uppercase; letter-spacing: 1px; }
-        input, select, button { width: 100%; padding: 12px; margin: 10px 0; border-radius: 6px; border: 1px solid #333; box-sizing: border-box; }
-        input, select { background: #1a1a1a; color: #fff; outline: none; }
-        button { background: #00f2ff; color: #000; font-weight: bold; cursor: pointer; border: none; transition: 0.3s; }
-        button:hover { background: #00c4cc; transform: translateY(-2px); }
-        .gestion-tabla { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        .gestion-tabla th, .gestion-tabla td { border: 1px solid #222; padding: 12px; text-align: left; font-size: 0.9rem; }
-        .gestion-tabla th { background: #00f2ff1a; color: #00f2ff; }
-        .btn-borrar { background: #ff4444; color: white; width: auto; padding: 6px 12px; font-size: 0.75rem; border-radius: 4px; }
+        .panel { background: #111; border: 1px solid #00f2ff; padding: 20px; border-radius: 12px; margin-bottom: 25px; }
+        h3 { color: #00f2ff; text-transform: uppercase; margin-top: 0; }
+        input, select, button { width: 100%; padding: 10px; margin: 10px 0; border-radius: 6px; border: 1px solid #333; box-sizing: border-box; }
+        input, select { background: #1a1a1a; color: #fff; }
+        button { background: #00f2ff; color: #000; font-weight: bold; cursor: pointer; border: none; }
+        button.btn-edit { background: #ffcc00; width: auto; padding: 5px 10px; margin: 2px; }
+        button.btn-borrar { background: #ff4444; color: white; width: auto; padding: 5px 10px; margin: 2px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #222; padding: 10px; text-align: left; font-size: 0.9rem; }
+        th { color: #00f2ff; background: #00f2ff1a; }
+        .flex-group { display: flex; gap: 10px; }
     </style>
 </head>
 <body onload="inicializarAdmin()">
 
-    <h1 style="text-align:center; color:#00f2ff; text-shadow: 0 0 10px #00f2ff;">Injective Admin Hub</h1>
+    <h1 style="text-align:center; color:#00f2ff;">Injective Master Control</h1>
 
     <div class="panel">
-        <h3>1. Publicar Nuevo Torneo</h3>
+        <h3>1. Gestión de Usuarios (Base de Datos)</h3>
+        <div class="flex-group">
+            <input type="text" id="nuevo_usuario_nombre" placeholder="Nombre del nuevo Ninja">
+            <button onclick="crearUsuario()" style="width: 200px;">+ Crear Usuario</button>
+        </div>
+        <table>
+            <thead>
+                <tr><th>Usuario</th><th>Puntos Actuales</th><th>Acciones</th></tr>
+            </thead>
+            <tbody id="tabla-usuarios"></tbody>
+        </table>
+    </div>
+
+    <div class="panel">
+        <h3>2. Publicar Nuevo Torneo</h3>
         <input type="text" id="nombre_torneo" placeholder="Nombre del Torneo">
         <input type="date" id="fecha_torneo">
-        <button onclick="addEvento()">PUBLICAR EN CALENDARIO</button>
+        <button onclick="addEvento()">Publicar Torneo</button>
     </div>
 
     <div class="panel">
-        <h3>2. Registrar Ganadores y Sumar Puntos</h3>
-        <select id="lista_torneos"><option value="">Cargando torneos...</option></select>
-        <input type="text" id="nombre_ganador" placeholder="Nombre exacto del Usuario">
-        <input type="number" id="puntos_ganados" placeholder="Cantidad de Puntos (ej: 50)">
-        <button onclick="guardarGanadorYSumar()">REGISTRAR Y SUMAR AL RANKING</button>
-    </div>
-
-    <div class="panel">
-        <h3>3. Gestión de Torneos Activos</h3>
-        <table class="gestion-tabla">
-            <thead>
-                <tr><th>TORNEO</th><th>FECHA</th><th>ACCIONES</th></tr>
-            </thead>
-            <tbody id="tabla-gestion-eventos"></tbody>
-        </table>
+        <h3>3. Registrar Resultados de Torneo</h3>
+        <select id="select_torneo_ganador"><option>Cargando torneos...</option></select>
+        <select id="select_usuario_ganador"><option>Selecciona un usuario registrado...</option></select>
+        <input type="number" id="puntos_a_sumar" placeholder="Puntos a sumar (ej: 50)">
+        <button onclick="registrarResultado()">Registrar y Actualizar Puntos</button>
     </div>
 
     <script>
         const SUPABASE_URL = 'https://ekaiwrnvbpwaaoenwnnp.supabase.co'; 
-        const SUPABASE_KEY = 'sb_publishable_YvgUfE8sAXfAUGvXMcNB4Q_aGC2GUMP'; // <--- PEGA TU LLAVE PUBLIC ANON AQUÍ
+        const SUPABASE_KEY = 'TU_LLAVE_ANON_AQUÍ'; 
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         async function inicializarAdmin() {
-            console.log("Panel iniciado correctamente");
+            await cargarUsuarios();
             await cargarTorneos();
         }
 
-        async function cargarTorneos() {
-            const { data: eventos, error } = await _supabase
-                .from('eventos')
-                .select('*')
-                .order('fecha', { ascending: false });
-
-            if (error) { console.error("Error al cargar:", error.message); return; }
-
-            const selector = document.getElementById('lista_torneos');
-            const tabla = document.getElementById('tabla-gestion-eventos');
+        // --- FUNCIONES DE USUARIOS ---
+        async function cargarUsuarios() {
+            const { data: usuarios } = await _supabase.from('ranking').select('*').order('nombre', { ascending: true });
+            const tabla = document.getElementById('tabla-usuarios');
+            const selectU = document.getElementById('select_usuario_ganador');
             
-            selector.innerHTML = '<option value="">-- Selecciona un Torneo --</option>';
             tabla.innerHTML = '';
+            selectU.innerHTML = '<option value="">-- Selecciona un Usuario --</option>';
 
-            eventos.forEach(e => {
-                selector.innerHTML += `<option value="${e.id}">${e.nombre} (${e.fecha})</option>`;
+            usuarios.forEach(u => {
                 tabla.innerHTML += `
                     <tr>
-                        <td>${e.nombre}</td>
-                        <td>${e.fecha}</td>
-                        <td><button class="btn-borrar" onclick="borrarEvento(${e.id})">BORRAR</button></td>
+                        <td>${u.nombre}</td>
+                        <td>${u.puntos}</td>
+                        <td>
+                            <button class="btn-edit" onclick="modificarPuntosDirecto('${u.nombre}', ${u.puntos})">Modificar</button>
+                            <button class="btn-borrar" onclick="borrarUsuario('${u.nombre}')">Eliminar</button>
+                        </td>
                     </tr>`;
+                selectU.innerHTML += `<option value="${u.nombre}">${u.nombre}</option>`;
+            });
+        }
+
+        async function crearUsuario() {
+            const nombre = document.getElementById('nuevo_usuario_nombre').value.trim();
+            if(!nombre) return;
+            const { error } = await _supabase.from('ranking').insert([{ nombre: nombre, puntos: 0 }]);
+            if(error) alert("El usuario ya existe o hubo un error");
+            else { document.getElementById('nuevo_usuario_nombre').value = ''; cargarUsuarios(); }
+        }
+
+        async function modificarPuntosDirecto(nombre, puntosActuales) {
+            const nuevoPuntaje = prompt(`Modificar puntos para ${nombre}:`, puntosActuales);
+            if (nuevoPuntaje === null) return;
+            const { error } = await _supabase.from('ranking').update({ puntos: parseInt(nuevoPuntaje) }).eq('nombre', nombre);
+            if(!error) cargarUsuarios();
+        }
+
+        async function borrarUsuario(nombre) {
+            if(confirm(`¿Eliminar a ${nombre}? Esto borrará sus puntos.`)) {
+                await _supabase.from('ranking').delete().eq('nombre', nombre);
+                cargarUsuarios();
+            }
+        }
+
+        // --- FUNCIONES DE TORNEOS ---
+        async function cargarTorneos() {
+            const { data: eventos } = await _supabase.from('eventos').select('*').order('fecha', { ascending: false });
+            const selectT = document.getElementById('select_torneo_ganador');
+            selectT.innerHTML = '<option value="">-- Selecciona un Torneo --</option>';
+            eventos.forEach(e => {
+                selectT.innerHTML += `<option value="${e.id}">${e.nombre}</option>`;
             });
         }
 
         async function addEvento() {
             const n = document.getElementById('nombre_torneo').value;
             const f = document.getElementById('fecha_torneo').value;
-            if(!n || !f) return alert("Por favor completa nombre y fecha");
-
-            const { error } = await _supabase.from('eventos').insert([{ nombre: n, fecha: f }]);
-            if (error) alert("Error: " + error.message);
-            else { alert("¡Torneo añadido!"); cargarTorneos(); }
+            await _supabase.from('eventos').insert([{ nombre: n, fecha: f }]);
+            cargarTorneos();
+            alert("Torneo creado");
         }
 
-        async function guardarGanadorYSumar() {
-            const idT = document.getElementById('lista_torneos').value;
-            const nomG = document.getElementById('nombre_ganador').value.trim();
-            const ptsNuevos = parseInt(document.getElementById('puntos_ganados').value);
+        async function registrarResultado() {
+            const idT = document.getElementById('select_torneo_ganador').value;
+            const nomU = document.getElementById('select_usuario_ganador').value;
+            const pts = parseInt(document.getElementById('puntos_a_sumar').value);
 
-            if(!idT || !nomG || isNaN(ptsNuevos)) return alert("Datos inválidos");
+            if(!idT || !nomU || isNaN(pts)) return alert("Completa todos los campos");
 
-            // 1. Guardar en historial (Calendario)
-            await _supabase.from('ganadores').insert([
-                { evento_id: idT, nombre_jugador: nomG, premio: ptsNuevos + " PTS" }
-            ]);
+            // 1. Historial
+            await _supabase.from('ganadores').insert([{ evento_id: idT, nombre_jugador: nomU, premio: pts + " PTS" }]);
 
-            // 2. Sumar en Ranking
-            const { data: userExistente } = await _supabase.from('ranking').select('puntos').eq('nombre', nomG).single();
-            let total = (userExistente ? parseInt(userExistente.puntos) : 0) + ptsNuevos;
+            // 2. Sumar al Ranking
+            const { data: u } = await _supabase.from('ranking').select('puntos').eq('nombre', nomU).single();
+            const nuevoTotal = (u.puntos || 0) + pts;
+            await _supabase.from('ranking').update({ puntos: nuevoTotal }).eq('nombre', nomU);
 
-            const { error: err2 } = await _supabase.from('ranking').upsert({ nombre: nomG, puntos: total }, { onConflict: 'nombre' });
-
-            if(err2) alert("Error: " + err2.message);
-            else alert("¡Puntos actualizados!");
-        }
-
-        async function borrarEvento(id) {
-            if(!confirm("¿Borrar este torneo?")) return;
-            const { error } = await _supabase.from('eventos').delete().eq('id', id);
-            if(error) alert(error.message);
-            else cargarTorneos();
+            alert("Puntos sumados a " + nomU);
+            cargarUsuarios(); 
         }
     </script>
 </body>
