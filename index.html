@@ -2,21 +2,47 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Ninja Hub | Home</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Ninja Hub | Leaderboard</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #1a1a1a; color: white; margin: 0; padding: 0; }
+        .container { padding: 20px; max-width: 1000px; margin: auto; }
+        h1 { text-align: center; color: #00f2ff; letter-spacing: 2px; text-transform: uppercase; }
+
+        /* PODIO ORIGINAL */
+        .top-three { display: flex; justify-content: center; align-items: flex-end; gap: 15px; margin: 40px 0; height: 220px; }
+        .spot { background-color: #2a2a2a; border: 1px solid #444; width: 150px; border-radius: 15px; display: flex; flex-direction: column; align-items: center; padding: 20px; text-align: center; }
+        .spot-1 { height: 180px; border-color: #00f2ff; box-shadow: 0 0 20px rgba(0, 242, 255, 0.3); }
+        .spot-2 { height: 140px; }
+        .spot-3 { height: 110px; }
+        .spot strong { display: block; margin-top: 10px; font-size: 1.1rem; }
+        .spot span { color: #00f2ff; font-weight: bold; font-size: 1.2rem; }
+
+        /* SECCIONES */
+        .card { background-color: #2a2a2a; padding: 25px; border-radius: 15px; border: 1px solid #444; margin-bottom: 25px; }
+        h2 { color: #00f2ff; border-bottom: 1px solid #444; padding-bottom: 10px; }
+
+        /* TABLA RANKING */
+        table { width: 100%; border-collapse: collapse; }
+        td { padding: 15px; border-bottom: 1px solid #333; font-size: 1.1rem; }
+        .pts-col { text-align: right; color: #00f2ff; font-weight: bold; }
+
+        /* CALENDARIO ORIGINAL */
+        .grid-calendario { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; margin-top: 20px; }
+        .dia { background-color: #2a2a2a; border: 1px solid #444; min-height: 80px; padding: 10px; border-radius: 8px; font-size: 0.9rem; }
+        .dia.hoy { border-color: #00f2ff; background-color: #1e3a3d; }
+        .evento-tag { background-color: #00f2ff; color: black; font-size: 0.7rem; padding: 4px; border-radius: 4px; margin-top: 5px; font-weight: bold; text-align: center; }
+    </style>
 </head>
 <body>
     <div class="container">
-        <h1 style="text-align: center;">NINJA HUB LEADERBOARD</h1>
+        <h1>NINJA HUB LEADERBOARD</h1>
         
         <div class="top-three" id="podio"></div>
 
         <div class="card">
             <h2>RANKING GENERAL</h2>
-            <table>
-                <tbody id="leaderboard"></tbody>
-            </table>
+            <table><tbody id="leaderboard"></tbody></table>
         </div>
 
         <div class="card">
@@ -31,7 +57,6 @@
         async function init() {
             const { data: n } = await _supabase.from('ranking').select('*').order('puntos', { ascending: false });
             
-            // Render Podio
             if(n && n.length >= 3) {
                 document.getElementById('podio').innerHTML = `
                     <div class="spot spot-2">🥈<strong>${n[1].nombre}</strong><span>${n[1].puntos} PTS</span></div>
@@ -39,11 +64,9 @@
                     <div class="spot spot-3">🥉<strong>${n[2].nombre}</strong><span>${n[2].puntos} PTS</span></div>`;
             }
 
-            // Render Leaderboard
             document.getElementById('leaderboard').innerHTML = n.map((u, i) => `
-                <tr><td>#${i+1} ${u.nombre}</td><td style="text-align:right; color:#00f2ff; font-weight:bold;">${u.puntos} PTS</td></tr>`).join('');
+                <tr><td>#${i+1} ${u.nombre}</td><td class="pts-col">${u.puntos} PTS</td></tr>`).join('');
 
-            // Render Calendario
             const { data: e } = await _supabase.from('eventos').select('*');
             const hoy = new Date();
             const dias = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0).getDate();
