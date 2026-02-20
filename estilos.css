@@ -1,0 +1,103 @@
+/* ESTILO INJECTIVE DARK MODE */
+:root { 
+    --bg: #060606; 
+    --card: #111111; 
+    --accent: #00f2ff; 
+    --text: #e0e0e0; 
+    --border: #222; 
+}
+
+body { 
+    background: var(--bg); 
+    color: var(--text); 
+    font-family: 'Inter', sans-serif; 
+    margin: 0; 
+}
+
+/* Navegación */
+nav { 
+    display: flex; 
+    justify-content: center; 
+    gap: 40px; 
+    padding: 25px; 
+    border-bottom: 1px solid var(--border); 
+    background: #000; 
+    position: sticky; 
+    top: 0; 
+    z-index: 100; 
+}
+
+nav a { 
+    color: var(--text); 
+    text-decoration: none; 
+    font-weight: bold; 
+    cursor: pointer; 
+    text-transform: uppercase; 
+    font-size: 0.9rem; 
+}
+
+nav a:hover { color: var(--accent); }
+
+/* Contenedores */
+.container { max-width: 1000px; margin: 40px auto; padding: 20px; }
+.section { display: none; }
+.active { display: block; }
+
+/* Calendario */
+.grid-calendario { 
+    display: grid; 
+    grid-template-columns: repeat(7, 1fr); 
+    gap: 1px; 
+    background: var(--border); 
+    border: 1px solid var(--border); 
+}
+
+.dia { background: var(--card); min-height: 110px; padding: 10px; }
+.dia-semana { background: #1a1a1a; padding: 12px; text-align: center; color: var(--accent); font-weight: bold; }
+
+.evento-tag { 
+    background: rgba(0, 242, 255, 0.1); 
+    border-left: 3px solid var(--accent); 
+    color: var(--accent); 
+    font-size: 0.75rem; 
+    padding: 5px; 
+    margin-top: 5px; 
+    border-radius: 2px; 
+}
+
+/* Ranking */
+table { width: 100%; border-collapse: collapse; background: var(--card); border-radius: 8px; overflow: hidden; }
+th, td { padding: 18px; border-bottom: 1px solid var(--border); text-align: left; }
+th { background: #1a1a1a; color: var(--accent); text-transform: uppercase; font-size: 0.8rem; }
+
+/* Panel Admin */
+.panel { 
+    max-width: 500px; 
+    margin: 20px auto; 
+    background: #111; 
+    padding: 30px; 
+    border: 1px solid var(--border); 
+    border-radius: 15px; 
+}
+
+input { 
+    width: 100%; 
+    padding: 12px; 
+    margin: 10px 0; 
+    background: #222; 
+    color: #fff; 
+    border: 1px solid #444; 
+    border-radius: 5px; 
+    box-sizing: border-box; 
+}
+
+button { 
+    background: var(--accent); 
+    color: #000; 
+    border: none; 
+    padding: 15px; 
+    width: 100%; 
+    cursor: pointer; 
+    font-weight: bold; 
+    border-radius: 5px; 
+}
