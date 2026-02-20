@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Dashboard</title>
+    <style>
+        body { background: #111; color: white; font-family: sans-serif; padding: 40px; }
+        .panel { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
+        .box { background: #1a1a1a; padding: 20px; border-radius: 10px; border: 1px solid #333; }
+        input, textarea { width: 100%; margin: 10px 0; padding: 10px; background: #000; border: 1px solid #444; color: white; box-sizing: border-box; }
+        button { background: #00f2ff; border: none; padding: 10px 20px; cursor: pointer; font-weight: bold; border-radius: 5px; }
+        .lista-item { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #333; }
+        button.del { background: #ff4444; margin-left: 10px; }
+    </style>
+</head>
+<body>
+    <h1>ADMIN DASHBOARD</h1>
+    <div class="panel">
+        <div class="box">
+            <h3>Añadir Torneo</h3>
+            <input type="text" id="evNombre" placeholder="Nombre del Torneo">
+            <input type="date" id="evFecha">
+            <textarea id="evDesc" placeholder="Descripción corta"></textarea>
+            <button onclick="addEvento()">Publicar Evento</button>
+            <div id="admin-eventos"></div>
+        </div>
+
+        <div class="box">
+            <h3>Gestión de Ranking</h3>
+            <input type="text" id="playNombre" placeholder="Nombre del Jugador">
+            <input type="number" id="playPuntos" placeholder="Puntos">
+            <button onclick="addRanking()">Añadir/Actualizar Jugador</button>
+            <div id="admin-ranking"></div>
+        </div>
+    </div>
+
+<script>
+    function addEvento() {
+        const eventos = JSON.parse(localStorage.getItem('eventos') || '[]');
+        eventos.push({
+            nombre: document.getElementById('evNombre').value,
+            fecha: document.getElementById('evFecha').value,
+            desc: document.getElementById('evDesc').value
+        });
+        localStorage.setItem('eventos', JSON.stringify(eventos));
+        render();
+    }
+
+    function addRanking() {
+        let ranking = JSON.parse(localStorage.getItem('ranking') || '[]');
+        const nombre = document.getElementById('playNombre').value;
+        const puntos = parseInt(document.getElementById('playPuntos').value);
+        
+        const existía = ranking.find(p => p.nombre === nombre);
+        if(existía) { existía.puntos = puntos; } 
+        else { ranking.push({nombre, puntos}); }
+        
+        localStorage.setItem('ranking', JSON.stringify(ranking));
+        render();
+    }
+
+    function borrarEv(i) {
+        let evs = JSON.parse(localStorage.getItem('eventos'));
+        evs.splice(i, 1);
+        localStorage.setItem('eventos', JSON.stringify(evs));
+        render();
+    }
+
+    function borrarRank(i) {
+        let ranks = JSON.parse(localStorage.getItem('ranking'));
+        ranks.splice(i, 1);
+        localStorage.setItem('ranking', JSON.stringify(ranks));
+        render();
+    }
+
+    function render() {
+        const evs = JSON.parse(localStorage.getItem('eventos') || '[]');
+        document.getElementById('admin-eventos').innerHTML = evs.map((e, i) => `
+            <div class="lista-item">${e.nombre} <button class="del" onclick="borrarEv(${i})">X</button></div>
+        `).join('');
+
+        const ranks = JSON.parse(localStorage.getItem('ranking') || '[]');
+        document.getElementById('admin-ranking').innerHTML = ranks.map((r, i) => `
+            <div class="lista-item">${r.nombre} (${r.puntos} pts) <button class="del" onclick="borrarRank(${i})">X</button></div>
+        `).join('');
+    }
+    render();
+</script>
+</body>
+</html>
