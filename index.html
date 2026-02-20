@@ -2,180 +2,200 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Injective | Comunidad</title>
-    <link rel="stylesheet" href="estilos.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Injective Hub | Comunidad Ninja</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root { --neon: #00f2ff; --bg: #000; --panel: #0a0a0a; }
+        body { background: var(--bg); color: #fff; font-family: 'Segoe UI', sans-serif; margin: 0; padding-bottom: 50px; }
+        .container { max-width: 1000px; margin: auto; padding: 20px; }
+        h1, h2 { color: var(--neon); text-transform: uppercase; text-align: center; letter-spacing: 2px; }
+
+        /* --- RANKING --- */
+        .ranking-card { background: var(--panel); border: 1px solid var(--neon); border-radius: 15px; padding: 20px; box-shadow: 0 0 20px rgba(0, 242, 255, 0.1); margin-bottom: 40px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 15px; text-align: left; border-bottom: 1px solid #222; }
+        th { color: var(--neon); font-size: 0.9rem; }
+        .pos { font-weight: bold; color: var(--neon); width: 40px; }
+
+        /* --- CALENDARIO --- */
+        .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .grid-calendario { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; }
+        .dia-header { text-align: center; color: var(--neon); font-weight: bold; font-size: 0.8rem; padding: 10px 0; }
+        .dia { background: #111; border: 1px solid #222; min-height: 90px; padding: 5px; border-radius: 8px; transition: 0.3s; }
+        .dia.hoy { border-color: var(--neon); box-shadow: inset 0 0 10px rgba(0, 242, 255, 0.1); }
+        .num-dia { font-size: 0.8rem; color: #555; margin-bottom: 5px; display: block; }
+        
+        /* Eventos Clicables */
+        .evento-tag { 
+            background: rgba(0, 242, 255, 0.15); 
+            color: var(--neon); 
+            font-size: 0.65rem; 
+            padding: 4px; 
+            margin-top: 4px; 
+            border-radius: 4px; 
+            border-left: 3px solid var(--neon);
+            cursor: pointer;
+            transition: 0.2s;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .evento-tag:hover { background: var(--neon); color: #000; transform: scale(1.02); }
+
+        /* --- MODAL --- */
+        #modal-evento { 
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.9); z-index: 9999; justify-content: center; align-items: center; 
+            backdrop-filter: blur(8px); 
+        }
+        .modal-content { 
+            background: #111; border: 2px solid var(--neon); padding: 30px; border-radius: 15px; 
+            width: 90%; max-width: 350px; text-align: center; box-shadow: 0 0 30px rgba(0, 242, 255, 0.3); 
+        }
+        .modal-content ul { list-style: none; padding: 0; text-align: left; margin: 20px 0; }
+        .modal-content li { padding: 10px 0; border-bottom: 1px solid #222; display: flex; justify-content: space-between; }
+
+        /* --- AUDITORIA --- */
+        .logs-section { margin-top: 50px; background: #050505; border-radius: 12px; padding: 20px; border: 1px dashed #333; }
+        .log-row { font-size: 0.85rem; border-bottom: 1px solid #111; padding: 8px 0; display: flex; justify-content: space-between; }
+    </style>
 </head>
 <body>
-    <nav>
-        <a onclick="show('cal')">Calendario</a>
-        <a onclick="show('rank')">Ranking</a>
-    </nav>
+
     <div class="container">
-        <div id="cal" class="section active">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-        <button onclick="mesAnterior()" style="width: auto; padding: 10px 20px;">◀ Ant.</button>
-        <h2 style="color: #00f2ff; margin: 0;">EVENTOS</h2>
-        <button onclick="mesSiguiente()" style="width: auto; padding: 10px 20px;">Sig. ▶</button>
-    </div>
-    <div class="grid-calendario" id="grid"></div>
-</div>
-        <div id="rank" class="section">
-            <h2 style="color: #00f2ff">LEADERBOARD</h2>
+        <h1>Injective Ninja Hub</h1>
+
+        <div class="ranking-card">
+            <h2>Leaderboard de Puntos</h2>
             <table>
-                <thead><tr><th>Posición</th><th>Jugador</th><th>Puntos</th></tr></thead>
-                <tbody id="tabla-body"></tbody>
+                <thead>
+                    <tr><th>POS</th><th>NINJA</th><th>PUNTOS</th></tr>
+                </thead>
+                <tbody id="tabla-ranking"></tbody>
             </table>
         </div>
+
+        <div class="ranking-card">
+            <div class="cal-header">
+                <h2 style="margin:0">Calendario de Torneos</h2>
+                <div id="mes-actual" style="color: var(--neon); font-weight: bold;"></div>
+            </div>
+            <div class="grid-calendario" id="calendario">
+                </div>
+        </div>
+
+        <div class="logs-section">
+            <h3 style="color: #666; font-size: 0.8rem; text-transform: uppercase;">Últimos Movimientos (Transparencia)</h3>
+            <div id="logs-publicos"></div>
+        </div>
     </div>
+
+    <div id="modal-evento">
+        <div class="modal-content">
+            <h2 id="modal-titulo"></h2>
+            <p style="color:#555; font-size: 0.7rem;">GANADORES Y PREMIOS</p>
+            <ul id="lista-ganadores"></ul>
+            <button onclick="cerrarModal()" style="background:var(--neon); color:#000; border:none; padding:12px; width:100%; border-radius:8px; font-weight:bold; cursor:pointer;">CERRAR</button>
+        </div>
+    </div>
+
     <script>
-        const SUPABASE_URL = 'https://ekaiwrnvbpwaaoenwnnp.supabase.co'; 
+        const SUPABASE_URL = 'https://ekaiwrnvbpwaaoenwnnp.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_YvgUfE8sAXfAUGvXMcNB4Q_aGC2GUMP';
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-       // --- LÓGICA DEL CALENDARIO DINÁMICO ---
-let fechaActual = new Date(); // Esto obtiene la fecha de hoy automáticamente
+        async function cargarTodo() {
+            await cargarRanking();
+            await cargarCalendario();
+            await cargarLogsPublicos();
+        }
 
-function show(id) {
-    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-    document.getElementById(id).classList.add('active');
-}
-
-async function cargarCalendario() {
-    const { data: eventos } = await _supabase.from('eventos').select('*');
-    const grid = document.getElementById('grid');
-    
-    // Obtener año y mes actual para la vista
-    const año = fechaActual.getFullYear();
-    const mes = fechaActual.getMonth();
-    
-    // Nombres de meses para el título
-    const nombresMeses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
-    
-    // Actualizar el título del calendario (puedes añadir un <h3 id="mes-titulo"> en tu HTML)
-    document.getElementById('cal').querySelector('h2').innerText = `EVENTOS - ${nombresMeses[mes].toUpperCase()} ${año}`;
-
-    grid.innerHTML = '';
-    
-    // 1. Cabecera de días
-    ['L','M','X','J','V','S','D'].forEach(d => grid.innerHTML += `<div class="dia-semana">${d}</div>`);
-    
-    // 2. Calcular espacios vacíos (para que el día 1 caiga donde debe)
-    let primerDiaMes = new Date(año, mes, 1).getDay(); 
-    let ajuste = primerDiaMes === 0 ? 6 : primerDiaMes - 1; // Ajuste para que empiece en Lunes
-    
-    for(let i=0; i < ajuste; i++) {
-        grid.innerHTML += `<div class="dia" style="background: transparent; border:none;"></div>`;
-    }
-    
-    // 3. Dibujar los días del mes
-    const diasEnMes = new Date(año, mes + 1, 0).getDate();
-    
-    for(let i=1; i<=diasEnMes; i++) {
-        // Formato de fecha para comparar con Supabase (YYYY-MM-DD)
-        let mesFormateado = (mes + 1) < 10 ? '0' + (mes + 1) : (mes + 1);
-        let diaFormateado = i < 10 ? '0' + i : i;
-        let fechaString = `${año}-${mesFormateado}-${diaFormateado}`;
-        
-        let evs = eventos?.filter(e => e.fecha === fechaString) || [];
-        
-        grid.innerHTML += `
-            <div class="dia">
-                <div class="numero-dia">${i}</div>
-                ${evs.map(e => `<div class="evento-tag">${e.nombre}</div>`).join('')}
-            </div>`;
-    }
-}
-
-// Funciones para navegar
-function mesAnterior() {
-    fechaActual.setMonth(fechaActual.getMonth() - 1);
-    cargarCalendario();
-}
-
-function mesSiguiente() {
-    fechaActual.setMonth(fechaActual.getMonth() + 1);
-    cargarCalendario();
-}
-
-// Cargar Ranking (se queda igual)
-async function cargarRanking() {
-    const { data: ranks } = await _supabase.from('ranking').select('*').order('puntos', {ascending: false});
-    document.getElementById('tabla-body').innerHTML = ranks?.map((r, i) => `<tr><td>#${i+1}</td><td>${r.nombre}</td><td>${r.puntos} PTS</td></tr>`).join('') || '';
-}
-
-// Carga inicial
-cargarCalendario();
-cargarRanking();
-setInterval(cargarRanking, 10000); // El ranking se actualiza solo, el calendario al navegar
-        // 1. CARGAR AUDITORÍA PÚBLICA
-async function cargarLogsPublicos() {
-    const { data } = await _supabase.from('logs').select('*').order('created_at', { ascending: false }).limit(10);
-    const tbody = document.getElementById('logs-publicos');
-    
-    if (data) {
-        tbody.innerHTML = data.map(l => `
-            <tr style="border-bottom: 1px solid #222;">
-                <td style="padding:12px; color:#888; font-size:0.8rem;">${new Date(l.created_at).toLocaleDateString()}</td>
-                <td style="padding:12px;"><b>${l.nombre_ninja}</b></td>
-                <td style="padding:12px; color:#00f2ff;">+${l.puntos} PTS</td>
-            </tr>
-        `).join('');
-    }
-}
-
-// 2. FUNCIÓN PARA EL CALENDARIO INTERACTIVO
-async function abrirEvento(id, nombre) {
-    // Buscamos quién ganó ese evento en la tabla 'ganadores'
-    const { data: ganadores } = await _supabase.from('ganadores').select('nombre_jugador, premio').eq('evento_id', id);
-
-    document.getElementById('modal-titulo').innerText = nombre;
-    const lista = document.getElementById('lista-ganadores');
-    
-    lista.innerHTML = (ganadores && ganadores.length > 0) 
-        ? ganadores.map(g => `<li style="padding:8px 0; border-bottom:1px solid #333;">🏆 <b>${g.nombre_jugador}</b>: ${g.premio}</li>`).join('')
-        : "<li style='color:#666;'>Aún no hay resultados para este torneo.</li>";
-
-    document.getElementById('modal-evento').style.display = "flex";
-}
-
-function cerrarModal() {
-    document.getElementById('modal-evento').style.display = "none";
-}
-
-// 3. INICIALIZAR (Añade esto al final de lo que ya tengas)
-cargarLogsPublicos();
-
-
-        
-    </script>
-    <div id="modal-evento" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:9999; justify-content:center; align-items:center; backdrop-filter: blur(5px);">
-    <div style="background:#111; border:2px solid #00f2ff; padding:30px; border-radius:15px; width:90%; max-width:350px; box-shadow: 0 0 30px rgba(0, 242, 255, 0.3);">
-        <h2 id="modal-titulo" style="color:#00f2ff; margin-top:0; text-transform: uppercase;"></h2>
-        <p style="color:#888; font-size: 0.8rem;">Resultados oficiales:</p>
-        <ul id="lista-ganadores" style="color:white; padding:0; list-style:none; margin: 20px 0;"></ul>
-        <button onclick="cerrarModal()" style="background:#00f2ff; color:#000; border:none; padding:10px; cursor:pointer; width:100%; border-radius:5px; font-weight:bold;">CERRAR</button>
-    </div>
-</div>
-
-<div class="container" style="margin-top: 50px;">
-    <h2 style="color:#00f2ff; text-align:center;">AUDITORÍA DE PUNTOS</h2>
-    <div style="background:#111; padding:20px; border-radius:12px; border: 1px solid #222;">
-        <table style="width:100%; color:white; border-collapse: collapse;">
-            <thead>
-                <tr style="color:#00f2ff; border-bottom: 2px solid #222;">
-                    <th style="padding:10px; text-align:left;">Fecha</th>
-                    <th style="padding:10px; text-align:left;">Ninja</th>
-                    <th style="padding:10px; text-align:left;">Movimiento</th>
+        // 1. RANKING
+        async function cargarRanking() {
+            const { data } = await _supabase.from('ranking').select('*').order('puntos', { ascending: false });
+            const tbody = document.getElementById('tabla-ranking');
+            tbody.innerHTML = data.map((u, i) => `
+                <tr>
+                    <td class="pos">#${i + 1}</td>
+                    <td>${u.nombre}</td>
+                    <td style="color:var(--neon); font-weight:bold;">${u.puntos} PTS</td>
                 </tr>
-            </thead>
-            <tbody id="logs-publicos">
-                </tbody>
-        </table>
-    </div>
-</div>
+            `).join('');
+        }
+
+        // 2. CALENDARIO INTERACTIVO
+        async function cargarCalendario() {
+            const { data: eventos } = await _supabase.from('eventos').select('*');
+            const cal = document.getElementById('calendario');
+            const mesTxt = document.getElementById('mes-actual');
+            
+            const hoy = new Date();
+            const mes = hoy.getMonth();
+            const año = hoy.getFullYear();
+            
+            const nombresMeses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+            mesTxt.innerText = `${nombresMeses[mes]} ${año}`;
+
+            const primerDia = new Date(año, mes, 1).getDay();
+            const diasEnMes = new Date(año, mes + 1, 0).getDate();
+
+            cal.innerHTML = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"].map(d => `<div class="dia-header">${d}</div>`).join('');
+
+            // Espacios vacíos
+            for (let i = 0; i < primerDia; i++) { cal.innerHTML += `<div class="dia" style="opacity:0"></div>`; }
+
+            // Días del mes
+            for (let d = 1; d <= diasEnMes; d++) {
+                const fechaStr = `${año}-${String(mes + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                const esHoy = d === hoy.getDate() ? 'hoy' : '';
+                
+                let eventosHtml = '';
+                const evs = eventos.filter(e => e.fecha === fechaStr);
+                evs.forEach(e => {
+                    eventosHtml += `<div class="evento-tag" onclick="abrirEvento(${e.id}, '${e.nombre}')">${e.nombre}</div>`;
+                });
+
+                cal.innerHTML += `
+                    <div class="dia ${esHoy}">
+                        <span class="num-dia">${d}</span>
+                        ${eventosHtml}
+                    </div>`;
+            }
+        }
+
+        // 3. MODAL DE GANADORES
+        async function abrirEvento(id, nombre) {
+            const { data: ganadores } = await _supabase.from('ganadores').select('nombre_jugador, premio').eq('evento_id', id);
+            document.getElementById('modal-titulo').innerText = nombre;
+            const lista = document.getElementById('lista-ganadores');
+            
+            lista.innerHTML = (ganadores && ganadores.length > 0)
+                ? ganadores.map(g => `<li><span>⚡ ${g.nombre_jugador}</span> <span style="color:var(--neon)">${g.premio}</span></li>`).join('')
+                : "<li style='color:#444'>Sin resultados aún</li>";
+            
+            document.getElementById('modal-evento').style.display = 'flex';
+        }
+
+        function cerrarModal() { document.getElementById('modal-evento').style.display = 'none'; }
+
+        // 4. AUDITORÍA PÚBLICA
+        async function cargarLogsPublicos() {
+            const { data } = await _supabase.from('logs').select('*').order('created_at', { ascending: false }).limit(10);
+            const contenedor = document.getElementById('logs-publicos');
+            contenedor.innerHTML = data.map(l => `
+                <div class="log-row">
+                    <span style="color:#444">${new Date(l.created_at).toLocaleDateString()}</span>
+                    <span><b>${l.nombre_ninja}</b> <span style="color:#666">recibió</span> <b style="color:var(--neon)">+${l.puntos} PTS</b></span>
+                </div>
+            `).join('');
+        }
+
+        window.onload = cargarTodo;
+    </script>
 </body>
 </html>
+
 
 
 
