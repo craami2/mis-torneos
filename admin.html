@@ -136,13 +136,24 @@
             }
         }
 
-        async function cargarTorneos() {
-            const { data: eventos } = await _supabase.from('eventos').select('*').order('fecha', { ascending: false });
-            const selectT = document.getElementById('select_torneo_ganador');
-            selectT.innerHTML = '<option value="">-- Selecciona Torneo --</option>';
-            eventos.forEach(e => {
-                selectT.innerHTML += `<option value="${e.id}">${e.nombre}</option>`;
-            });
+       async function cargarTorneos() {
+    const { data: eventos, error } = await _supabase
+        .from('eventos')
+        .select('*')
+        .order('fecha', { ascending: false });
+
+    if (error) { console.error("Error al cargar:", error.message); return; }
+
+    const selectT = document.getElementById('select_torneo_ganador');
+    
+    // Limpiamos y ponemos la opción por defecto
+    selectT.innerHTML = '<option value="">-- Selecciona Torneo (Fecha) --</option>';
+
+    eventos.forEach(e => {
+        // Formateamos la fecha para que se vea más limpia (Opcional)
+        // Si e.fecha viene como 2024-05-20, aquí se verá igual pero dentro del paréntesis
+        selectT.innerHTML += `<option value="${e.id}">${e.nombre} | [${e.fecha}]</option>`;
+    });
         }
 
         async function addEvento() {
@@ -176,3 +187,4 @@
     </script>
 </body>
 </html>
+
