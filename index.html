@@ -1,26 +1,26 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Ninja Hub - Leaderboard</title>
+    <title>Ninja Hub | Home</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
     <div class="container">
-        <h1>RANKING NINJA HUB</h1>
+        <h1 style="text-align: center;">NINJA HUB LEADERBOARD</h1>
         
         <div class="top-three" id="podio"></div>
 
         <div class="card">
-            <h2>Leaderboard</h2>
+            <h2>RANKING GENERAL</h2>
             <table>
                 <tbody id="leaderboard"></tbody>
             </table>
         </div>
 
         <div class="card">
-            <h2>Calendario</h2>
+            <h2>CALENDARIO DE TORNEOS</h2>
             <div class="grid-calendario" id="calendario"></div>
         </div>
     </div>
@@ -28,37 +28,34 @@
     <script>
         const _supabase = supabase.createClient('https://ekaiwrnvbpwaaoenwnnp.supabase.co', 'sb_publishable_YvgUfE8sAXfAUGvXMcNB4Q_aGC2GUMP');
 
-        async function cargar() {
+        async function init() {
             const { data: n } = await _supabase.from('ranking').select('*').order('puntos', { ascending: false });
             
-            // Podio
-            if(n.length >= 3) {
+            // Render Podio
+            if(n && n.length >= 3) {
                 document.getElementById('podio').innerHTML = `
-                    <div class="spot spot-2">🥈 <strong>${n[1].nombre}</strong> <span>${n[1].puntos}</span></div>
-                    <div class="spot spot-1">👑 <strong>${n[0].nombre}</strong> <span>${n[0].puntos}</span></div>
-                    <div class="spot spot-3">🥉 <strong>${n[2].nombre}</strong> <span>${n[2].puntos}</span></div>`;
+                    <div class="spot spot-2">🥈<strong>${n[1].nombre}</strong><span>${n[1].puntos} PTS</span></div>
+                    <div class="spot spot-1">👑<strong>${n[0].nombre}</strong><span>${n[0].puntos} PTS</span></div>
+                    <div class="spot spot-3">🥉<strong>${n[2].nombre}</strong><span>${n[2].puntos} PTS</span></div>`;
             }
 
-            // Tabla
+            // Render Leaderboard
             document.getElementById('leaderboard').innerHTML = n.map((u, i) => `
-                <tr><td>#${i+1} ${u.nombre}</td><td style="color:#00f2ff">${u.puntos} PTS</td></tr>`).join('');
+                <tr><td>#${i+1} ${u.nombre}</td><td style="text-align:right; color:#00f2ff; font-weight:bold;">${u.puntos} PTS</td></tr>`).join('');
 
-            // Calendario
+            // Render Calendario
             const { data: e } = await _supabase.from('eventos').select('*');
-            const ahora = new Date();
-            const diasMes = new Date(ahora.getFullYear(), ahora.getMonth() + 1, 0).getDate();
-            let calHtml = '';
-            for(let i=1; i<=diasMes; i++) {
-                const f = `${ahora.getFullYear()}-${String(ahora.getMonth()+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
-                const evs = e.filter(ev => ev.fecha === f);
-                calHtml += `<div class="dia ${i===ahora.getDate()?'hoy':''}">${i}${evs.map(ev=>`<div class="evento-tag">${ev.nombre}</div>`).join('')}</div>`;
+            const hoy = new Date();
+            const dias = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0).getDate();
+            let html = '';
+            for(let i=1; i<=dias; i++) {
+                const fecha = `${hoy.getFullYear()}-${String(hoy.getMonth()+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
+                const evs = e.filter(ev => ev.fecha === fecha);
+                html += `<div class="dia ${i===hoy.getDate()?'hoy':''}">${i}${evs.map(ev=>`<div class="evento-tag">${ev.nombre}</div>`).join('')}</div>`;
             }
-            document.getElementById('calendario').innerHTML = calHtml;
+            document.getElementById('calendario').innerHTML = html;
         }
-        window.onload = cargar;
+        window.onload = init;
     </script>
 </body>
 </html>
-
-
-
