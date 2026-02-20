@@ -29,27 +29,83 @@
         const SUPABASE_KEY = 'sb_publishable_YvgUfE8sAXfAUGvXMcNB4Q_aGC2GUMP';
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        function show(id) {
-            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
-        }
+       // --- LÓGICA DEL CALENDARIO DINÁMICO ---
+let fechaActual = new Date(); // Esto obtiene la fecha de hoy automáticamente
 
-        async function cargar() {
-            const { data: eventos } = await _supabase.from('eventos').select('*');
-            const grid = document.getElementById('grid');
-            grid.innerHTML = '';
-            ['L','M','X','J','V','S','D'].forEach(d => grid.innerHTML += `<div class="dia-semana">${d}</div>`);
-            for(let i=1; i<=31; i++) {
-                let f = `2024-02-${i < 10 ? '0'+i : i}`;
-                let evs = eventos?.filter(e => e.fecha === f) || [];
-                grid.innerHTML += `<div class="dia"><div class="numero-dia">${i}</div>${evs.map(e => `<div class="evento-tag">${e.nombre}</div>`).join('')}</div>`;
-            }
-            const { data: ranks } = await _supabase.from('ranking').select('*').order('puntos', {ascending: false});
-            document.getElementById('tabla-body').innerHTML = ranks?.map((r, i) => `<tr><td>#${i+1}</td><td>${r.nombre}</td><td>${r.puntos} PTS</td></tr>`).join('') || '';
-        }
-        cargar();
-        setInterval(cargar, 5000);
+function show(id) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+}
+
+async function cargarCalendario() {
+    const { data: eventos } = await _supabase.from('eventos').select('*');
+    const grid = document.getElementById('grid');
+    
+    // Obtener año y mes actual para la vista
+    const año = fechaActual.getFullYear();
+    const mes = fechaActual.getMonth();
+    
+    // Nombres de meses para el título
+    const nombresMeses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+    
+    // Actualizar el título del calendario (puedes añadir un <h3 id="mes-titulo"> en tu HTML)
+    document.getElementById('cal').querySelector('h2').innerText = `EVENTOS - ${nombresMeses[mes].toUpperCase()} ${año}`;
+
+    grid.innerHTML = '';
+    
+    // 1. Cabecera de días
+    ['L','M','X','J','V','S','D'].forEach(d => grid.innerHTML += `<div class="dia-semana">${d}</div>`);
+    
+    // 2. Calcular espacios vacíos (para que el día 1 caiga donde debe)
+    let primerDiaMes = new Date(año, mes, 1).getDay(); 
+    let ajuste = primerDiaMes === 0 ? 6 : primerDiaMes - 1; // Ajuste para que empiece en Lunes
+    
+    for(let i=0; i < ajuste; i++) {
+        grid.innerHTML += `<div class="dia" style="background: transparent; border:none;"></div>`;
+    }
+    
+    // 3. Dibujar los días del mes
+    const diasEnMes = new Date(año, mes + 1, 0).getDate();
+    
+    for(let i=1; i<=diasEnMes; i++) {
+        // Formato de fecha para comparar con Supabase (YYYY-MM-DD)
+        let mesFormateado = (mes + 1) < 10 ? '0' + (mes + 1) : (mes + 1);
+        let diaFormateado = i < 10 ? '0' + i : i;
+        let fechaString = `${año}-${mesFormateado}-${diaFormateado}`;
+        
+        let evs = eventos?.filter(e => e.fecha === fechaString) || [];
+        
+        grid.innerHTML += `
+            <div class="dia">
+                <div class="numero-dia">${i}</div>
+                ${evs.map(e => `<div class="evento-tag">${e.nombre}</div>`).join('')}
+            </div>`;
+    }
+}
+
+// Funciones para navegar
+function mesAnterior() {
+    fechaActual.setMonth(fechaActual.getMonth() - 1);
+    cargarCalendario();
+}
+
+function mesSiguiente() {
+    fechaActual.setMonth(fechaActual.getMonth() + 1);
+    cargarCalendario();
+}
+
+// Cargar Ranking (se queda igual)
+async function cargarRanking() {
+    const { data: ranks } = await _supabase.from('ranking').select('*').order('puntos', {ascending: false});
+    document.getElementById('tabla-body').innerHTML = ranks?.map((r, i) => `<tr><td>#${i+1}</td><td>${r.nombre}</td><td>${r.puntos} PTS</td></tr>`).join('') || '';
+}
+
+// Carga inicial
+cargarCalendario();
+cargarRanking();
+setInterval(cargarRanking, 10000); // El ranking se actualiza solo, el calendario al navegar
     </script>
 </body>
 </html>
+
 
