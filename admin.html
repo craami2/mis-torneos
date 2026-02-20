@@ -2,53 +2,44 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Injective | Comunidad</title>
+    <title>Admin Dashboard</title>
     <link rel="stylesheet" href="estilos.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-<body>
-    <nav>
-        <a onclick="show('cal')">Calendario</a>
-        <a onclick="show('rank')">Clasificación</a>
-    </nav>
-    <div class="container">
-        <div id="cal" class="section active">
-            <h2 style="color: #00f2ff">EVENTOS</h2>
-            <div class="grid-calendario" id="grid"></div>
-        </div>
-        <div id="rank" class="section">
-            <h2 style="color: #00f2ff">RANKING</h2>
-            <table>
-                <thead><tr><th>#</th><th>Jugador</th><th>Puntos</th></tr></thead>
-                <tbody id="tabla-body"></tbody>
-            </table>
-        </div>
+<body style="display: block; padding-top: 50px;">
+    <h1 style="text-align:center; color:#00f2ff; letter-spacing: 3px;">ADMIN CONTROL</h1>
+    
+    <div class="panel">
+        <h3>Añadir Nuevo Torneo</h3>
+        <input type="text" id="n" placeholder="Nombre del Torneo">
+        <input type="date" id="f">
+        <button onclick="addE()">Publicar en Calendario</button>
+    </div>
+
+    <div class="panel">
+        <h3>Actualizar Ranking</h3>
+        <input type="text" id="un" placeholder="Nombre del Jugador">
+        <input type="number" id="up" placeholder="Puntos Totales">
+        <button onclick="addR()">Guardar Puntos</button>
     </div>
 
     <script>
-        const SUPABASE_URL = 'https://ekaiwrnvbpwaaoenwnnp.supabase.co'; 
+        // CAMBIA ESTO POR TU URL
+        const SUPABASE_URL = 'TU_URL_AQUÍ'; 
         const SUPABASE_KEY = 'sb_publishable_YvgUfe8sAXfAUGvXMcNB4Q_aGC2625292434313264426d4c67784f47514150534c453531';
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        function show(id) {
-            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
+        async function addE() {
+            const { error } = await _supabase.from('eventos').insert([{ nombre: n.value, fecha: f.value }]);
+            if(error) alert("Error: " + error.message);
+            else alert("¡Evento publicado con éxito!");
         }
 
-        async function cargar() {
-            const { data: eventos } = await _supabase.from('eventos').select('*');
-            const grid = document.getElementById('grid');
-            grid.innerHTML = '';
-            ['L','M','X','J','V','S','D'].forEach(d => grid.innerHTML += `<div class="dia-semana">${d}</div>`);
-            for(let i=1; i<=31; i++) {
-                let f = `2024-02-${i < 10 ? '0'+i : i}`;
-                let evs = eventos?.filter(e => e.fecha === f) || [];
-                grid.innerHTML += `<div class="dia">${i}${evs.map(e => `<div class="evento-tag">${e.nombre}</div>`).join('')}</div>`;
-            }
-            const { data: ranks } = await _supabase.from('ranking').select('*').order('puntos', {ascending: false});
-            document.getElementById('tabla-body').innerHTML = ranks?.map((r, i) => `<tr><td>${i+1}</td><td>${r.nombre}</td><td>${r.puntos}</td></tr>`).join('') || '';
+        async function addR() {
+            const { error } = await _supabase.from('ranking').upsert([{ nombre: un.value, puntos: parseInt(up.value) }], {onConflict: 'nombre'});
+            if(error) alert("Error: " + error.message);
+            else alert("¡Ranking actualizado para " + un.value + "!");
         }
-        cargar();
     </script>
 </body>
 </html>
