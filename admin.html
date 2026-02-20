@@ -2,50 +2,112 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Admin Dashboard</title>
+    <title>Admin Dashboard | Injective</title>
     <link rel="stylesheet" href="estilos.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-<body style="display: block; padding-top: 50px;">
-    <h1 style="text-align:center; color:#00f2ff;">PANEL DE CONTROL</h1>
+<body style="display: block; padding-top: 50px; background: #000; color: #fff;">
+    
+    <h1 style="text-align:center; color:#00f2ff; text-transform: uppercase; letter-spacing: 2px;">Panel de Control Admin</h1>
+
     <div class="panel">
-        <h3>Añadir Torneo</h3>
-        <input type="text" id="n" placeholder="Nombre del Evento">
-        <input type="date" id="f">
-        <button onclick="addE()">Publicar en Web</button>
+        <h3 style="color: #00f2ff;">1. Publicar Nuevo Torneo</h3>
+        <p style="font-size: 0.8rem; color: #888;">Aparecerá en el calendario de la página principal.</p>
+        <input type="text" id="nombre_torneo" placeholder="Nombre del Torneo (ej: Ninja Cup)">
+        <input type="date" id="fecha_torneo">
+        <button onclick="addEvento()">Publicar Torneo</button>
     </div>
+
     <div class="panel">
-        <h3>Actualizar Ranking</h3>
-        <input type="text" id="un" placeholder="Usuario">
-        <input type="number" id="up" placeholder="Puntos">
-        <button onclick="addR()">Guardar Puntos</button>
+        <h3 style="color: #00f2ff;">2. Registrar Ganadores (Suma Automática)</h3>
+        <p style="font-size: 0.8rem; color: #888;">Esto suma puntos al usuario y crea el historial para el calendario.</p>
+        <input type="number" id="id_torneo" placeholder="ID del Torneo (ver en Supabase)">
+        <input type="text" id="nombre_ganador" placeholder="Nombre del Usuario">
+        <input type="number" id="puntos_ganados" placeholder="Puntos Ganados">
+        <button onclick="guardarGanadorYSumar()">Registrar y Sumar</button>
     </div>
+
     <div class="panel">
-        <h3>Registrar Ganador de Torneo</h3>
-        <p style="font-size: 0.8rem; color: #888;">El ID del torneo lo ves en tu tabla 'eventos' de Supabase.</p>
-        <input type="number" id="id_torneo" placeholder="ID del Torneo">
-        <input type="text" id="nombre_ganador" placeholder="Nombre del Jugador">
-        <input type="number" id="puntos_a_sumar" placeholder="Puntos ganados">
-        <button onclick="guardarGanador()">Registrar y Sumar Puntos</button>
+        <h3 style="color: #00f2ff;">3. Ajuste Manual de Puntos</h3>
+        <p style="font-size: 0.8rem; color: #888;">Usa esto para corregir puntos o dar bonos directos (Sobrescribe el valor).</p>
+        <input type="text" id="user_manual" placeholder="Nombre del Usuario">
+        <input type="number" id="puntos_manual" placeholder="Puntos Totales">
+        <button onclick="ajusteManual()" style="background: #555;">Actualizar Manualmente</button>
     </div>
+    
     <script>
         const SUPABASE_URL = 'https://ekaiwrnvbpwaaoenwnnp.supabase.co'; 
         const SUPABASE_KEY = 'sb_publishable_YvgUfE8sAXfAUGvXMcNB4Q_aGC2GUMP';
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        async function addE() {
-            const { error } = await _supabase.from('eventos').insert([{ nombre: n.value, fecha: f.value }]);
+     // FUNCIÓN 1: AÑADIR EVENTO
+        async function addEvento() {
+            const n = document.getElementById('nombre_torneo').value;
+            const f = document.getElementById('fecha_torneo').value;
+            if(!n || !f) return alert("Llena nombre y fecha");
+
+            const { error } = await _supabase.from('eventos').insert([{ nombre: n, fecha: f }]);
             if(error) alert("Error: " + error.message);
-            else alert("¡Evento publicado!");
+            else {
+                alert("¡Torneo publicado!");
+                location.reload(); // Recarga para limpiar campos
+            }
         }
-        async function addR() {
-            const { error } = await _supabase.from('ranking').upsert([{ nombre: un.value, puntos: parseInt(up.value) }], {onConflict: 'nombre'});
+
+        // FUNCIÓN 2: REGISTRAR GANADOR Y SUMAR PUNTOS AUTOMÁTICAMENTE
+        async function guardarGanadorYSumar() {
+            const idT = document.getElementById('id_torneo').value;
+            const nomG = document.getElementById('nombre_ganador').value;
+            const ptsG = parseInt(document.getElementById('puntos_ganados').value);
+
+            if(!idT || !nomG || !ptsG) return alert("Faltan datos para el registro");
+
+            // A. Guardar en tabla 'ganadores' para el historial del calendario
+            const { error: errHistorial } = await _supabase.from('ganadores').insert([
+                { evento_id: idT, nombre_jugador: nomG, premio: ptsG + " PTS" }
+            ]);
+
+            if(errHistorial) return alert("Error en historial: " + errHistorial.message);
+
+            // B. Buscar puntos actuales para sumar
+            const { data: userExistente } = await _supabase
+                .from('ranking')
+                .select('puntos')
+                .eq('nombre', nomG)
+                .single();
+
+            let puntosFinales = ptsG;
+            if (userExistente) {
+                puntosFinales = userExistente.puntos + ptsG;
+            }
+
+            // C. Actualizar Ranking
+            const { error: errRank } = await _supabase.from('ranking').upsert(
+                { nombre: nomG, puntos: puntosFinales },
+                { onConflict: 'nombre' }
+            );
+
+            if(errRank) alert("Error al actualizar puntos: " + errRank.message);
+            else alert(`¡Éxito! ${ptsG} puntos sumados a ${nomG}. Total: ${puntosFinales}`);
+        }
+
+        // FUNCIÓN 3: AJUSTE MANUAL (TU FUNCIÓN ORIGINAL)
+        async function ajusteManual() {
+            const u = document.getElementById('user_manual').value;
+            const p = parseInt(document.getElementById('puntos_manual').value);
+            
+            const { error } = await _supabase.from('ranking').upsert(
+                [{ nombre: u, puntos: p }], 
+                { onConflict: 'nombre' }
+            );
+            
             if(error) alert("Error: " + error.message);
-            else alert("¡Puntos guardados!");
+            else alert("Ranking actualizado manualmente.");
         }
     </script>
 </body>
 </html>
+
 
 
 
