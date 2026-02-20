@@ -7,24 +7,20 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body style="display: block; padding-top: 50px;">
-    <h1 style="text-align:center; color:#00f2ff; letter-spacing: 3px;">ADMIN CONTROL</h1>
-    
+    <h1 style="text-align:center; color:#00f2ff;">PANEL DE CONTROL</h1>
     <div class="panel">
-        <h3>Añadir Nuevo Torneo</h3>
-        <input type="text" id="n" placeholder="Nombre del Torneo">
+        <h3>Añadir Torneo</h3>
+        <input type="text" id="n" placeholder="Nombre del Evento">
         <input type="date" id="f">
-        <button onclick="addE()">Publicar en Calendario</button>
+        <button onclick="addE()">Publicar en Web</button>
     </div>
-
     <div class="panel">
         <h3>Actualizar Ranking</h3>
-        <input type="text" id="un" placeholder="Nombre del Jugador">
-        <input type="number" id="up" placeholder="Puntos Totales">
+        <input type="text" id="un" placeholder="Usuario">
+        <input type="number" id="up" placeholder="Puntos">
         <button onclick="addR()">Guardar Puntos</button>
     </div>
-
     <script>
-        // CAMBIA ESTO POR TU URL
         const SUPABASE_URL = 'https://ekaiwrnvbpwaaoenwnnp.supabase.co'; 
         const SUPABASE_KEY = 'sb_publishable_YvgUfe8sAXfAUGvXMcNB4Q_aGC2625292434313264426d4c67784f47514150534c453531';
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -32,15 +28,13 @@
         async function addE() {
             const { error } = await _supabase.from('eventos').insert([{ nombre: n.value, fecha: f.value }]);
             if(error) alert("Error: " + error.message);
-            else alert("¡Evento publicado con éxito!");
+            else alert("¡Evento publicado!");
         }
-
         async function addR() {
             const { error } = await _supabase.from('ranking').upsert([{ nombre: un.value, puntos: parseInt(up.value) }], {onConflict: 'nombre'});
             if(error) alert("Error: " + error.message);
-            else alert("¡Ranking actualizado para " + un.value + "!");
+            else alert("¡Puntos guardados!");
         }
     </script>
 </body>
 </html>
-
