@@ -86,5 +86,60 @@
                 <tr>
                     <td>${ev.fecha}</td>
                     <td>${ev.nombre}</td>
-                    <td><button class="
+                    <td><button class="btn-del" onclick="delE(${ev.id})">X</button></td>
+                </tr>
+            `).join('');
+            
+            // --- AQUÍ ESTÁ EL CAMBIO: NOMBRE + FECHA EN EL SELECTOR ---
+            document.getElementById('se').innerHTML = e.map(ev => `<option value="${ev.id}">${ev.nombre} (${ev.fecha})</option>`).join('');
+        }
 
+        async function save() {
+            const eid = document.getElementById('se').value;
+            const nom = document.getElementById('sn').value;
+            const pts = parseInt(document.getElementById('pg').value);
+            const pre = document.getElementById('pr').value;
+
+            await _supabase.from('ganadores').insert([{ evento_id: eid, nombre_jugador: nom, premio: pre }]);
+            const { data: u } = await _supabase.from('ranking').select('puntos').eq('nombre', nom).single();
+            const totalNuevo = (u ? u.puntos : 0) + pts;
+            await _supabase.from('ranking').update({ puntos: totalNuevo }).eq('nombre', nom);
+            await _supabase.from('logs').insert([{
+                ninja_nombre: nom,
+                puntos_cambiados: pts,
+                tipo_accion: "Torneo",
+                detalle: "Ganó torneo. Premio: " + (pre || "N/A")
+            }]);
+
+            alert("Puntos y Log registrados!"); 
+            refresh();
+        }
+
+        async function editPuntos(id, nombre, puntosActuales) {
+            const valor = prompt("Puntos actuales de " + nombre + ": " + puntosActuales + "\n¿Cuál es el NUEVO TOTAL?");
+            if (valor !== null && valor !== "") {
+                const nuevosPuntos = parseInt(valor);
+                if (!isNaN(nuevosPuntos)) {
+                    const diferencia = nuevosPuntos - puntosActuales;
+                    await _supabase.from('ranking').update({ puntos: nuevosPuntos }).eq('id', id);
+                    await _supabase.from('logs').insert([{
+                        ninja_nombre: nombre,
+                        puntos_cambiados: diferencia,
+                        tipo_accion: "Modificación",
+                        detalle: "Ajuste manual de puntos."
+                    }]);
+                    alert("Ranking actualizado y historial registrado.");
+                    refresh(); 
+                }
+            }
+        }
+
+        async function addN() { await _supabase.from('ranking').insert([{ nombre: document.getElementById('nn').value, puntos: document.getElementById('np').value }]); refresh(); }
+        async function addE() { await _supabase.from('eventos').insert([{ nombre: document.getElementById('en').value, fecha: document.getElementById('ef').value }]); refresh(); }
+        async function delN(id) { if(confirm('¿Borrar?')) { await _supabase.from('ranking').delete().eq('id', id); refresh(); } }
+        async function delE(id) { if(confirm('¿Borrar?')) { await _supabase.from('eventos').delete().eq('id', id); refresh(); } }
+
+        window.onload = refresh;
+    </script>
+</body>
+</html>
