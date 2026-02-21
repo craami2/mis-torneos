@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UNIÓN REPUBLICANA MULTICULTURAL| Inicio</title>
+    <title>Ninja Hub | Inicio</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body {
@@ -24,54 +24,43 @@
         }
         .nav-links a:hover { background: #00f2ff; color: black; box-shadow: 0 0 15px #00f2ff; }
 
-        /* --- ESTILOS DEL PODIO --- */
         .glass-panel {
             background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(15px);
             border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 20px; padding: 20px; margin-bottom: 25px;
         }
+
+        /* --- PODIO CON AVATARES --- */
         .podium-title { text-align: center; color: #00f2ff; letter-spacing: 3px; margin-bottom: 30px; font-size: 1.2rem; font-weight: bold; }
         .podium { display: flex; justify-content: center; align-items: flex-end; gap: 15px; height: 150px; margin-bottom: 10px; }
         .podium-spot { background: rgba(255,255,255,0.05); border-radius: 10px 10px 5px 5px; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; width: 100px; position: relative; padding-bottom: 10px; border: 1px solid rgba(255,255,255,0.1); }
-        
-        /* ESTILOS DE AVATAR AÑADIDOS */
-        .avatar {
-            width: 45px; height: 45px; border-radius: 50%; background: #333;
-            position: absolute; top: -25px; border: 2px solid; 
-            object-fit: cover; overflow: hidden;
-        }
+        .avatar { width: 45px; height: 45px; border-radius: 50%; background: #333; position: absolute; top: -25px; border: 2px solid; object-fit: cover; overflow: hidden; }
         .avatar img { width: 100%; height: 100%; object-fit: cover; }
-        
         .p1 { height: 130px; border-color: #ffcc00; box-shadow: 0 0 15px rgba(255,204,0,0.2); }
         .p1 .avatar { border-color: #ffcc00; width: 55px; height: 55px; top: -30px; }
         .p2 { height: 100px; border-color: #e5e5e5; }
         .p2 .avatar { border-color: #e5e5e5; }
         .p3 { height: 80px; border-color: #cd7f32; }
         .p3 .avatar { border-color: #cd7f32; }
-
         .crown { font-size: 1.5rem; position: absolute; top: -55px; z-index: 10; }
-        .podium-name { font-size: 0.8rem; font-weight: bold; text-align: center; width: 90%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 5px; }
+        .podium-name { font-size: 0.8rem; font-weight: bold; margin-top: 5px; text-align: center; width: 90%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .podium-pts { font-size: 0.7rem; color: #00f2ff; }
 
-        /* --- ESTILOS DEL CALENDARIO --- */
-        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin-top: 20px; }
+        /* --- CALENDARIO MODERNO CON FLECHAS --- */
+        .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .cal-title { color: #00f2ff; font-size: 1.2rem; font-weight: bold; letter-spacing: 2px; text-transform: uppercase; }
+        .nav-btn { background: rgba(255,255,255,0.1); border: 1px solid #00f2ff; color: #00f2ff; padding: 5px 15px; border-radius: 8px; cursor: pointer; transition: 0.3s; font-size: 1.2rem; }
+        .nav-btn:hover { background: #00f2ff; color: black; }
+
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; }
         .day { 
             min-height: 80px; background: rgba(255,255,255,0.03); border-radius: 8px; 
             display: flex; flex-direction: column; align-items: center; cursor: pointer; 
-            border: 1px solid rgba(255,255,255,0.05); transition: all 0.3s ease;
+            border: 1px solid rgba(255,255,255,0.05); transition: 0.3s;
         }
-        .day:hover { 
-            background: rgba(0, 242, 255, 0.15); 
-            border-color: #00f2ff; 
-            transform: translateY(-3px);
-            box-shadow: 0 5px 15px rgba(0, 242, 255, 0.2);
-        }
+        .day:hover { background: rgba(0, 242, 255, 0.15); border-color: #00f2ff; transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0, 242, 255, 0.2); }
         .event-label { font-size: 0.6rem; background: #00ff88; color: black; padding: 2px 5px; border-radius: 4px; margin-top: 5px; font-weight: bold; }
         
-        #event-info { 
-            margin-top: 20px; padding: 20px; border-radius: 15px; 
-            background: rgba(0,255,136,0.05); border: 1px solid rgba(0,255,136,0.2); display: none; 
-            animation: fadeIn 0.5s ease;
-        }
+        #event-info { margin-top: 20px; padding: 20px; border-radius: 15px; background: rgba(0,255,136,0.05); border: 1px solid rgba(0,255,136,0.2); display: none; animation: fadeIn 0.5s ease; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         .winner-line { color: #ffcc00; font-weight: bold; font-size: 1.1rem; display: block; margin-top: 10px; }
     </style>
@@ -85,26 +74,20 @@
         </div>
 
         <div class="glass-panel">
-            <div class="podium-title">🏆 TOP 3</div>
+            <div class="podium-title">🏆 TOP 3 ALDEA NINJA</div>
             <div class="podium">
-                <div class="podium-spot p2">
-                    <div class="avatar" id="img-2"></div>
-                    <span class="podium-name" id="name-2">---</span><span class="podium-pts" id="pts-2"></span>
-                </div>
-                <div class="podium-spot p1">
-                    <span class="crown">👑</span>
-                    <div class="avatar" id="img-1"></div>
-                    <span class="podium-name" id="name-1">---</span><span class="podium-pts" id="pts-1"></span>
-                </div>
-                <div class="podium-spot p3">
-                    <div class="avatar" id="img-3"></div>
-                    <span class="podium-name" id="name-3">---</span><span class="podium-pts" id="pts-3"></span>
-                </div>
+                <div class="podium-spot p2"><div class="avatar" id="img-2"></div><span class="podium-name" id="name-2">---</span><span class="podium-pts" id="pts-2"></span></div>
+                <div class="podium-spot p1"><span class="crown">👑</span><div class="avatar" id="img-1"></div><span class="podium-name" id="name-1">---</span><span class="podium-pts" id="pts-1"></span></div>
+                <div class="podium-spot p3"><div class="avatar" id="img-3"></div><span class="podium-name" id="name-3">---</span><span class="podium-pts" id="pts-3"></span></div>
             </div>
         </div>
 
         <div class="glass-panel">
-            <h3 style="text-align: center; letter-spacing: 2px; color: #00f2ff; margin: 0;">CALENDARIO DE EVENTOS</h3>
+            <div class="cal-header">
+                <button class="nav-btn" onclick="changeMonth(-1)">❮</button>
+                <div class="cal-title" id="month-name">MES</div>
+                <button class="nav-btn" onclick="changeMonth(1)">❯</button>
+            </div>
             <div id="calendar-days" class="calendar-grid"></div>
             <div id="event-info"></div>
         </div>
@@ -113,34 +96,41 @@
     <script>
         const _supabase = supabase.createClient('https://ekaiwrnvbpwaaoenwnnp.supabase.co', 'sb_publishable_YvgUfE8sAXfAUGvXMcNB4Q_aGC2GUMP');
         let eventosData = [];
+        let currentViewDate = new Date();
 
         async function cargarTodo() {
-            // CARGAR PODIO CON IMÁGENES
+            // CARGAR PODIO
             const { data: top3 } = await _supabase.from('ranking').select('*').order('puntos', { ascending: false }).limit(3);
             if (top3) {
                 top3.forEach((user, index) => {
                     const i = index + 1;
                     document.getElementById(`name-${i}`).innerText = user.nombre;
                     document.getElementById(`pts-${i}`).innerText = user.puntos + " PTS";
-                    if (user.avatar_url) {
-                        document.getElementById(`img-${i}`).innerHTML = `<img src="${user.avatar_url}" alt="avatar">`;
-                    }
+                    if (user.avatar_url) document.getElementById(`img-${i}`).innerHTML = `<img src="${user.avatar_url}">`;
                 });
             }
 
-            // CARGAR EVENTOS
             const { data: eventos } = await _supabase.from('eventos').select('*');
             eventosData = eventos || [];
             renderCalendar();
         }
 
-        function renderCalendar() {
-            const daysContainer = document.getElementById('calendar-days');
-            const now = new Date();
-            const year = now.getFullYear();
-            const month = now.getMonth();
-            const lastDay = new Date(year, month + 1, 0).getDate();
+        function changeMonth(dir) {
+            currentViewDate.setMonth(currentViewDate.getMonth() + dir);
+            renderCalendar();
+            document.getElementById('event-info').style.display = 'none';
+        }
 
+        function renderCalendar() {
+            const container = document.getElementById('calendar-days');
+            const monthTitle = document.getElementById('month-name');
+            const year = currentViewDate.getFullYear();
+            const month = currentViewDate.getMonth();
+            
+            const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+            monthTitle.innerText = `${monthNames[month]} ${year}`;
+
+            const lastDay = new Date(year, month + 1, 0).getDate();
             let html = '';
             for (let i = 1; i <= lastDay; i++) {
                 const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
@@ -150,7 +140,7 @@
                             ${evs.map(e => `<div class="event-label">${e.nombre}</div>`).join('')}
                          </div>`;
             }
-            daysContainer.innerHTML = html;
+            container.innerHTML = html;
         }
 
         async function mostrarDetalleDia(fechaStr) {
@@ -161,14 +151,9 @@
             let html = "";
             for (const ev of evs) {
                 const { data: gans } = await _supabase.from('ganadores').select('nombre_jugador, premio').eq('evento_id', ev.id);
-                
-                let gansHtml = "";
-                if (gans && gans.length > 0) {
-                    gansHtml = gans.map(g => `<span class="winner-line">🏆 ${g.nombre_jugador} (+${g.premio || '0'} PTS)</span>`).join('');
-                } else {
-                    gansHtml = `<span style="color:#888; display:block; margin-top:5px;">Resultados en proceso...</span>`;
-                }
-                
+                let gansHtml = gans && gans.length > 0 
+                    ? gans.map(g => `<span class="winner-line">🏆 ${g.nombre_jugador} (+${g.premio || '0'} PTS)</span>`).join('')
+                    : `<span style="color:#888; display:block; margin-top:5px;">Resultados en proceso...</span>`;
                 html += `<div style="margin-bottom:15px;"><strong style="color:#00ff88; font-size:1.2rem; display:block; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:5px;">📌 ${ev.nombre}</strong>${gansHtml}</div>`;
             }
             info.innerHTML = html;
@@ -179,4 +164,3 @@
     </script>
 </body>
 </html>
-
