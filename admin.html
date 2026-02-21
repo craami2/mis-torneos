@@ -66,49 +66,85 @@
             ev.currentTarget.classList.add('active');
         }
 
-       async function refresh() {
-    // 1. Pedimos los datos a la base de datos
-    const { data: n } = await _supabase.from('ranking').select('*').order('puntos', { ascending: false });
-    const { data: e } = await _supabase.from('eventos').select('*').order('fecha', { ascending: false });
+        async function refresh() {
+            const { data: n } = await _supabase.from('ranking').select('*').order('puntos', { ascending: false });
+            const { data: e } = await _supabase.from('eventos').select('*').order('fecha', { ascending: false });
 
-    // 2. Dibujamos la tabla de USUARIOS (con el nuevo botón EDITAR)
-    document.getElementById('table-n').innerHTML = n.map(u => `
-        <tr>
-            <td><strong>${u.nombre}</strong></td>
-            <td style="color:#00f2ff; font-weight:bold;">${u.puntos}</td>
-            <td>
-                <button onclick="editPuntos(${u.id}, '${u.nombre}')" style="background:#ffcc00; border:none; padding:5px 10px; border-radius:4px; cursor:pointer; font-weight:bold; margin-right:10px;">EDITAR</button>
-                <button class="btn-del" onclick="delN(${u.id})">ELIMINAR</button>
-            </td>
-        </tr>
-    `).join('');
-    
-    // 3. Llenamos el selector de nombres en la pestaña ASIGNAR PUNTOS
-    document.getElementById('sn').innerHTML = n.map(u => `<option value="${u.nombre}">${u.nombre}</option>`).join('');
+            document.getElementById('table-n').innerHTML = n.map(u => `
+                <tr>
+                    <td><strong>${u.nombre}</strong></td>
+                    <td style="color:#00f2ff; font-weight:bold;">${u.puntos}</td>
+                    <td>
+                        <button onclick="editPuntos(${u.id}, '${u.nombre}', ${u.puntos})" style="background:#ffcc00; border:none; padding:5px 10px; border-radius:4px; cursor:pointer; font-weight:bold; margin-right:10px;">EDITAR</button>
+                        <button class="btn-del" onclick="delN(${u.id})">ELIMINAR</button>
+                    </td>
+                </tr>
+            `).join('');
+            
+            document.getElementById('sn').innerHTML = n.map(u => `<option value="${u.nombre}">${u.nombre}</option>`).join('');
+            document.getElementById('table-e').innerHTML = e.map(ev => `
+                <tr>
+                    <td>${ev.fecha}</td>
+                    <td>${ev.nombre}</td>
+                    <td><button class="btn-del" onclick="delE(${ev.id})">X</button></td>
+                </tr>
+            `).join('');
+            document.getElementById('se').innerHTML = e.map(ev => `<option value="${ev.id}">${ev.nombre}</option>`).join('');
+        }
 
-    // 4. Dibujamos la tabla de TORNEOS
-    document.getElementById('table-e').innerHTML = e.map(ev => `
-        <tr>
-            <td>${ev.fecha}</td>
-            <td>${ev.nombre}</td>
-            <td><button class="btn-del" onclick="delE(${ev.id})">X</button></td>
-        </tr>
-    `).join('');
-
-    // 5. Llenamos el selector de torneos en la pestaña ASIGNAR PUNTOS
-    document.getElementById('se').innerHTML = e.map(ev => `<option value="${ev.id}">${ev.nombre}</option>`).join('');
-}
-
+        // --- FUNCIÓN GUARDAR TORNEO CON LOG ---
         async function save() {
             const eid = document.getElementById('se').value;
             const nom = document.getElementById('sn').value;
             const pts = parseInt(document.getElementById('pg').value);
             const pre = document.getElementById('pr').value;
 
+            // 1. Guardar en la tabla de ganadores
             await _supabase.from('ganadores').insert([{ evento_id: eid, nombre_jugador: nom, premio: pre }]);
+            
+            // 2. Obtener puntos actuales para sumar
             const { data: u } = await _supabase.from('ranking').select('puntos').eq('nombre', nom).single();
-            await _supabase.from('ranking').update({ puntos: u.puntos + pts }).eq('nombre', nom);
-            alert("Puntos sumados!"); refresh();
+            const totalNuevo = (u ? u.puntos : 0) + pts;
+            
+            // 3. Actualizar ranking
+            await _supabase.from('ranking').update({ puntos: totalNuevo }).eq('nombre', nom);
+            
+            // 4. CREAR LOG DEL TORNEO
+            await _supabase.from('logs').insert([{
+                ninja_nombre: nom,
+                puntos_cambiados: pts,
+                tipo_accion: "Torneo",
+                detalle: "Ganó torneo. Premio: " + (pre || "N/A")
+            }]);
+
+            alert("Puntos y Log registrados!"); 
+            refresh();
+        }
+
+        // --- FUNCIÓN EDITAR MANUAL CON LOG ---
+        async function editPuntos(id, nombre, puntosActuales) {
+            const valor = prompt("Puntos actuales de " + nombre + ": " + puntosActuales + "\n¿Cuál es el NUEVO TOTAL?");
+            
+            if (valor !== null && valor !== "") {
+                const nuevosPuntos = parseInt(valor);
+                if (!isNaN(nuevosPuntos)) {
+                    const diferencia = nuevosPuntos - puntosActuales;
+
+                    // 1. Actualizar Ranking
+                    await _supabase.from('ranking').update({ puntos: nuevosPuntos }).eq('id', id);
+                    
+                    // 2. CREAR LOG DE LA EDICIÓN
+                    await _supabase.from('logs').insert([{
+                        ninja_nombre: nombre,
+                        puntos_cambiados: diferencia,
+                        tipo_accion: "Modificación",
+                        detalle: "Ajuste manual de puntos."
+                    }]);
+
+                    alert("Ranking actualizado y historial registrado.");
+                    refresh(); 
+                }
+            }
         }
 
         async function addN() { await _supabase.from('ranking').insert([{ nombre: document.getElementById('nn').value, puntos: document.getElementById('np').value }]); refresh(); }
@@ -117,21 +153,6 @@
         async function delE(id) { if(confirm('¿Borrar?')) { await _supabase.from('eventos').delete().eq('id', id); refresh(); } }
 
         window.onload = refresh;
-        
-        async function editPuntos(id, nombre) {
-    const valor = prompt("¿Cuántos puntos quieres ponerle a " + nombre + "?");
-    if (valor !== null && valor !== "") {
-        const nuevosPuntos = parseInt(valor);
-        if (!isNaN(nuevosPuntos)) {
-            await _supabase.from('ranking').update({ puntos: nuevosPuntos }).eq('id', id);
-            refresh(); 
-        } else {
-            alert("Introduce un número válido");
-        }
-    }
-}
-
-        
     </script>
 </body>
 </html>
