@@ -9,28 +9,58 @@
         body {
             margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; color: white;
             background: linear-gradient(135deg, #0f0f0f, #1a1a2e, #16213e, #0f0f0f);
+            background-size: 400% 400%; animation: gradientBG 15s ease infinite;
             min-height: 100vh; display: flex; justify-content: center;
         }
+        @keyframes gradientBG { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+
         .container { width: 95%; max-width: 900px; padding: 20px; }
+        
         .nav-links { display: flex; justify-content: center; gap: 10px; margin-bottom: 30px; }
         .nav-links a { 
             background: rgba(255,255,255,0.05); padding: 12px 20px; border-radius: 12px; 
             color: #00f2ff; text-decoration: none; font-weight: bold; border: 1px solid rgba(0,242,255,0.2);
+            transition: 0.3s;
         }
+        .nav-links a:hover { background: #00f2ff; color: black; box-shadow: 0 0 15px #00f2ff; }
+
+        /* --- ESTILOS DEL PODIO --- */
         .glass-panel {
             background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(15px);
-            border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 20px; padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 20px; padding: 20px; margin-bottom: 25px;
         }
+        .podium-title { text-align: center; color: #00f2ff; letter-spacing: 3px; margin-bottom: 30px; font-size: 1.2rem; font-weight: bold; }
+        .podium { display: flex; justify-content: center; align-items: flex-end; gap: 15px; height: 150px; margin-bottom: 10px; }
+        .podium-spot { background: rgba(255,255,255,0.05); border-radius: 10px 10px 5px 5px; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; width: 100px; position: relative; padding-bottom: 10px; border: 1px solid rgba(255,255,255,0.1); }
+        .p1 { height: 130px; border-color: #ffcc00; box-shadow: 0 0 15px rgba(255,204,0,0.2); }
+        .p2 { height: 100px; border-color: #e5e5e5; }
+        .p3 { height: 80px; border-color: #cd7f32; }
+        .crown { font-size: 1.5rem; position: absolute; top: -30px; }
+        .podium-name { font-size: 0.8rem; font-weight: bold; text-align: center; width: 90%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .podium-pts { font-size: 0.7rem; color: #00f2ff; }
+
+        /* --- ESTILOS DEL CALENDARIO --- */
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin-top: 20px; }
         .day { 
             min-height: 80px; background: rgba(255,255,255,0.03); border-radius: 8px; 
-            display: flex; flex-direction: column; align-items: center; cursor: pointer; border: 1px solid rgba(255,255,255,0.05);
+            display: flex; flex-direction: column; align-items: center; cursor: pointer; 
+            border: 1px solid rgba(255,255,255,0.05); transition: all 0.3s ease;
+        }
+        /* EFECTO BONITO HOVER */
+        .day:hover { 
+            background: rgba(0, 242, 255, 0.15); 
+            border-color: #00f2ff; 
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 242, 255, 0.2);
         }
         .event-label { font-size: 0.6rem; background: #00ff88; color: black; padding: 2px 5px; border-radius: 4px; margin-top: 5px; font-weight: bold; }
+        
         #event-info { 
             margin-top: 20px; padding: 20px; border-radius: 15px; 
             background: rgba(0,255,136,0.05); border: 1px solid rgba(0,255,136,0.2); display: none; 
+            animation: fadeIn 0.5s ease;
         }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         .winner-line { color: #ffcc00; font-weight: bold; font-size: 1.1rem; display: block; margin-top: 10px; }
     </style>
 </head>
@@ -41,7 +71,18 @@
             <a href="canje.html">TIENDA</a>
             <a href="historial.html">HISTORIAL</a>
         </div>
+
         <div class="glass-panel">
+            <div class="podium-title">🏆 TOP 3 ALDEA NINJA</div>
+            <div class="podium">
+                <div class="podium-spot p2"><span class="podium-name" id="name-2">---</span><span class="podium-pts" id="pts-2"></span></div>
+                <div class="podium-spot p1"><span class="crown">👑</span><span class="podium-name" id="name-1">---</span><span class="podium-pts" id="pts-1"></span></div>
+                <div class="podium-spot p3"><span class="podium-name" id="name-3">---</span><span class="podium-pts" id="pts-3"></span></div>
+            </div>
+        </div>
+
+        <div class="glass-panel">
+            <h3 style="text-align: center; letter-spacing: 2px; color: #00f2ff; margin: 0;">CALENDARIO DE EVENTOS</h3>
             <div id="calendar-days" class="calendar-grid"></div>
             <div id="event-info"></div>
         </div>
@@ -52,6 +93,15 @@
         let eventosData = [];
 
         async function cargarTodo() {
+            // CARGAR PODIO
+            const { data: top3 } = await _supabase.from('ranking').select('*').order('puntos', { ascending: false }).limit(3);
+            if (top3) {
+                if(top3[0]) { document.getElementById('name-1').innerText = top3[0].nombre; document.getElementById('pts-1').innerText = top3[0].puntos + " PTS"; }
+                if(top3[1]) { document.getElementById('name-2').innerText = top3[1].nombre; document.getElementById('pts-2').innerText = top3[1].puntos + " PTS"; }
+                if(top3[2]) { document.getElementById('name-3').innerText = top3[2].nombre; document.getElementById('pts-3').innerText = top3[2].puntos + " PTS"; }
+            }
+
+            // CARGAR EVENTOS
             const { data: eventos } = await _supabase.from('eventos').select('*');
             eventosData = eventos || [];
             renderCalendar();
@@ -69,7 +119,7 @@
                 const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
                 const evs = eventosData.filter(e => e.fecha === dateStr);
                 html += `<div class="day" onclick="mostrarDetalleDia('${dateStr}')">
-                            <span style="margin-top:5px">${i}</span>
+                            <span style="margin-top:5px; font-weight:bold;">${i}</span>
                             ${evs.map(e => `<div class="event-label">${e.nombre}</div>`).join('')}
                          </div>`;
             }
@@ -83,18 +133,13 @@
             
             let html = "";
             for (const ev of evs) {
-                // Buscamos directamente en la tabla 'ganadores' usando el ID del evento
-                const { data: gans, error } = await _supabase
-                    .from('ganadores')
-                    .select('nombre_jugador, premio')
-                    .eq('evento_id', ev.id);
+                const { data: gans } = await _supabase.from('ganadores').select('nombre_jugador, premio').eq('evento_id', ev.id);
                 
                 let gansHtml = "";
                 if (gans && gans.length > 0) {
-                    // g.premio ahora trae el valor del input "pg" (puntos) que enviamos desde el Admin
                     gansHtml = gans.map(g => `<span class="winner-line">🏆 ${g.nombre_jugador} (+${g.premio || '0'} PTS)</span>`).join('');
                 } else {
-                    gansHtml = `<span style="color:#888; display:block; margin-top:5px;">No hay resultados aún</span>`;
+                    gansHtml = `<span style="color:#888; display:block; margin-top:5px;">Resultados en proceso...</span>`;
                 }
                 
                 html += `<div style="margin-bottom:15px;"><strong style="color:#00ff88; font-size:1.2rem; display:block; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:5px;">📌 ${ev.nombre}</strong>${gansHtml}</div>`;
