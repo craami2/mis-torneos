@@ -14,8 +14,9 @@
         }
         @keyframes gradientBG { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
 
-        .container { width: 95%; max-width: 800px; padding: 20px 10px; }
+        .container { width: 95%; max-width: 800px; padding: 20px 10px; box-sizing: border-box; }
         
+        /* MENÚ SUPERIOR */
         .nav-links { display: flex; justify-content: center; gap: 10px; margin-bottom: 30px; flex-wrap: wrap; }
         .nav-links a { 
             background: rgba(255,255,255,0.05); backdrop-filter: blur(10px);
@@ -34,20 +35,33 @@
         /* PODIO */
         .podium-title { text-align: center; color: #00f2ff; text-transform: uppercase; letter-spacing: 3px; margin-bottom: 40px; font-size: 1.2rem; }
         .podium { display: flex; justify-content: center; align-items: flex-end; gap: 15px; margin-bottom: 20px; height: 160px; }
-        .podium-spot { background: rgba(255,255,255,0.05); border-radius: 15px 15px 5px 5px; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; width: 90px; position: relative; padding-bottom: 10px; border-bottom: none; }
-        .p1 { height: 130px; border: 2px solid #ffcc00; }
-        .p2 { height: 100px; border: 2px solid #e5e5e5; }
-        .p3 { height: 80px; border: 2px solid #cd7f32; }
-        .crown { font-size: 1.8rem; position: absolute; top: -35px; }
-        .podium-name { font-size: 0.8rem; font-weight: bold; text-align: center; width: 85%; overflow: hidden; }
+        .podium-spot { background: rgba(255,255,255,0.05); border-radius: 15px 15px 5px 5px; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; width: 95px; position: relative; padding-bottom: 10px; border: 1px solid rgba(255,255,255,0.1); }
+        .p1 { height: 135px; border: 2px solid #ffcc00; box-shadow: 0 0 15px rgba(255,204,0,0.2); }
+        .p2 { height: 105px; border: 2px solid #e5e5e5; }
+        .p3 { height: 85px; border: 2px solid #cd7f32; }
+        .crown { font-size: 1.8rem; position: absolute; top: -35px; text-shadow: 0 0 10px rgba(255,204,0,0.5); }
+        .podium-name { font-size: 0.8rem; font-weight: bold; text-align: center; width: 90%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+        .podium-pts { font-size: 0.7rem; color: #00f2ff; margin-top: 4px; }
 
         /* CALENDARIO */
         .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; }
-        .day { padding: 12px 0; border-radius: 8px; font-size: 0.9rem; background: rgba(255,255,255,0.03); position: relative; cursor: pointer; text-align: center; }
-        .has-event::after { content: ''; width: 6px; height: 6px; background: #00ff88; border-radius: 50%; position: absolute; bottom: 4px; left: 45%; }
-        .today { background: #00f2ff; color: black; font-weight: bold; }
-        #event-info { margin-top: 20px; padding: 15px; border-radius: 12px; background: rgba(0,255,136,0.1); color: #00ff88; text-align: center; border: 1px solid rgba(0,255,136,0.3); display: none; }
+        .day { padding: 12px 0; border-radius: 8px; font-size: 0.9rem; background: rgba(255,255,255,0.03); position: relative; cursor: pointer; text-align: center; transition: 0.2s; }
+        .day:hover { background: rgba(0,242,255,0.1); }
+        .has-event::after { content: ''; width: 6px; height: 6px; background: #00ff88; border-radius: 50%; position: absolute; bottom: 4px; left: 45%; box-shadow: 0 0 5px #00ff88; }
+        .today { background: #00f2ff; color: black; font-weight: bold; box-shadow: 0 0 15px #00f2ff; }
+
+        /* VISOR DE EVENTOS RECONSTRUIDO */
+        #event-info { 
+            margin-top: 20px; padding: 20px; border-radius: 15px; 
+            background: rgba(0,255,136,0.05); color: #fff; 
+            border: 1px solid rgba(0,255,136,0.2); display: none; 
+            animation: fadeIn 0.4s ease;
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .event-title { color: #00ff88; font-weight: bold; font-size: 1.1rem; margin-bottom: 8px; display: block; }
+        .event-detail { color: #eee; font-size: 0.9rem; line-height: 1.4; }
+        .event-winners { color: #ffcc00; font-weight: bold; margin-top: 10px; font-size: 0.9rem; display: block; }
     </style>
 </head>
 <body>
@@ -62,19 +76,30 @@
         <div class="glass-panel">
             <div class="podium-title">🏆 TOP 3 ALDEA NINJA</div>
             <div class="podium">
-                <div class="podium-spot p2"><span id="name-2">---</span></div>
-                <div class="podium-spot p1"><span class="crown">👑</span><span id="name-1">---</span></div>
-                <div class="podium-spot p3"><span id="name-3">---</span></div>
+                <div class="podium-spot p2">
+                    <span class="podium-name" id="name-2">---</span>
+                    <span class="podium-pts" id="pts-2"></span>
+                </div>
+                <div class="podium-spot p1">
+                    <span class="crown">👑</span>
+                    <span class="podium-name" id="name-1">---</span>
+                    <span class="podium-pts" id="pts-1"></span>
+                </div>
+                <div class="podium-spot p3">
+                    <span class="podium-name" id="name-3">---</span>
+                    <span class="podium-pts" id="pts-3"></span>
+                </div>
             </div>
         </div>
 
         <div class="glass-panel">
             <div class="calendar-header">
-                <button onclick="changeMonth(-1)" style="background:none; border:none; color:#00f2ff; cursor:pointer;">◀</button>
-                <h3 id="month-name" style="margin:0;">MES</h3>
-                <button onclick="changeMonth(1)" style="background:none; border:none; color:#00f2ff; cursor:pointer;">▶</button>
+                <button onclick="changeMonth(-1)" style="background:none; border:none; color:#00f2ff; cursor:pointer; font-size:1.2rem;">◀</button>
+                <h3 id="month-name" style="margin:0; letter-spacing: 2px;">MES</h3>
+                <button onclick="changeMonth(1)" style="background:none; border:none; color:#00f2ff; cursor:pointer; font-size:1.2rem;">▶</button>
             </div>
             <div class="calendar-grid" id="calendar-days"></div>
+            
             <div id="event-info"></div>
         </div>
     </div>
@@ -85,15 +110,24 @@
         let eventosData = [];
 
         async function cargarTodo() {
-            // Recuperar Podio
+            // Cargar Podio Real
             const { data: ranking } = await _supabase.from('ranking').select('*').order('puntos', { ascending: false }).limit(3);
             if (ranking) {
-                document.getElementById('name-1').innerText = ranking[0]?.nombre || "---";
-                document.getElementById('name-2').innerText = ranking[1]?.nombre || "---";
-                document.getElementById('name-3').innerText = ranking[2]?.nombre || "---";
+                if (ranking[0]) { 
+                    document.getElementById('name-1').innerText = ranking[0].nombre;
+                    document.getElementById('pts-1').innerText = `${ranking[0].puntos} PTS`;
+                }
+                if (ranking[1]) { 
+                    document.getElementById('name-2').innerText = ranking[1].nombre;
+                    document.getElementById('pts-2').innerText = `${ranking[1].puntos} PTS`;
+                }
+                if (ranking[2]) { 
+                    document.getElementById('name-3').innerText = ranking[2].nombre;
+                    document.getElementById('pts-3').innerText = `${ranking[2].puntos} PTS`;
+                }
             }
 
-            // RECUPERAR EVENTOS (Lógica rebobinada)
+            // Cargar Eventos desde Supabase
             const { data: eventos } = await _supabase.from('eventos').select('*');
             eventosData = eventos || [];
             renderCalendar();
@@ -112,28 +146,32 @@
             const today = new Date();
 
             let html = '';
-            for (let i = 0; i < firstDay; i++) { html += `<div class="day" style="opacity:0"></div>`; }
+            for (let i = 0; i < firstDay; i++) { html += `<div class="day" style="opacity:0; cursor:default"></div>`; }
 
             for (let i = 1; i <= lastDay; i++) {
-                // Formato de fecha exacto para comparar con tu DB (YYYY-MM-DD)
                 const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
-                const ev = eventosData.find(e => e.fecha === dateStr);
+                
+                // Buscamos el evento para este día
+                const evIndex = eventosData.findIndex(e => e.fecha === dateStr);
+                const hasEvent = evIndex !== -1;
                 const isToday = i === today.getDate() && month === today.getMonth() && year === today.getFullYear();
                 
-                // Aquí usamos JSON.stringify para pasar el objeto completo y que no dé undefined
-                const eventArg = ev ? JSON.stringify(ev).replace(/"/g, '&quot;') : 'null';
-                
-                html += `<div class="day ${isToday ? 'today' : ''} ${ev ? 'has-event' : ''}" 
-                         onclick="showEvent(${eventArg})">${i}</div>`;
+                html += `<div class="day ${isToday ? 'today' : ''} ${hasEvent ? 'has-event' : ''}" 
+                         onclick="mostrarDetalleEvento(${evIndex})">${i}</div>`;
             }
             daysContainer.innerHTML = html;
         }
 
-        function showEvent(ev) {
+        function mostrarDetalleEvento(index) {
             const info = document.getElementById('event-info');
-            if(ev) {
-                // Usamos ev.titulo porque es como lo tenías en tu tabla
-                info.innerText = `📌 ${ev.titulo}`;
+            if (index !== -1) {
+                const ev = eventosData[index];
+                // Lógica rebobinada: Mostramos título, detalle y ganadores
+                info.innerHTML = `
+                    <span class="event-title">📌 ${ev.titulo || 'Evento'}</span>
+                    <div class="event-detail">${ev.detalle || 'No hay descripción disponible para este evento.'}</div>
+                    ${ev.ganadores ? `<span class="event-winners">🏆 Ganadores: ${ev.ganadores}</span>` : ''}
+                `;
                 info.style.display = 'block';
             } else {
                 info.style.display = 'none';
