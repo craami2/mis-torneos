@@ -32,11 +32,24 @@
         .podium-title { text-align: center; color: #00f2ff; letter-spacing: 3px; margin-bottom: 30px; font-size: 1.2rem; font-weight: bold; }
         .podium { display: flex; justify-content: center; align-items: flex-end; gap: 15px; height: 150px; margin-bottom: 10px; }
         .podium-spot { background: rgba(255,255,255,0.05); border-radius: 10px 10px 5px 5px; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; width: 100px; position: relative; padding-bottom: 10px; border: 1px solid rgba(255,255,255,0.1); }
+        
+        /* ESTILOS DE AVATAR AÑADIDOS */
+        .avatar {
+            width: 45px; height: 45px; border-radius: 50%; background: #333;
+            position: absolute; top: -25px; border: 2px solid; 
+            object-fit: cover; overflow: hidden;
+        }
+        .avatar img { width: 100%; height: 100%; object-fit: cover; }
+        
         .p1 { height: 130px; border-color: #ffcc00; box-shadow: 0 0 15px rgba(255,204,0,0.2); }
+        .p1 .avatar { border-color: #ffcc00; width: 55px; height: 55px; top: -30px; }
         .p2 { height: 100px; border-color: #e5e5e5; }
+        .p2 .avatar { border-color: #e5e5e5; }
         .p3 { height: 80px; border-color: #cd7f32; }
-        .crown { font-size: 1.5rem; position: absolute; top: -30px; }
-        .podium-name { font-size: 0.8rem; font-weight: bold; text-align: center; width: 90%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .p3 .avatar { border-color: #cd7f32; }
+
+        .crown { font-size: 1.5rem; position: absolute; top: -55px; z-index: 10; }
+        .podium-name { font-size: 0.8rem; font-weight: bold; text-align: center; width: 90%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 5px; }
         .podium-pts { font-size: 0.7rem; color: #00f2ff; }
 
         /* --- ESTILOS DEL CALENDARIO --- */
@@ -46,7 +59,6 @@
             display: flex; flex-direction: column; align-items: center; cursor: pointer; 
             border: 1px solid rgba(255,255,255,0.05); transition: all 0.3s ease;
         }
-        /* EFECTO BONITO HOVER */
         .day:hover { 
             background: rgba(0, 242, 255, 0.15); 
             border-color: #00f2ff; 
@@ -75,9 +87,19 @@
         <div class="glass-panel">
             <div class="podium-title">🏆 TOP 3 ALDEA NINJA</div>
             <div class="podium">
-                <div class="podium-spot p2"><span class="podium-name" id="name-2">---</span><span class="podium-pts" id="pts-2"></span></div>
-                <div class="podium-spot p1"><span class="crown">👑</span><span class="podium-name" id="name-1">---</span><span class="podium-pts" id="pts-1"></span></div>
-                <div class="podium-spot p3"><span class="podium-name" id="name-3">---</span><span class="podium-pts" id="pts-3"></span></div>
+                <div class="podium-spot p2">
+                    <div class="avatar" id="img-2"></div>
+                    <span class="podium-name" id="name-2">---</span><span class="podium-pts" id="pts-2"></span>
+                </div>
+                <div class="podium-spot p1">
+                    <span class="crown">👑</span>
+                    <div class="avatar" id="img-1"></div>
+                    <span class="podium-name" id="name-1">---</span><span class="podium-pts" id="pts-1"></span>
+                </div>
+                <div class="podium-spot p3">
+                    <div class="avatar" id="img-3"></div>
+                    <span class="podium-name" id="name-3">---</span><span class="podium-pts" id="pts-3"></span>
+                </div>
             </div>
         </div>
 
@@ -93,12 +115,17 @@
         let eventosData = [];
 
         async function cargarTodo() {
-            // CARGAR PODIO
+            // CARGAR PODIO CON IMÁGENES
             const { data: top3 } = await _supabase.from('ranking').select('*').order('puntos', { ascending: false }).limit(3);
             if (top3) {
-                if(top3[0]) { document.getElementById('name-1').innerText = top3[0].nombre; document.getElementById('pts-1').innerText = top3[0].puntos + " PTS"; }
-                if(top3[1]) { document.getElementById('name-2').innerText = top3[1].nombre; document.getElementById('pts-2').innerText = top3[1].puntos + " PTS"; }
-                if(top3[2]) { document.getElementById('name-3').innerText = top3[2].nombre; document.getElementById('pts-3').innerText = top3[2].puntos + " PTS"; }
+                top3.forEach((user, index) => {
+                    const i = index + 1;
+                    document.getElementById(`name-${i}`).innerText = user.nombre;
+                    document.getElementById(`pts-${i}`).innerText = user.puntos + " PTS";
+                    if (user.avatar_url) {
+                        document.getElementById(`img-${i}`).innerHTML = `<img src="${user.avatar_url}" alt="avatar">`;
+                    }
+                });
             }
 
             // CARGAR EVENTOS
