@@ -2,41 +2,53 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ninja Hub | Inicio</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #1a1a1a; color: white; margin: 0; padding: 0; }
-        .container { padding: 20px; max-width: 1000px; margin: auto; }
-        h1 { text-align: center; color: #00f2ff; letter-spacing: 5px; text-transform: uppercase; margin-top: 30px; }
-        
-        /* BOTONES NAVEGACIÓN */
-        .nav-links { display: flex; justify-content: center; gap: 15px; margin-bottom: 30px; }
-        .nav-btn { background: #2a2a2a; border: 1px solid #00f2ff; color: #00f2ff; padding: 12px 25px; border-radius: 10px; text-decoration: none; font-weight: bold; transition: 0.3s; }
-        .nav-btn:hover { background: #00f2ff; color: black; }
+     body {
+    margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; color: white;
+    background: linear-gradient(135deg, #0f0f0f, #1a1a2e, #16213e, #0f0f0f);
+    background-size: 400% 400%;
+    animation: gradientBG 15s ease infinite;
+    min-height: 100vh;
+    display: flex; justify-content: center;
+}
+@keyframes gradientBG {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+.container { 
+    width: 90%; max-width: 800px; 
+    padding: 40px 15px; box-sizing: border-box; 
+}
+h1 { 
+    color: #00f2ff; text-align: center; text-transform: uppercase; 
+    letter-spacing: 5px; text-shadow: 0 0 20px rgba(0,242,255,0.4); 
+}
+/* EFECTO CRISTAL PARA TABLAS Y CONTENEDORES */
+.glass-panel {
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
+    overflow: hidden;
+    padding: 10px;
+}
+table { width: 100%; border-collapse: collapse; }
+th { background: rgba(0, 242, 255, 0.1); color: #00f2ff; padding: 15px; text-align: left; }
+td { padding: 15px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
 
-        /* PODIO */
-        .top-three { display: flex; justify-content: center; align-items: flex-end; gap: 15px; margin: 40px 0; height: 220px; }
-        .spot { background-color: #2a2a2a; border: 1px solid #444; width: 150px; border-radius: 15px; display: flex; flex-direction: column; align-items: center; padding: 20px; text-align: center; }
-        .spot-1 { height: 180px; border-color: #00f2ff; box-shadow: 0 0 20px rgba(0, 242, 255, 0.3); }
-        .spot-2 { height: 140px; }
-        .spot-3 { height: 110px; }
-        .spot span { color: #00f2ff; font-weight: bold; font-size: 1.2rem; display: block; margin-top: 5px; }
-
-        /* CALENDARIO */
-        .card { background-color: #2a2a2a; padding: 25px; border-radius: 15px; border: 1px solid #444; margin-bottom: 25px; }
-        .header-calendario { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        .btn-mes { background: none; border: 1px solid #00f2ff; color: #00f2ff; padding: 5px 15px; cursor: pointer; border-radius: 5px; font-weight: bold; }
-        .btn-mes:hover { background: #00f2ff; color: black; }
-        
-        .grid-calendario { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; margin-top: 20px; }
-        .dia { background-color: #333; border: 1px solid #444; min-height: 80px; padding: 10px; border-radius: 8px; cursor: pointer; transition: 0.3s; }
-        .dia:hover { border-color: #00f2ff; background-color: #3d3d3d; }
-        .dia.hoy { border-color: #00f2ff; background-color: #1e3a3d; }
-        .evento-tag { background-color: #00f2ff; color: black; font-size: 0.65rem; padding: 3px; border-radius: 4px; margin-top: 5px; font-weight: bold; text-align: center; }
-
-        /* VENTANA DE GANADORES INTERACTIVA */
-        #detalle-ganadores { display: none; margin-top: 20px; border-left: 4px solid #00f2ff; background: #222; padding: 20px; border-radius: 10px; }
-        .ganador-item { background: #2a2a2a; padding: 10px; margin-top: 10px; border-radius: 5px; border: 1px solid #333; }
+/* Botones con estilo Tienda */
+.btn-action {
+    display: block; width: 100%; background: #00f2ff; color: black; text-align: center;
+    padding: 15px; border-radius: 12px; text-decoration: none; font-weight: bold;
+    margin-top: 20px; transition: 0.3s; text-transform: uppercase; border: none;
+}
+.btn-action:hover { background: #fff; box-shadow: 0 0 15px #00f2ff; }
     </style>
 </head>
 <body>
@@ -153,4 +165,5 @@
     </script>
 </body>
 </html>
+
 
