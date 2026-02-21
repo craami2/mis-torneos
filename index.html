@@ -14,7 +14,7 @@
         }
         @keyframes gradientBG { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
 
-        .container { width: 95%; max-width: 800px; padding: 20px 10px; box-sizing: border-box; }
+        .container { width: 95%; max-width: 900px; padding: 20px 10px; box-sizing: border-box; }
         
         .nav-links { display: flex; justify-content: center; gap: 10px; margin-bottom: 30px; flex-wrap: wrap; }
         .nav-links a { 
@@ -28,7 +28,7 @@
         .glass-panel {
             background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(15px);
             border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 20px;
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8); padding: 25px; margin-bottom: 25px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8); padding: 20px; margin-bottom: 25px;
         }
 
         /* PODIO */
@@ -42,22 +42,35 @@
         .podium-name { font-size: 0.8rem; font-weight: bold; text-align: center; width: 90%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
         .podium-pts { font-size: 0.7rem; color: #00f2ff; margin-top: 4px; }
 
-        /* CALENDARIO */
+        /* CALENDARIO CON NOMBRE DE EVENTO */
         .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; }
-        .day { padding: 12px 0; border-radius: 8px; font-size: 0.9rem; background: rgba(255,255,255,0.03); position: relative; cursor: pointer; text-align: center; }
-        .has-event::after { content: ''; width: 6px; height: 6px; background: #00ff88; border-radius: 50%; position: absolute; bottom: 4px; left: 45%; }
-        .today { background: #00f2ff; color: black; font-weight: bold; box-shadow: 0 0 15px #00f2ff; }
+        .day { 
+            min-height: 80px; padding: 10px 5px; border-radius: 8px; font-size: 0.9rem; 
+            background: rgba(255,255,255,0.03); position: relative; cursor: pointer; 
+            display: flex; flex-direction: column; align-items: center; transition: 0.2s;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        .day:hover { background: rgba(0,242,255,0.1); }
+        .day-number { font-weight: bold; margin-bottom: 5px; }
+        
+        .event-label { 
+            font-size: 0.65rem; background: #00ff88; color: #000; 
+            padding: 2px 4px; border-radius: 4px; text-align: center;
+            width: 90%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+            font-weight: bold; margin-top: auto;
+        }
+        
+        .today { border: 2px solid #00f2ff !important; background: rgba(0,242,255,0.1); }
 
-        /* VISOR DE EVENTOS */
+        /* VISOR DE DETALLES */
         #event-info { 
             margin-top: 20px; padding: 20px; border-radius: 15px; 
             background: rgba(0,255,136,0.05); color: #fff; 
             border: 1px solid rgba(0,255,136,0.2); display: none; 
         }
-        .event-title { color: #00ff88; font-weight: bold; font-size: 1.1rem; margin-bottom: 8px; display: block; }
-        .event-detail { color: #eee; font-size: 0.9rem; line-height: 1.4; }
-        .event-winners { color: #ffcc00; font-weight: bold; margin-top: 10px; font-size: 0.9rem; display: block; }
+        .event-title-display { color: #00ff88; font-weight: bold; font-size: 1.1rem; margin-bottom: 8px; display: block; }
+        .event-winners-display { color: #ffcc00; font-weight: bold; margin-top: 10px; font-size: 0.9rem; display: block; }
     </style>
 </head>
 <body>
@@ -80,9 +93,9 @@
 
         <div class="glass-panel">
             <div class="calendar-header">
-                <button onclick="changeMonth(-1)" style="background:none; border:none; color:#00f2ff; cursor:pointer; font-size:1.2rem;">◀</button>
+                <button onclick="changeMonth(-1)" style="background:none; border:none; color:#00f2ff; cursor:pointer; font-size:1.5rem;">◀</button>
                 <h3 id="month-name" style="margin:0; letter-spacing: 2px;">MES</h3>
-                <button onclick="changeMonth(1)" style="background:none; border:none; color:#00f2ff; cursor:pointer; font-size:1.2rem;">▶</button>
+                <button onclick="changeMonth(1)" style="background:none; border:none; color:#00f2ff; cursor:pointer; font-size:1.5rem;">▶</button>
             </div>
             <div class="calendar-grid" id="calendar-days"></div>
             <div id="event-info"></div>
@@ -95,7 +108,6 @@
         let eventosData = [];
 
         async function cargarTodo() {
-            // Ranking Podio
             const { data: ranking } = await _supabase.from('ranking').select('*').order('puntos', { ascending: false }).limit(3);
             if (ranking) {
                 if(ranking[0]) { document.getElementById('name-1').innerText = ranking[0].nombre; document.getElementById('pts-1').innerText = ranking[0].puntos + " PTS"; }
@@ -120,13 +132,19 @@
             const today = new Date();
 
             let html = '';
-            for (let i = 0; i < firstDay; i++) { html += `<div class="day" style="opacity:0"></div>`; }
+            for (let i = 0; i < firstDay; i++) { html += `<div class="day" style="opacity:0; cursor:default"></div>`; }
 
             for (let i = 1; i <= lastDay; i++) {
                 const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+                const ev = eventosData.find(e => e.fecha === dateStr);
                 const evIndex = eventosData.findIndex(e => e.fecha === dateStr);
                 const isToday = i === today.getDate() && month === today.getMonth() && year === today.getFullYear();
-                html += `<div class="day ${isToday ? 'today' : ''} ${evIndex !== -1 ? 'has-event' : ''}" onclick="mostrarDetalleEvento(${evIndex})">${i}</div>`;
+                
+                html += `
+                    <div class="day ${isToday ? 'today' : ''}" onclick="mostrarDetalleEvento(${evIndex})">
+                        <span class="day-number">${i}</span>
+                        ${ev ? `<div class="event-label">${ev.nombre}</div>` : ''}
+                    </div>`;
             }
             daysContainer.innerHTML = html;
         }
@@ -136,25 +154,26 @@
             if (index === -1) { info.style.display = 'none'; return; }
 
             const ev = eventosData[index];
+            const hoy = new Date().toISOString().split('T')[0];
 
-            // BUSCAMOS GANADORES POR EL NOMBRE DEL EVENTO (No por fecha)
-            // Esto es lo que asignaste en la casilla del Admin
             const { data: logs } = await _supabase.from('logs')
                 .select('ninja_nombre')
-                .eq('motivo', ev.nombre) // Buscamos los logs donde el motivo sea igual al nombre del evento
+                .eq('motivo', ev.nombre)
                 .gt('puntos_cambiados', 0);
 
             let txtGanadores = "";
             if (logs && logs.length > 0) {
                 const nombres = [...new Set(logs.map(l => l.ninja_nombre))].join(', ');
-                txtGanadores = `<span class="event-winners">🏆 Ganadores: ${nombres}</span>`;
+                txtGanadores = `<span class="event-winners-display">🏆 Ganadores: ${nombres}</span>`;
             } else {
-                txtGanadores = `<span style="color:#888; font-size:0.8rem; display:block; margin-top:10px;">⏳ Esperando resultados de los Ninjas...</span>`;
+                txtGanadores = ev.fecha < hoy ? 
+                    `<span style="color:#888; font-size:0.8rem; display:block; margin-top:10px;">🏁 Evento finalizado. Ganadores no registrados.</span>` : 
+                    `<span style="color:#888; font-size:0.8rem; display:block; margin-top:10px;">⏳ El evento no ha comenzado.</span>`;
             }
 
             info.innerHTML = `
-                <span class="event-title">📌 ${ev.nombre || 'Evento'}</span>
-                <div class="event-detail">${ev.desc || 'Sin descripción.'}</div>
+                <span class="event-title-display">📌 ${ev.nombre}</span>
+                <div style="font-size: 0.9rem; line-height: 1.4;">${ev.desc || 'Sin descripción.'}</div>
                 ${txtGanadores}
             `;
             info.style.display = 'block';
@@ -165,4 +184,5 @@
     </script>
 </body>
 </html>
+
 
