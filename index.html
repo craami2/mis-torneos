@@ -29,93 +29,89 @@
             border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 20px; padding: 20px; margin-bottom: 25px;
         }
 
-        /* --- PODIO CON AVATARES --- */
-        .podium-title { text-align: center; color: #00f2ff; letter-spacing: 3px; margin-bottom: 50px; font-size: 1.2rem; font-weight: bold; }
+        /* --- ANIMACIONES DE ELO (ESTILO LOL) --- */
+        @keyframes rotateBorder { 100% { transform: rotate(360deg); } }
+        @keyframes pulseGlow {
+            0% { filter: drop-shadow(0 0 10px var(--glow-color)); opacity: 0.8; }
+            50% { filter: drop-shadow(0 0 25px var(--glow-color)); opacity: 1; }
+            100% { filter: drop-shadow(0 0 10px var(--glow-color)); opacity: 0.8; }
+        }
+
+        .podium-title { text-align: center; color: #00f2ff; letter-spacing: 3px; margin-bottom: 70px; font-size: 1.2rem; font-weight: bold; }
         .podium { display: flex; justify-content: center; align-items: flex-end; gap: 15px; height: 150px; margin-bottom: 10px; }
-        .podium-spot { background: rgba(255,255,255,0.05); border-radius: 10px 10px 5px 5px; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; width: 100px; position: relative; padding-bottom: 10px; border: 1px solid rgba(255,255,255,0.1); }
-        .avatar { width: 45px; height: 45px; border-radius: 50%; background: #333; position: absolute; top: -25px; border: 2px solid; object-fit: cover; overflow: hidden; }
-        .avatar img { width: 100%; height: 100%; object-fit: cover; }
-        .p1 { height: 130px; border-color: #ffcc00; box-shadow: 0 0 15px rgba(255,204,0,0.2); }
-        .p1 .avatar { border-color: #ffcc00; width: 55px; height: 55px; top: -30px; }
-        .p2 { height: 100px; border-color: #e5e5e5; }
-        .p2 .avatar { border-color: #e5e5e5; }
-        .p3 { height: 80px; border-color: #cd7f32; }
-        .p3 .avatar { border-color: #cd7f32; }
-        .crown { font-size: 1.5rem; position: absolute; top: -55px; z-index: 10; }
+        
+        .podium-spot { 
+            background: rgba(255,255,255,0.05); border-radius: 10px 10px 5px 5px; 
+            display: flex; flex-direction: column; align-items: center; 
+            justify-content: flex-end; width: 100px; position: relative; 
+            padding-bottom: 10px; border: 1px solid rgba(255,255,255,0.1); 
+        }
+
+        /* Contenedores para el borde animado */
+        .avatar-container {
+            position: absolute; top: -35px; width: 60px; height: 60px;
+            border-radius: 50%; display: flex; justify-content: center;
+            align-items: center; overflow: hidden;
+        }
+        .avatar-container::before {
+            content: ''; position: absolute; width: 150%; height: 150%;
+            background: conic-gradient(transparent, var(--border-color), transparent 30%);
+            animation: rotateBorder 3s linear infinite;
+        }
+        .avatar-inner {
+            position: absolute; width: 88%; height: 88%;
+            background: #1a1a1a; border-radius: 50%; z-index: 1;
+            display: flex; justify-content: center; align-items: center; overflow: hidden;
+        }
+        .avatar-inner img { width: 100%; height: 100%; object-fit: cover; }
+
+        /* Estilos por Puesto */
+        .p1 { 
+            --border-color: #ffcc00; --glow-color: rgba(255, 204, 0, 0.8);
+            height: 135px; z-index: 5; animation: pulseGlow 2s ease-in-out infinite; 
+        }
+        .p1 .avatar-container { width: 80px; height: 80px; top: -45px; }
+        .p2 { --border-color: #e5e5e5; --glow-color: rgba(229, 229, 229, 0.4); height: 105px; }
+        .p3 { --border-color: #cd7f32; --glow-color: rgba(205, 127, 50, 0.3); height: 85px; }
+
+        .crown { font-size: 1.8rem; position: absolute; top: -75px; z-index: 10; filter: drop-shadow(0 0 10px gold); }
         .podium-name { font-size: 0.8rem; font-weight: bold; margin-top: 5px; text-align: center; width: 90%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .podium-pts { font-size: 0.7rem; color: #00f2ff; }
 
-        /* --- CALENDARIO MODERNO CON FLECHAS --- */
+        /* --- CALENDARIO MODERNO --- */
         .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         .cal-title { color: #00f2ff; font-size: 1.2rem; font-weight: bold; letter-spacing: 2px; text-transform: uppercase; }
         .nav-btn { background: rgba(255,255,255,0.1); border: 1px solid #00f2ff; color: #00f2ff; padding: 5px 15px; border-radius: 8px; cursor: pointer; transition: 0.3s; font-size: 1.2rem; }
         .nav-btn:hover { background: #00f2ff; color: black; }
 
-        /* --- CALENDARIO INTERACTIVO --- */
-        .calendar-grid { 
-            display: grid; 
-            grid-template-columns: repeat(7, 1fr); 
-            gap: 10px; 
-            perspective: 1000px; /* Añade profundidad 3D */
-        }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; perspective: 1000px; }
 
         .day { 
-            min-height: 90px; 
-            background: rgba(255, 255, 255, 0.03); 
-            border-radius: 12px; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            cursor: pointer; 
-            border: 1px solid rgba(255, 255, 255, 0.08); 
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
-            position: relative;
-            overflow: hidden;
+            min-height: 90px; background: rgba(255, 255, 255, 0.03); border-radius: 12px; 
+            display: flex; flex-direction: column; align-items: center; cursor: pointer; 
+            border: 1px solid rgba(255, 255, 255, 0.08); transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+            position: relative; overflow: hidden;
         }
 
-        /* EFECTO AL PASAR EL MOUSE */
         .day:hover { 
-            background: rgba(0, 242, 255, 0.1); 
-            border-color: #00f2ff; 
-            transform: translateY(-8px) scale(1.05); /* Se eleva y crece un poco */
-            box-shadow: 0 10px 25px rgba(0, 242, 255, 0.3);
-            z-index: 10;
+            background: rgba(0, 242, 255, 0.1); border-color: #00f2ff; 
+            transform: translateY(-8px) scale(1.05); box-shadow: 0 10px 25px rgba(0, 242, 255, 0.3); z-index: 10;
         }
 
-        /* Brillo interno que recorre el día al hacer hover */
         .day::after {
-            content: '';
-            position: absolute;
-            top: -50%; left: -50%;
-            width: 200%; height: 200%;
+            content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
             background: linear-gradient(45deg, transparent, rgba(0, 242, 255, 0.1), transparent);
-            transform: rotate(45deg);
-            transition: 0.5s;
-            pointer-events: none;
+            transform: rotate(45deg); transition: 0.5s; pointer-events: none;
         }
+        .day:hover::after { left: 100%; }
 
-        .day:hover::after {
-            left: 100%; /* El brillo cruza el cuadro */
-        }
-
-        /* Indicador de "Hoy" o Día con Evento */
-        .day.has-event {
-            border-bottom: 3px solid #00ff88;
-        }
+        .day.has-event { border-bottom: 3px solid #00ff88; }
 
         .event-label { 
-            font-size: 0.65rem; 
-            background: #00ff88; 
-            color: #000; 
-            padding: 3px 6px; 
-            border-radius: 4px; 
-            margin-top: 5px; 
-            font-weight: bold;
-            box-shadow: 0 0 8px rgba(0, 255, 136, 0.4);
-            max-width: 90%;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            font-size: 0.65rem; background: #00ff88; color: #000; padding: 3px 6px; 
+            border-radius: 4px; margin-top: 5px; font-weight: bold;
+            box-shadow: 0 0 8px rgba(0, 255, 136, 0.4); max-width: 90%;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
         
         #event-info { margin-top: 20px; padding: 20px; border-radius: 15px; background: rgba(0,255,136,0.05); border: 1px solid rgba(0,255,136,0.2); display: none; animation: fadeIn 0.5s ease; }
@@ -134,9 +130,19 @@
         <div class="glass-panel">
             <div class="podium-title">🏆 TOP 3 UNIÓN REPUBLICANA MULTICULTURAL</div>
             <div class="podium">
-                <div class="podium-spot p2"><div class="avatar" id="img-2"></div><span class="podium-name" id="name-2">---</span><span class="podium-pts" id="pts-2"></span></div>
-                <div class="podium-spot p1"><span class="crown">👑</span><div class="avatar" id="img-1"></div><span class="podium-name" id="name-1">---</span><span class="podium-pts" id="pts-1"></span></div>
-                <div class="podium-spot p3"><div class="avatar" id="img-3"></div><span class="podium-name" id="name-3">---</span><span class="podium-pts" id="pts-3"></span></div>
+                <div class="podium-spot p2">
+                    <div class="avatar-container"><div class="avatar-inner" id="img-2"></div></div>
+                    <span class="podium-name" id="name-2">---</span><span class="podium-pts" id="pts-2"></span>
+                </div>
+                <div class="podium-spot p1">
+                    <span class="crown">👑</span>
+                    <div class="avatar-container"><div class="avatar-inner" id="img-1"></div></div>
+                    <span class="podium-name" id="name-1">---</span><span class="podium-pts" id="pts-1"></span>
+                </div>
+                <div class="podium-spot p3">
+                    <div class="avatar-container"><div class="avatar-inner" id="img-3"></div></div>
+                    <span class="podium-name" id="name-3">---</span><span class="podium-pts" id="pts-3"></span>
+                </div>
             </div>
         </div>
 
@@ -157,14 +163,16 @@
         let currentViewDate = new Date();
 
         async function cargarTodo() {
-            // CARGAR PODIO
             const { data: top3 } = await _supabase.from('ranking').select('*').order('puntos', { ascending: false }).limit(3);
             if (top3) {
                 top3.forEach((user, index) => {
                     const i = index + 1;
                     document.getElementById(`name-${i}`).innerText = user.nombre;
-                    document.getElementById(`pts-${i}`).innerText = user.puntos + " PTS";
-                    if (user.avatar_url) document.getElementById(`img-${i}`).innerHTML = `<img src="${user.avatar_url}">`;
+                    // Formato de miles aplicado aquí
+                    document.getElementById(`pts-${i}`).innerText = Number(user.puntos).toLocaleString('es-ES') + " PTS";
+                    if (user.avatar_url) {
+                        document.getElementById(`img-${i}`).innerHTML = `<img src="${user.avatar_url}">`;
+                    }
                 });
             }
 
@@ -179,7 +187,7 @@
             document.getElementById('event-info').style.display = 'none';
         }
 
-            function renderCalendar() {
+        function renderCalendar() {
             const container = document.getElementById('calendar-days');
             const monthTitle = document.getElementById('month-name');
             const year = currentViewDate.getFullYear();
@@ -193,8 +201,6 @@
             for (let i = 1; i <= lastDay; i++) {
                 const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
                 const evs = eventosData.filter(e => e.fecha === dateStr);
-                
-                // Si tiene eventos, le ponemos la clase 'has-event'
                 const eventClass = evs.length > 0 ? 'has-event' : '';
 
                 html += `<div class="day ${eventClass}" onclick="mostrarDetalleDia('${dateStr}')">
@@ -214,7 +220,7 @@
             for (const ev of evs) {
                 const { data: gans } = await _supabase.from('ganadores').select('nombre_jugador, premio').eq('evento_id', ev.id);
                 let gansHtml = gans && gans.length > 0 
-                    ? gans.map(g => `<span class="winner-line">🏆 ${g.nombre_jugador} (+${g.premio || '0'} PTS)</span>`).join('')
+                    ? gans.map(g => `<span class="winner-line">🏆 ${g.nombre_jugador} (+${Number(g.premio).toLocaleString('es-ES') || '0'} PTS)</span>`).join('')
                     : `<span style="color:#888; display:block; margin-top:5px;">Resultados en proceso...</span>`;
                 html += `<div style="margin-bottom:15px;"><strong style="color:#00ff88; font-size:1.2rem; display:block; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:5px;">📌 ${ev.nombre}</strong>${gansHtml}</div>`;
             }
@@ -226,7 +232,6 @@
     </script>
 </body>
 </html>
-
 
 
 
