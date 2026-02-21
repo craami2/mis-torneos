@@ -84,16 +84,20 @@
             let html = "";
             for (const ev of evs) {
                 // Buscamos directamente en la tabla 'ganadores' usando el ID del evento
-                const { data: gans } = await _supabase.from('ganadores').select('*').eq('evento_id', ev.id);
+                const { data: gans, error } = await _supabase
+                    .from('ganadores')
+                    .select('nombre_jugador, premio')
+                    .eq('evento_id', ev.id);
                 
                 let gansHtml = "";
                 if (gans && gans.length > 0) {
-                    gansHtml = gans.map(g => `<span class="winner-line">🏆 ${g.nombre_jugador} (+${g.premio} PTS)</span>`).join('');
+                    // g.premio ahora trae el valor del input "pg" (puntos) que enviamos desde el Admin
+                    gansHtml = gans.map(g => `<span class="winner-line">🏆 ${g.nombre_jugador} (+${g.premio || '0'} PTS)</span>`).join('');
                 } else {
                     gansHtml = `<span style="color:#888; display:block; margin-top:5px;">No hay resultados aún</span>`;
                 }
                 
-                html += `<div><strong style="color:#00ff88; font-size:1.2rem;">📌 ${ev.nombre}</strong>${gansHtml}</div>`;
+                html += `<div style="margin-bottom:15px;"><strong style="color:#00ff88; font-size:1.2rem; display:block; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:5px;">📌 ${ev.nombre}</strong>${gansHtml}</div>`;
             }
             info.innerHTML = html;
             info.style.display = 'block';
