@@ -3,92 +3,51 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ninja Hub | Ranking</title>
+    <title>Ninja Hub | Ranking & Calendario</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* FONDO ANIMADO NINJA */
         body {
-            margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: white;
+            margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; color: white;
             background: linear-gradient(135deg, #0f0f0f, #1a1a2e, #16213e, #0f0f0f);
             background-size: 400% 400%;
             animation: gradientBG 15s ease infinite;
-            min-height: 100vh;
-            display: flex; justify-content: center;
+            min-height: 100vh; display: flex; justify-content: center;
         }
+        @keyframes gradientBG { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
 
-        @keyframes gradientBG {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
+        .container { width: 95%; max-width: 800px; padding: 40px 15px; box-sizing: border-box; }
+        h1 { color: #00f2ff; text-align: center; text-transform: uppercase; letter-spacing: 5px; text-shadow: 0 0 20px rgba(0, 242, 255, 0.4); }
 
-        .container {
-            width: 95%;
-            max-width: 800px;
-            padding: 40px 15px;
-            box-sizing: border-box;
-        }
-
-        h1 {
-            color: #00f2ff;
-            text-align: center;
-            text-transform: uppercase;
-            letter-spacing: 5px;
-            text-shadow: 0 0 20px rgba(0, 242, 255, 0.4);
-            margin-bottom: 30px;
-        }
-
-        /* EFECTO CRISTAL (Glassmorphism) */
         .glass-panel {
-            background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
-            overflow: hidden;
-            margin-bottom: 25px;
+            background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 20px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8); overflow: hidden; margin-bottom: 25px; padding: 20px;
         }
 
-        /* MARQUESINA */
-        .news-bar {
-            padding: 12px;
-            color: #00ff88;
-            font-weight: bold;
-            font-size: 0.9rem;
-        }
+        /* --- ESTILOS DEL CALENDARIO DINÁMICO --- */
+        .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid rgba(0,242,255,0.2); padding-bottom: 10px; }
+        .calendar-header h2 { margin: 0; color: #00f2ff; font-size: 1.2rem; text-transform: uppercase; }
+        .nav-btn { background: rgba(0,242,255,0.1); border: 1px solid #00f2ff; color: #00f2ff; padding: 5px 15px; border-radius: 5px; cursor: pointer; }
+        
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; text-align: center; }
+        .day-name { font-weight: bold; color: #00ff88; font-size: 0.7rem; padding-bottom: 10px; }
+        .day { padding: 10px 0; border-radius: 5px; font-size: 0.9rem; transition: 0.3s; background: rgba(255,255,255,0.02); }
+        .day:hover { background: rgba(0,242,255,0.2); }
+        .today { background: #00f2ff !important; color: black; font-weight: bold; box-shadow: 0 0 10px #00f2ff; }
+        .other-month { opacity: 0.3; }
 
-        /* TABLA */
+        /* --- TABLA RANKING --- */
         table { width: 100%; border-collapse: collapse; }
-        th { 
-            background: rgba(0, 242, 255, 0.1); 
-            color: #00f2ff; 
-            padding: 15px; 
-            text-align: left; 
-            font-size: 0.8rem;
-            text-transform: uppercase;
-        }
+        th { background: rgba(0, 242, 255, 0.1); color: #00f2ff; padding: 15px; text-align: left; font-size: 0.8rem; }
         td { padding: 15px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
+        tr:nth-child(1) td { color: #ffcc00; font-weight: bold; }
 
-        /* Resaltar TOP 3 */
-        tr:nth-child(1) td { color: #ffcc00; font-weight: bold; } /* Oro */
-        tr:nth-child(2) td { color: #e5e5e5; } /* Plata */
-        tr:nth-child(3) td { color: #cd7f32; } /* Bronce */
-
-        /* BOTONES */
         .btn-action {
             display: block; width: 100%; background: #00f2ff; color: black; text-align: center;
             padding: 18px; border-radius: 15px; text-decoration: none; font-weight: bold;
-            margin-top: 20px; transition: 0.3s; text-transform: uppercase; border: none;
-            cursor: pointer;
+            margin-top: 10px; transition: 0.3s; text-transform: uppercase; border: none; cursor: pointer;
         }
         .btn-action:hover { background: #fff; transform: scale(1.02); box-shadow: 0 0 20px #00f2ff; }
-
-        .footer-link {
-            text-align: center; margin-top: 20px; font-size: 0.8rem;
-        }
-        .footer-link a { color: #888; text-decoration: none; transition: 0.3s; }
-        .footer-link a:hover { color: #00f2ff; }
     </style>
 </head>
 <body>
@@ -97,72 +56,84 @@
         <h1>NINJA HUB</h1>
 
         <div class="glass-panel">
-            <div class="news-bar">
-                <marquee id="marquee-canjes">Cargando últimos movimientos de la aldea...</marquee>
-            </div>
-        </div>
-
-        <div class="glass-panel">
             <table id="ranking-table">
                 <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>NINJA</th>
-                        <th style="text-align: right;">PUNTOS</th>
-                    </tr>
+                    <tr><th>#</th><th>NINJA</th><th style="text-align: right;">PTS</th></tr>
                 </thead>
-                <tbody id="lista-ranking">
-                    </tbody>
+                <tbody id="lista-ranking"></tbody>
             </table>
         </div>
 
-        <a href="canje.html" class="btn-action">🛒 IR A LA TIENDA</a>
-
-        <div class="footer-link">
-            <a href="historial.html">Ver historial de actividad</a>
+        <div class="glass-panel">
+            <div class="calendar-header">
+                <button class="nav-btn" onclick="changeMonth(-1)">◀</button>
+                <h2 id="month-name">MES</h2>
+                <button class="nav-btn" onclick="changeMonth(1)">▶</button>
+            </div>
+            <div class="calendar-grid" id="calendar-days">
+                </div>
         </div>
+
+        <a href="canje.html" class="btn-action">🛒 IR A LA TIENDA</a>
+        <center><a href="historial.html" style="color:#888; text-decoration:none; font-size:0.8rem; display:inline-block; margin-top:15px;">Ver historial</a></center>
     </div>
 
     <script>
-        // TU CONFIGURACIÓN DE SUPABASE (No la tocamos)
         const _supabase = supabase.createClient('https://ekaiwrnvbpwaaoenwnnp.supabase.co', 'sb_publishable_YvgUfE8sAXfAUGvXMcNB4Q_aGC2GUMP');
 
-        async function cargarDatos() {
-            // Cargar Ranking
-            const { data: ranking, error: errorRank } = await _supabase
-                .from('ranking')
-                .select('*')
-                .order('puntos', { ascending: false });
-
-            if (!errorRank) {
-                const tabla = document.getElementById('lista-ranking');
-                tabla.innerHTML = ranking.map((u, index) => `
+        // --- LÓGICA DEL RANKING ---
+        async function cargarRanking() {
+            const { data: ranking } = await _supabase.from('ranking').select('*').order('puntos', { ascending: false });
+            if (ranking) {
+                document.getElementById('lista-ranking').innerHTML = ranking.map((u, index) => `
                     <tr>
-                        <td style="font-weight:bold; color: #00f2ff; width: 30px;">${index + 1}</td>
+                        <td style="color: #00f2ff; font-weight:bold;">${index + 1}</td>
                         <td>${u.nombre}</td>
-                        <td style="text-align: right; font-weight: bold;">${u.puntos} PTS</td>
+                        <td style="text-align: right; font-weight: bold;">${u.puntos}</td>
                     </tr>
                 `).join('');
             }
-
-            // Cargar Noticias de Canjes
-            const { data: logs } = await _supabase
-                .from('logs')
-                .select('*')
-                .lt('puntos_cambiados', 0)
-                .order('created_at', { ascending: false })
-                .limit(5);
-
-            const marquee = document.getElementById('marquee-canjes');
-            if (logs && logs.length > 0) {
-                marquee.innerText = logs.map(l => `🔥 ${l.ninja_nombre} realizó un canje | `).join(' ');
-            } else {
-                marquee.innerText = "¡Bienvenidos al Ninja Hub! Compite para ganar premios.";
-            }
         }
 
-        window.onload = cargarDatos;
-    </script>
+        // --- LÓGICA DEL CALENDARIO DINÁMICO ---
+        let currentDate = new Date();
 
+        function renderCalendar() {
+            const monthName = document.getElementById('month-name');
+            const daysContainer = document.getElementById('calendar-days');
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+
+            const firstDay = new Date(year, month, 1).getDay();
+            const lastDay = new Date(year, month + 1, 0).getDate();
+            const today = new Date();
+
+            const nombresMeses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+            monthName.innerText = `${nombresMeses[month]} ${year}`;
+
+            let html = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'].map(d => `<div class="day-name">${d}</div>`).join('');
+
+            // Espacios días mes anterior
+            for (let i = 0; i < firstDay; i++) { html += `<div class="day other-month"></div>`; }
+
+            // Días del mes
+            for (let i = 1; i <= lastDay; i++) {
+                const isToday = i === today.getDate() && month === today.getMonth() && year === today.getFullYear();
+                html += `<div class="day ${isToday ? 'today' : ''}">${i}</div>`;
+            }
+
+            daysContainer.innerHTML = html;
+        }
+
+        function changeMonth(diff) {
+            currentDate.setMonth(currentDate.getMonth() + diff);
+            renderCalendar();
+        }
+
+        window.onload = () => {
+            cargarRanking();
+            renderCalendar();
+        };
+    </script>
 </body>
 </html>
