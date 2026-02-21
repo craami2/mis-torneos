@@ -5,82 +5,133 @@
     <title>Ninja Hub | Historial</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #1a1a1a; color: white; margin: 0; padding: 20px; }
-        .container { max-width: 900px; margin: auto; }
-        h1 { color: #00f2ff; text-align: center; text-transform: uppercase; letter-spacing: 3px; }
-        
-        /* Botón Volver */
-        .btn-volver { display: inline-block; margin-bottom: 20px; color: #00f2ff; text-decoration: none; font-weight: bold; border: 1px solid #00f2ff; padding: 10px 20px; border-radius: 8px; transition: 0.3s; }
-        .btn-volver:hover { background: #00f2ff; color: black; }
+        body { 
+            margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; color: white;
+            background: linear-gradient(135deg, #0f0f0f, #1a1a2e, #16213e, #0f0f0f);
+            background-size: 400% 400%; animation: gradientBG 15s ease infinite;
+            min-height: 100vh; display: flex; justify-content: center;
+        }
+        @keyframes gradientBG { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
 
-        /* Tabla de Logs */
-        .tabla-contenedor { background: #2a2a2a; border-radius: 15px; overflow: hidden; border: 1px solid #444; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 15px; text-align: left; border-bottom: 1px solid #333; }
-        th { background-color: #333; color: #00f2ff; font-size: 0.8rem; text-transform: uppercase; }
+        .container { width: 95%; max-width: 1000px; padding: 20px; }
         
+        .btn-back { 
+            background: rgba(255,255,255,0.05); padding: 10px 20px; border-radius: 12px; 
+            color: #00f2ff; text-decoration: none; font-weight: bold; border: 1px solid rgba(0,242,255,0.2);
+            transition: 0.3s; display: inline-block; margin-bottom: 20px;
+        }
+        .btn-back:hover { background: #00f2ff; color: black; box-shadow: 0 0 15px #00f2ff; }
+
+        h1 { color: #00f2ff; text-align: center; text-transform: uppercase; letter-spacing: 4px; margin-bottom: 20px; }
+
+        /* BUSCADOR Y FILTROS */
+        .filters {
+            display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;
+        }
+        .filters input, .filters select {
+            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+            color: white; padding: 10px; border-radius: 8px; outline: none; flex: 1; min-width: 150px;
+        }
+        .filters input:focus { border-color: #00f2ff; }
+
+        /* TABLA GLASSMORPHISM */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 20px; padding: 10px; overflow-x: auto;
+        }
+
+        table { width: 100%; border-collapse: collapse; min-width: 600px; }
+        th { text-align: left; color: #00f2ff; padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); text-transform: uppercase; font-size: 0.75rem; }
+        td { padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.95rem; }
+        
+        .fecha { color: #888; font-size: 0.8rem; white-space: nowrap; }
         .positivo { color: #00ff88; font-weight: bold; }
         .negativo { color: #ff4444; font-weight: bold; }
-        .fecha { color: #888; font-size: 0.85rem; }
-        .badge { background: #444; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; }
+        .badge { background: rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 6px; font-size: 0.7rem; border: 1px solid rgba(255,255,255,0.1); }
+        
+        tr:hover { background: rgba(0, 242, 255, 0.03); }
     </style>
 </head>
 <body>
     <div class="container">
-        <a href="index.html" class="btn-volver">← VOLVER AL INICIO</a>
-        <h1>📜 Historial de Movimientos</h1>
+        <a href="index.html" class="btn-back">← VOLVER AL INICIO</a>
+        <h1>📜 Auditoría de Movimientos</h1>
+
+        <div class="filters">
+            <input type="text" id="filter-ninja" placeholder="Buscar por Ninja..." onkeyup="filtrar()">
+            <select id="filter-accion" onchange="filtrar()">
+                <option value="">Todas las acciones</option>
+                <option value="Torneo">Torneo</option>
+                <option value="Canje">Canje</option>
+                <option value="Modificación">Modificación</option>
+            </select>
+        </div>
         
-        <div class="tabla-contenedor">
+        <div class="glass-panel">
             <table>
                 <thead>
                     <tr>
                         <th>Fecha y Hora</th>
                         <th>Ninja</th>
                         <th>Acción</th>
-                        <th>Puntos</th>
+                        <th style="text-align:right">Cambio</th>
                         <th>Detalle</th>
                     </tr>
                 </thead>
-                <tbody id="cuerpo-logs">
-                    </tbody>
+                <tbody id="cuerpo-logs"></tbody>
             </table>
         </div>
     </div>
 
     <script>
         const _supabase = supabase.createClient('https://ekaiwrnvbpwaaoenwnnp.supabase.co', 'sb_publishable_YvgUfE8sAXfAUGvXMcNB4Q_aGC2GUMP');
+        let todosLosLogs = [];
 
         async function cargarLogs() {
-            const lista = document.getElementById('cuerpo-logs');
-            lista.innerHTML = "<tr><td colspan='5' style='text-align:center;'>Cargando historial...</td></tr>";
-
-            // Pedimos los logs ordenados por fecha (el más nuevo arriba)
             const { data, error } = await _supabase
                 .from('logs')
                 .select('*')
                 .order('created_at', { ascending: false });
 
-            if (error) {
-                lista.innerHTML = "<tr><td colspan='5'>Error al cargar logs.</td></tr>";
-                return;
-            }
+            if (error) return;
+            todosLosLogs = data;
+            renderizar(todosLosLogs);
+        }
 
-            lista.innerHTML = data.map(log => {
-                const fecha = new Date(log.created_at).toLocaleString();
+        function renderizar(logs) {
+            const lista = document.getElementById('cuerpo-logs');
+            lista.innerHTML = logs.map(log => {
+                const fecha = new Date(log.created_at).toLocaleString('es-ES');
                 const esPositivo = log.puntos_cambiados >= 0;
                 const clasePuntos = esPositivo ? 'positivo' : 'negativo';
                 const signo = esPositivo ? '+' : '';
+                
+                // Aplicamos el formato de miles .
+                const puntosFormateados = Number(log.puntos_cambiados).toLocaleString('es-ES');
 
                 return `
                     <tr>
                         <td class="fecha">${fecha}</td>
                         <td><strong>${log.ninja_nombre}</strong></td>
                         <td><span class="badge">${log.tipo_accion}</span></td>
-                        <td class="${clasePuntos}">${signo}${log.puntos_cambiados}</td>
-                        <td style="color:#bbb;">${log.detalle}</td>
+                        <td class="${clasePuntos}" style="text-align:right">${signo}${puntosFormateados}</td>
+                        <td style="color:#bbb; font-size: 0.85rem;">${log.detalle}</td>
                     </tr>
                 `;
             }).join('');
+        }
+
+        function filtrar() {
+            const busqueda = document.getElementById('filter-ninja').value.toLowerCase();
+            const accion = document.getElementById('filter-accion').value;
+
+            const filtrados = todosLosLogs.filter(log => {
+                const coincideNinja = log.ninja_nombre.toLowerCase().includes(busqueda);
+                const coincideAccion = accion === "" || log.tipo_accion === accion;
+                return coincideNinja && coincideAccion;
+            });
+
+            renderizar(filtrados);
         }
 
         window.onload = cargarLogs;
