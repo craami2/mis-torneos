@@ -4,8 +4,24 @@
     <meta charset="UTF-8">
     <title>Ninja Hub | Tienda</title>
     <style>
-        body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #1a1a1a; color: white; margin: 0; padding: 20px; }
-        .container { max-width: 1000px; margin: auto; }
+        body {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+    color: white;
+    /* Un fondo oscuro con toques de azul y morado ninja */
+    background: linear-gradient(135deg, #0f0f0f, #1a1a2e, #16213e, #0f0f0f);
+    background-size: 400% 400%;
+    animation: gradientBG 15s ease infinite;
+    min-height: 100vh;
+}
+
+/* El movimiento del fondo */
+@keyframes gradientBG {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
         
         /* Botón Volver */
         .btn-back { background: none; border: 1px solid #444; color: #00f2ff; padding: 10px 20px; border-radius: 8px; cursor: pointer; text-decoration: none; display: inline-block; margin-bottom: 20px; font-weight: bold; transition: 0.3s; }
