@@ -121,7 +121,7 @@
             document.getElementById('event-info').style.display = 'none';
         }
 
-        function renderCalendar() {
+            function renderCalendar() {
             const container = document.getElementById('calendar-days');
             const monthTitle = document.getElementById('month-name');
             const year = currentViewDate.getFullYear();
@@ -135,8 +135,12 @@
             for (let i = 1; i <= lastDay; i++) {
                 const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
                 const evs = eventosData.filter(e => e.fecha === dateStr);
-                html += `<div class="day" onclick="mostrarDetalleDia('${dateStr}')">
-                            <span style="margin-top:5px; font-weight:bold;">${i}</span>
+                
+                // Si tiene eventos, le ponemos la clase 'has-event'
+                const eventClass = evs.length > 0 ? 'has-event' : '';
+
+                html += `<div class="day ${eventClass}" onclick="mostrarDetalleDia('${dateStr}')">
+                            <span style="margin-top:8px; font-weight:bold; font-size: 1.1rem;">${i}</span>
                             ${evs.map(e => `<div class="event-label">${e.nombre}</div>`).join('')}
                          </div>`;
             }
@@ -164,6 +168,7 @@
     </script>
 </body>
 </html>
+
 
 
 
