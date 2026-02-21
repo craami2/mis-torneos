@@ -2,103 +2,177 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ninja Hub | Tienda</title>
     <style>
+        /* FONDO ANIMADO */
         body {
-    margin: 0;
-    padding: 0;
-    font-family: Arial, sans-serif;
-    color: white;
-    /* Un fondo oscuro con toques de azul y morado ninja */
-    background: linear-gradient(135deg, #0f0f0f, #1a1a2e, #16213e, #0f0f0f);
-    background-size: 400% 400%;
-    animation: gradientBG 15s ease infinite;
-    min-height: 100vh;
-}
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: white;
+            background: linear-gradient(135deg, #0f0f0f, #1a1a2e, #16213e, #0f0f0f);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+        }
 
-/* El movimiento del fondo */
-@keyframes gradientBG {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
-}
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* CONTENEDOR CON RESPIRACIÓN (Para que no pegue al borde) */
+        .container {
+            width: 90%;
+            max-width: 1000px;
+            padding: 40px 20px; /* Espacio arriba y a los lados */
+            box-sizing: border-box;
+        }
+
+        h1 {
+            color: #00f2ff;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 5px;
+            text-shadow: 0 0 20px rgba(0, 242, 255, 0.4);
+            margin-bottom: 40px;
+        }
+
+        .shop-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+        }
+
+        /* TARJETAS ESTILO CRISTAL (Glassmorphism) */
+        .item-card {
+            background: rgba(255, 255, 255, 0.05); /* Blanco muy transparente */
+            backdrop-filter: blur(10px); /* Desenfoque de fondo */
+            border: 1px dotted rgba(0, 242, 255, 0.3);
+            border-radius: 20px;
+            padding: 25px;
+            text-align: center;
+            transition: all 0.4s ease;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
+        }
+
+        .item-card:hover {
+            transform: translateY(-10px);
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid #00f2ff;
+            box-shadow: 0 0 20px rgba(0, 242, 255, 0.2);
+        }
+
+        .item-card h3 {
+            color: #fff;
+            font-size: 1.1rem;
+            margin: 0;
+            letter-spacing: 1px;
+        }
+
+        /* EL COLOR CORREGIDO (Adiós amarillo) */
+        .price {
+            font-size: 2rem;
+            font-weight: 900;
+            margin: 20px 0;
+            color: #00f2ff; /* Cian Neón */
+            text-shadow: 0 0 10px rgba(0, 242, 255, 0.5);
+        }
+
+        .btn-buy {
+            background: #00f2ff;
+            color: #000;
+            border: none;
+            padding: 12px;
+            border-radius: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: 0.3s;
+        }
+
+        .btn-buy:hover {
+            background: #fff;
+            box-shadow: 0 0 15px #fff;
+        }
+
+        .btn-back {
+            text-decoration: none;
+            color: #888;
+            font-size: 0.9rem;
+            display: inline-block;
+            margin-bottom: 20px;
+            transition: 0.3s;
+        }
         
-        /* Botón Volver */
-        .btn-back { background: none; border: 1px solid #444; color: #00f2ff; padding: 10px 20px; border-radius: 8px; cursor: pointer; text-decoration: none; display: inline-block; margin-bottom: 20px; font-weight: bold; transition: 0.3s; }
-        .btn-back:hover { background: #444; border-color: #00f2ff; }
+        .btn-back:hover { color: #00f2ff; }
 
-        h1 { color: #00f2ff; text-align: center; text-transform: uppercase; letter-spacing: 3px; }
-        .subtitle { text-align: center; color: #888; margin-bottom: 30px; }
-
-        /* Cuadrícula de la tienda */
-        .shop-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; }
-
-        /* Tarjeta de ítem */
-        .item-card { background: #2a2a2a; border: 1px solid #444; border-radius: 15px; padding: 20px; text-align: center; transition: 0.3s; }
-        .item-card:hover { border-color: #00f2ff; transform: translateY(-5px); box-shadow: 0 5px 15px rgba(0, 242, 255, 0.1); }
-
-        .item-card h3 { color: #00f2ff; margin-top: 0; font-size: 1.1rem; }
-        .price { font-size: 1.8rem; font-weight: bold; margin: 15px 0; color: #00f2ff; }
-        
-        /* Botón de Canje */
-        .btn-buy { background: #00f2ff; color: black; border: none; padding: 12px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; transition: 0.3s; }
-        .btn-buy:hover { background: #fff; transform: scale(1.02); }
-
-        .note { font-size: 0.75rem; color: #666; margin-top: 15px; font-style: italic; }
     </style>
 </head>
 <body>
 
     <div class="container">
         <a href="index.html" class="btn-back">← VOLVER AL HUB</a>
-        <h1>NINJA REWARDS</h1>
-        <p class="subtitle">Selecciona tu premio y solicítalo por Discord</p>
+        <h1>NINJA SHOP</h1>
 
         <div class="shop-grid">
-            <div class="item-card"><h3>ROL DE COLOR</h3><div class="price">300 PTS</div><button class="btn-buy" onclick="solicitar('Rol de Color', '300')">CANJEAR</button></div>
-            <div class="item-card"><h3>ICONO PERFIL VIP</h3><div class="price">500 PTS</div><button class="btn-buy" onclick="solicitar('Icono VIP', '500')">CANJEAR</button></div>
-            <div class="item-card"><h3>EMOJI PROPIO</h3><div class="price">800 PTS</div><button class="btn-buy" onclick="solicitar('Emoji Propio', '800')">CANJEAR</button></div>
-            <div class="item-card"><h3>ELEGIR MAPA</h3><div class="price">1000 PTS</div><button class="btn-buy" onclick="solicitar('Elegir Mapa', '1000')">CANJEAR</button></div>
-            <div class="item-card"><h3>GIFT CARD 5$</h3><div class="price">1500 PTS</div><button class="btn-buy" onclick="solicitar('Gift Card 5$', '1500')">CANJEAR</button></div>
-            <div class="item-card"><h3>MENCIÓN REDES</h3><div class="price">2000 PTS</div><button class="btn-buy" onclick="solicitar('Mención Redes', '2000')">CANJEAR</button></div>
-            <div class="item-card"><h3>GIFT CARD 10$</h3><div class="price">3000 PTS</div><button class="btn-buy" onclick="solicitar('Gift Card 10$', '3000')">CANJEAR</button></div>
-            <div class="item-card"><h3>SKIN ÉPICA</h3><div class="price">5000 PTS</div><button class="btn-buy" onclick="solicitar('Skin Épica', '5000')">CANJEAR</button></div>
-            <div class="item-card"><h3>PASE TORNEO PRO</h3><div class="price">7500 PTS</div><button class="btn-buy" onclick="solicitar('Pase Torneo Pro', '7500')">CANJEAR</button></div>
-            <div class="item-card"><h3>LEYENDA ETERNA</h3><div class="price">10000 PTS</div><button class="btn-buy" onclick="solicitar('Leyenda Eterna', '10000')">CANJEAR</button></div>
+            <div class="item-card">
+                <h3>ROL DE COLOR</h3>
+                <div class="price">300</div>
+                <button class="btn-buy" onclick="solicitar('Rol de Color', '300')">CANJEAR</button>
+            </div>
+            <div class="item-card">
+                <h3>ICONO PERFIL VIP</h3>
+                <div class="price">500</div>
+                <button class="btn-buy" onclick="solicitar('Icono VIP', '500')">CANJEAR</button>
+            </div>
+            <div class="item-card">
+                <h3>EMOJI PROPIO</h3>
+                <div class="price">800</div>
+                <button class="btn-buy" onclick="solicitar('Emoji Propio', '800')">CANJEAR</button>
+            </div>
+            <div class="item-card">
+                <h3>ELEGIR MAPA</h3>
+                <div class="price">1000</div>
+                <button class="btn-buy" onclick="solicitar('Elegir Mapa', '1000')">CANJEAR</button>
+            </div>
+            <div class="item-card">
+                <h3>GIFT CARD 5$</h3>
+                <div class="price">1500</div>
+                <button class="btn-buy" onclick="solicitar('Gift Card 5$', '1500')">CANJEAR</button>
+            </div>
+            <div class="item-card">
+                <h3>MENCIÓN REDES</h3>
+                <div class="price">2000</div>
+                <button class="btn-buy" onclick="solicitar('Mención Redes', '2000')">CANJEAR</button>
+            </div>
         </div>
     </div>
 
     <script>
         function solicitar(item, precio) {
-            /** * DOCUMENTACIÓN DE CONFIGURACIÓN:
-             * idServidor: El ID de tu servidor (obtenido del link que pasaste).
-             * idCanal: El ID del canal específico (obtenido del link que pasaste).
-             */
             const idServidor = "800184417666465792"; 
             const idCanal = "800184417666465795";
-
             const mensaje = `🥋 SOLICITUD DE CANJE 🥋\n----------------------------\n🎁 Recompensa: ${item}\n💰 Costo: ${precio} puntos\n👤 Usuario: [ESCRIBE TU NOMBRE AQUÍ]\n----------------------------\n@Craami revisa mi saldo!`;
 
-            // 1. Intentar copiar al portapapeles
             navigator.clipboard.writeText(mensaje).then(() => {
-                alert("✅ ¡Mensaje de canje copiado!\n\nAhora se abrirá tu aplicación de Discord directamente en el canal. Solo tienes que PEGAR (Ctrl+V) y enviar.");
-                
-                // 2. Forzar apertura en la APP (discord://)
-                // Esto evita que se abra en el navegador y busque la app instalada
+                alert("✅ ¡Copiado!\n\nSe abrirá Discord. Pega el mensaje en el canal.");
                 window.location.href = `discord://discord.com/channels/${idServidor}/${idCanal}`;
-
-                // 3. Respaldo por si la app no abre (abre la web después de 3 segundos)
+                
                 setTimeout(() => {
-                    if (confirm("¿No se abrió la aplicación? Haz clic en Aceptar para abrir Discord en el navegador.")) {
+                    if (document.hasFocus()) {
                         window.open(`https://discord.com/channels/${idServidor}/${idCanal}`, '_blank');
                     }
                 }, 3000);
-
-            }).catch(err => {
-                alert("Hubo un error al copiar el mensaje automáticamente. Por favor contacta a Craami directamente.");
             });
         }
     </script>
-
 </body>
 </html>
