@@ -31,7 +31,6 @@
             box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8); padding: 20px; margin-bottom: 25px;
         }
 
-        /* PODIO */
         .podium-title { text-align: center; color: #00f2ff; text-transform: uppercase; letter-spacing: 3px; margin-bottom: 40px; font-size: 1.2rem; }
         .podium { display: flex; justify-content: center; align-items: flex-end; gap: 15px; margin-bottom: 20px; height: 160px; }
         .podium-spot { background: rgba(255,255,255,0.05); border-radius: 15px 15px 5px 5px; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; width: 95px; position: relative; padding-bottom: 10px; border: 1px solid rgba(255,255,255,0.1); }
@@ -42,7 +41,6 @@
         .podium-name { font-size: 0.8rem; font-weight: bold; text-align: center; width: 90%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
         .podium-pts { font-size: 0.7rem; color: #00f2ff; margin-top: 4px; }
 
-        /* CALENDARIO */
         .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; }
         .day { 
@@ -63,16 +61,14 @@
         
         .today { border: 2px solid #00f2ff !important; background: rgba(0,242,255,0.1); }
 
-        /* VISOR */
         #event-info { 
             margin-top: 20px; padding: 20px; border-radius: 15px; 
             background: rgba(0,255,136,0.05); color: #fff; 
             border: 1px solid rgba(0,255,136,0.2); display: none; 
         }
-        .event-block { margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); }
-        .event-block:last-child { border: 0; margin: 0; }
+        .event-block { margin-bottom: 15px; }
         .event-title-display { color: #00ff88; font-weight: bold; font-size: 1.1rem; margin-bottom: 5px; display: block; }
-        .event-winners-display { color: #ffcc00; font-weight: bold; margin-top: 8px; font-size: 0.9rem; display: block; }
+        .winner-line { color: #ffcc00; font-weight: bold; font-size: 1rem; display: block; margin-top: 5px; }
     </style>
 </head>
 <body>
@@ -116,7 +112,6 @@
                 if(ranking[1]) { document.getElementById('name-2').innerText = ranking[1].nombre; document.getElementById('pts-2').innerText = ranking[1].puntos + " PTS"; }
                 if(ranking[2]) { document.getElementById('name-3').innerText = ranking[2].nombre; document.getElementById('pts-3').innerText = ranking[2].puntos + " PTS"; }
             }
-
             const { data: eventos } = await _supabase.from('eventos').select('*');
             eventosData = eventos || [];
             renderCalendar();
@@ -128,27 +123,17 @@
             const year = currentDate.getFullYear();
             const month = currentDate.getMonth();
             monthNameLabel.innerText = currentDate.toLocaleString('es', { month: 'long', year: 'numeric' }).toUpperCase();
-            
             const firstDay = new Date(year, month, 1).getDay();
             const lastDay = new Date(year, month + 1, 0).getDate();
             const today = new Date();
-
             let html = '';
             for (let i = 0; i < firstDay; i++) { html += `<div class="day" style="opacity:0; cursor:default"></div>`; }
-
             for (let i = 1; i <= lastDay; i++) {
                 const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
-                // Filtramos todos los eventos de este día
                 const evsDelDia = eventosData.filter(e => e.fecha === dateStr);
                 const isToday = i === today.getDate() && month === today.getMonth() && year === today.getFullYear();
-                
                 let labelsHtml = evsDelDia.map(ev => `<div class="event-label">${ev.nombre}</div>`).join('');
-
-                html += `
-                    <div class="day ${isToday ? 'today' : ''}" onclick="mostrarDetalleDia('${dateStr}')">
-                        <span class="day-number">${i}</span>
-                        ${labelsHtml}
-                    </div>`;
+                html += `<div class="day ${isToday ? 'today' : ''}" onclick="mostrarDetalleDia('${dateStr}')"><span class="day-number">${i}</span>${labelsHtml}</div>`;
             }
             daysContainer.innerHTML = html;
         }
@@ -156,39 +141,19 @@
         async function mostrarDetalleDia(fechaStr) {
             const info = document.getElementById('event-info');
             const evsDelDia = eventosData.filter(e => e.fecha === fechaStr);
-            
             if (evsDelDia.length === 0) { info.style.display = 'none'; return; }
-
-            const hoy = new Date().toISOString().split('T')[0];
             let contenidoHtml = "";
-
             for (const ev of evsDelDia) {
-                // Buscamos ninjas que recibieron puntos con el nombre exacto de ESTE evento
                 const { data: logs } = await _supabase.from('logs')
                     .select('ninja_nombre, puntos_cambiados')
                     .eq('motivo', ev.nombre)
                     .gt('puntos_cambiados', 0);
-
-                let txtGanadores = "";
+                let txtResultados = "";
                 if (logs && logs.length > 0) {
-                    // Muestra nombre y los puntos que ganó en ese evento
-                    const lista = logs.map(l => `${l.ninja_nombre} (+${l.puntos_cambiados} PTS)`).join(', ');
-                    txtGanadores = `<span class="event-winners-display">🏆 Ganadores: ${lista}</span>`;
-                } else {
-                    txtGanadores = fechaStr < hoy ? 
-                        `<span style="color:#888; font-size:0.8rem; display:block; margin-top:10px;">🏁 Finalizado. Sin ganadores registrados.</span>` : 
-                        `<span style="color:#888; font-size:0.8rem; display:block; margin-top:10px;">⏳ Próximamente...</span>`;
+                    txtResultados = logs.map(l => `<span class="winner-line">🏆 ${l.ninja_nombre} (+${l.puntos_cambiados} PTS)</span>`).join('');
                 }
-
-                contenidoHtml += `
-                    <div class="event-block">
-                        <span class="event-title-display">📌 ${ev.nombre}</span>
-                        <div style="font-size: 0.9rem; line-height: 1.4; opacity: 0.8;">${ev.desc || 'Sin descripción.'}</div>
-                        ${txtGanadores}
-                    </div>
-                `;
+                contenidoHtml += `<div class="event-block"><span class="event-title-display">📌 ${ev.nombre}</span>${txtResultados}</div>`;
             }
-
             info.innerHTML = contenidoHtml;
             info.style.display = 'block';
         }
