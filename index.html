@@ -51,14 +51,72 @@
         .nav-btn { background: rgba(255,255,255,0.1); border: 1px solid #00f2ff; color: #00f2ff; padding: 5px 15px; border-radius: 8px; cursor: pointer; transition: 0.3s; font-size: 1.2rem; }
         .nav-btn:hover { background: #00f2ff; color: black; }
 
-        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; }
-        .day { 
-            min-height: 80px; background: rgba(255,255,255,0.03); border-radius: 8px; 
-            display: flex; flex-direction: column; align-items: center; cursor: pointer; 
-            border: 1px solid rgba(255,255,255,0.05); transition: 0.3s;
+        /* --- CALENDARIO INTERACTIVO --- */
+        .calendar-grid { 
+            display: grid; 
+            grid-template-columns: repeat(7, 1fr); 
+            gap: 10px; 
+            perspective: 1000px; /* Añade profundidad 3D */
         }
-        .day:hover { background: rgba(0, 242, 255, 0.15); border-color: #00f2ff; transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0, 242, 255, 0.2); }
-        .event-label { font-size: 0.6rem; background: #00ff88; color: black; padding: 2px 5px; border-radius: 4px; margin-top: 5px; font-weight: bold; }
+
+        .day { 
+            min-height: 90px; 
+            background: rgba(255, 255, 255, 0.03); 
+            border-radius: 12px; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            cursor: pointer; 
+            border: 1px solid rgba(255, 255, 255, 0.08); 
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* EFECTO AL PASAR EL MOUSE */
+        .day:hover { 
+            background: rgba(0, 242, 255, 0.1); 
+            border-color: #00f2ff; 
+            transform: translateY(-8px) scale(1.05); /* Se eleva y crece un poco */
+            box-shadow: 0 10px 25px rgba(0, 242, 255, 0.3);
+            z-index: 10;
+        }
+
+        /* Brillo interno que recorre el día al hacer hover */
+        .day::after {
+            content: '';
+            position: absolute;
+            top: -50%; left: -50%;
+            width: 200%; height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(0, 242, 255, 0.1), transparent);
+            transform: rotate(45deg);
+            transition: 0.5s;
+            pointer-events: none;
+        }
+
+        .day:hover::after {
+            left: 100%; /* El brillo cruza el cuadro */
+        }
+
+        /* Indicador de "Hoy" o Día con Evento */
+        .day.has-event {
+            border-bottom: 3px solid #00ff88;
+        }
+
+        .event-label { 
+            font-size: 0.65rem; 
+            background: #00ff88; 
+            color: #000; 
+            padding: 3px 6px; 
+            border-radius: 4px; 
+            margin-top: 5px; 
+            font-weight: bold;
+            box-shadow: 0 0 8px rgba(0, 255, 136, 0.4);
+            max-width: 90%;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
         
         #event-info { margin-top: 20px; padding: 20px; border-radius: 15px; background: rgba(0,255,136,0.05); border: 1px solid rgba(0,255,136,0.2); display: none; animation: fadeIn 0.5s ease; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -168,6 +226,7 @@
     </script>
 </body>
 </html>
+
 
 
 
