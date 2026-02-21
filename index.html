@@ -3,167 +3,166 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ninja Hub | Inicio</title>
+    <title>Ninja Hub | Ranking</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-     body {
-    margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; color: white;
-    background: linear-gradient(135deg, #0f0f0f, #1a1a2e, #16213e, #0f0f0f);
-    background-size: 400% 400%;
-    animation: gradientBG 15s ease infinite;
-    min-height: 100vh;
-    display: flex; justify-content: center;
-}
-@keyframes gradientBG {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
-}
-.container { 
-    width: 90%; max-width: 800px; 
-    padding: 40px 15px; box-sizing: border-box; 
-}
-h1 { 
-    color: #00f2ff; text-align: center; text-transform: uppercase; 
-    letter-spacing: 5px; text-shadow: 0 0 20px rgba(0,242,255,0.4); 
-}
-/* EFECTO CRISTAL PARA TABLAS Y CONTENEDORES */
-.glass-panel {
-    background: rgba(255, 255, 255, 0.03);
-    backdrop-filter: blur(15px);
-    -webkit-backdrop-filter: blur(15px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 20px;
-    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
-    overflow: hidden;
-    padding: 10px;
-}
-table { width: 100%; border-collapse: collapse; }
-th { background: rgba(0, 242, 255, 0.1); color: #00f2ff; padding: 15px; text-align: left; }
-td { padding: 15px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
+        /* FONDO ANIMADO NINJA */
+        body {
+            margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: white;
+            background: linear-gradient(135deg, #0f0f0f, #1a1a2e, #16213e, #0f0f0f);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            min-height: 100vh;
+            display: flex; justify-content: center;
+        }
 
-/* Botones con estilo Tienda */
-.btn-action {
-    display: block; width: 100%; background: #00f2ff; color: black; text-align: center;
-    padding: 15px; border-radius: 12px; text-decoration: none; font-weight: bold;
-    margin-top: 20px; transition: 0.3s; text-transform: uppercase; border: none;
-}
-.btn-action:hover { background: #fff; box-shadow: 0 0 15px #00f2ff; }
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .container {
+            width: 95%;
+            max-width: 800px;
+            padding: 40px 15px;
+            box-sizing: border-box;
+        }
+
+        h1 {
+            color: #00f2ff;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 5px;
+            text-shadow: 0 0 20px rgba(0, 242, 255, 0.4);
+            margin-bottom: 30px;
+        }
+
+        /* EFECTO CRISTAL (Glassmorphism) */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
+            overflow: hidden;
+            margin-bottom: 25px;
+        }
+
+        /* MARQUESINA */
+        .news-bar {
+            padding: 12px;
+            color: #00ff88;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        /* TABLA */
+        table { width: 100%; border-collapse: collapse; }
+        th { 
+            background: rgba(0, 242, 255, 0.1); 
+            color: #00f2ff; 
+            padding: 15px; 
+            text-align: left; 
+            font-size: 0.8rem;
+            text-transform: uppercase;
+        }
+        td { padding: 15px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
+
+        /* Resaltar TOP 3 */
+        tr:nth-child(1) td { color: #ffcc00; font-weight: bold; } /* Oro */
+        tr:nth-child(2) td { color: #e5e5e5; } /* Plata */
+        tr:nth-child(3) td { color: #cd7f32; } /* Bronce */
+
+        /* BOTONES */
+        .btn-action {
+            display: block; width: 100%; background: #00f2ff; color: black; text-align: center;
+            padding: 18px; border-radius: 15px; text-decoration: none; font-weight: bold;
+            margin-top: 20px; transition: 0.3s; text-transform: uppercase; border: none;
+            cursor: pointer;
+        }
+        .btn-action:hover { background: #fff; transform: scale(1.02); box-shadow: 0 0 20px #00f2ff; }
+
+        .footer-link {
+            text-align: center; margin-top: 20px; font-size: 0.8rem;
+        }
+        .footer-link a { color: #888; text-decoration: none; transition: 0.3s; }
+        .footer-link a:hover { color: #00f2ff; }
     </style>
 </head>
 <body>
+
     <div class="container">
-        <h1>UNION REPUBLICANA MULTICULTURAL</h1>
+        <h1>NINJA HUB</h1>
 
-        <div class="nav-links">
-            <a href="leaderboard.html" class="nav-btn">🏆 VER RANKING COMPLETO</a>
-            <a href="canje.html" class="nav-btn">💰 TIENDA DE CANJE</a>
-            <a href="historial.html" class="nav-btn">📜 Historial de Puntos</a>
+        <div class="glass-panel">
+            <div class="news-bar">
+                <marquee id="marquee-canjes">Cargando últimos movimientos de la aldea...</marquee>
+            </div>
         </div>
-        
-        <div class="top-three" id="podio"></div>
 
-        <div class="card">
-            <div class="header-calendario">
-                <button class="btn-mes" onclick="cambiarMes(-1)">◀ ANTERIOR</button>
-                <h2 id="mes-titulo" style="margin:0; color:#00f2ff;"></h2>
-                <button class="btn-mes" onclick="cambiarMes(1)">SIGUIENTE ▶</button>
-            </div>
-            <p style="color: #888; text-align: center;">Toca un día para ver los ganadores de ese torneo.</p>
-            <div class="grid-calendario" id="calendario"></div>
-            
-            <div id="detalle-ganadores">
-                <h3 id="fecha-seleccionada" style="color:#00f2ff; margin-top:0;"></h3>
-                <div id="lista-ganadores-dia"></div>
-            </div>
+        <div class="glass-panel">
+            <table id="ranking-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>NINJA</th>
+                        <th style="text-align: right;">PUNTOS</th>
+                    </tr>
+                </thead>
+                <tbody id="lista-ranking">
+                    </tbody>
+            </table>
+        </div>
+
+        <a href="canje.html" class="btn-action">🛒 IR A LA TIENDA</a>
+
+        <div class="footer-link">
+            <a href="historial.html">Ver historial de actividad</a>
         </div>
     </div>
 
     <script>
+        // TU CONFIGURACIÓN DE SUPABASE (No la tocamos)
         const _supabase = supabase.createClient('https://ekaiwrnvbpwaaoenwnnp.supabase.co', 'sb_publishable_YvgUfE8sAXfAUGvXMcNB4Q_aGC2GUMP');
 
-        // Variables globales para controlar el tiempo
-        let fechaActual = new Date();
-        let mesVisualizado = fechaActual.getMonth();
-        let anioVisualizado = fechaActual.getFullYear();
+        async function cargarDatos() {
+            // Cargar Ranking
+            const { data: ranking, error: errorRank } = await _supabase
+                .from('ranking')
+                .select('*')
+                .order('puntos', { ascending: false });
 
-        async function init() {
-            // Cargar Podio (Solo se carga una vez al inicio)
-            const { data: n } = await _supabase.from('ranking').select('*').order('puntos', { ascending: false }).limit(3);
-            if(n && n.length >= 3) {
-                document.getElementById('podio').innerHTML = `
-                    <div class="spot spot-2">🥈<strong>${n[1].nombre}</strong><span>${n[1].puntos} PTS</span></div>
-                    <div class="spot spot-1">👑<strong>${n[0].nombre}</strong><span>${n[0].puntos} PTS</span></div>
-                    <div class="spot spot-3">🥉<strong>${n[2].nombre}</strong><span>${n[2].puntos} PTS</span></div>`;
-            }
-            renderizarCalendario();
-        }
-
-        async function renderizarCalendario() {
-            const { data: e } = await _supabase.from('eventos').select('*');
-            
-            const nombresMeses = ["ENERO", "FEBRERO", "MARZO", "ABRIL", "MAYO", "JUNIO", "JULIO", "AGOSTO", "SEPTIEMBRE", "OCTUBRE", "NOVIEMBRE", "DICIEMBRE"];
-            document.getElementById('mes-titulo').innerText = `${nombresMeses[mesVisualizado]} ${anioVisualizado}`;
-
-            const diasEnMes = new Date(anioVisualizado, mesVisualizado + 1, 0).getDate();
-            let html = '';
-            
-            for(let i=1; i<=diasEnMes; i++) {
-                const fechaStr = `${anioVisualizado}-${String(mesVisualizado+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
-                const evs = e.filter(ev => ev.fecha === fechaStr);
-                
-                // Comprobar si es el día de hoy real
-                const hoyReal = new Date();
-                const esHoy = i === hoyReal.getDate() && mesVisualizado === hoyReal.getMonth() && anioVisualizado === hoyReal.getFullYear();
-
-                html += `<div class="dia ${esHoy ? 'hoy' : ''}" onclick="verGanadores('${fechaStr}', ${evs.length > 0 ? evs[0].id : null})">
-                            ${i}${evs.map(ev=>`<div class="evento-tag">${ev.nombre}</div>`).join('')}
-                         </div>`;
-            }
-            document.getElementById('calendario').innerHTML = html;
-        }
-
-        function cambiarMes(delta) {
-            mesVisualizado += delta;
-            if (mesVisualizado > 11) {
-                mesVisualizado = 0;
-                anioVisualizado++;
-            } else if (mesVisualizado < 0) {
-                mesVisualizado = 11;
-                anioVisualizado--;
-            }
-            renderizarCalendario();
-        }
-
-        async function verGanadores(fecha, eventoId) {
-            const detalle = document.getElementById('detalle-ganadores');
-            const lista = document.getElementById('lista-ganadores-dia');
-            document.getElementById('fecha-seleccionada').innerText = "Resultados del " + fecha;
-            detalle.style.display = 'block';
-            lista.innerHTML = "Cargando...";
-
-            if(!eventoId) {
-                lista.innerHTML = "<p>No hubo torneos programados para este día.</p>";
-                return;
-            }
-
-            const { data: ganadores } = await _supabase.from('ganadores').select('*').eq('evento_id', eventoId);
-            
-            if(ganadores && ganadores.length > 0) {
-                lista.innerHTML = "<h4>Ganadores anteriores:</h4>" + ganadores.map(g => `
-                    <div class="ganador-item">
-                        <strong>👤 ${g.nombre_jugador}</strong><br>
-                        <small>🎁 Premio: ${g.premio || 'No especificado'}</small>
-                    </div>
+            if (!errorRank) {
+                const tabla = document.getElementById('lista-ranking');
+                tabla.innerHTML = ranking.map((u, index) => `
+                    <tr>
+                        <td style="font-weight:bold; color: #00f2ff; width: 30px;">${index + 1}</td>
+                        <td>${u.nombre}</td>
+                        <td style="text-align: right; font-weight: bold;">${u.puntos} PTS</td>
+                    </tr>
                 `).join('');
+            }
+
+            // Cargar Noticias de Canjes
+            const { data: logs } = await _supabase
+                .from('logs')
+                .select('*')
+                .lt('puntos_cambiados', 0)
+                .order('created_at', { ascending: false })
+                .limit(5);
+
+            const marquee = document.getElementById('marquee-canjes');
+            if (logs && logs.length > 0) {
+                marquee.innerText = logs.map(l => `🔥 ${l.ninja_nombre} realizó un canje | `).join(' ');
             } else {
-                lista.innerHTML = "<h4>Ganadores anteriores:</h4><p>No hay ganadores registrados para este torneo aún.</p>";
+                marquee.innerText = "¡Bienvenidos al Ninja Hub! Compite para ganar premios.";
             }
         }
 
-        window.onload = init;
+        window.onload = cargarDatos;
     </script>
+
 </body>
 </html>
-
-
