@@ -24,7 +24,6 @@
 
         h1 { color: #00f2ff; text-align: center; text-transform: uppercase; letter-spacing: 4px; margin-bottom: 30px; }
         
-        /* ESTILO GLASS PANEL IGUAL AL INDEX */
         .glass-panel {
             background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(15px);
             border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 20px; padding: 10px; overflow: hidden;
@@ -37,7 +36,6 @@
         .rank-col { color: #888; width: 40px; font-weight: bold; text-align: center; }
         .pts-col { text-align: right; color: #00f2ff; font-weight: bold; }
         
-        /* ESTILO PARA MINI AVATAR EN TABLA */
         .user-info { display: flex; align-items: center; gap: 12px; }
         .mini-avatar { 
             width: 35px; height: 35px; border-radius: 50%; 
@@ -71,28 +69,41 @@
         const _supabase = supabase.createClient('https://ekaiwrnvbpwaaoenwnnp.supabase.co', 'sb_publishable_YvgUfE8sAXfAUGvXMcNB4Q_aGC2GUMP');
 
         async function load() {
-            const { data } = await _supabase.from('ranking').select('*').order('puntos', { ascending: false });
+            const { data, error } = await _supabase.from('ranking').select('*').order('puntos', { ascending: false });
             
-            document.getElementById('full-ranking').innerHTML = data.map((u, i) => {
-                // Si no hay foto, ponemos una por defecto o dejamos el div vacío
+            if (error) return;
+
+            const tbody = document.getElementById('full-ranking');
+            let htmlFinal = "";
+
+            data.forEach((u, i) => {
+                // 1. Limpiamos y convertimos a número (por si viene como texto o nulo)
+                const valorNumerico = parseInt(u.puntos) || 0;
+                
+                // 2. Formateamos manualmente a estilo español (con punto)
+                const ptsConPunto = valorNumerico.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+
                 const avatarImg = u.avatar_url 
                     ? `<img src="${u.avatar_url}" class="mini-avatar">` 
                     : `<div class="mini-avatar" style="display:flex; align-items:center; justify-content:center; font-size:10px; color:#555;">N/A</div>`;
 
-                return `
+                htmlFinal += `
                 <tr>
-                    <td class="rank-col">${i+1}</td>
+                    <td class="rank-col">${i + 1}</td>
                     <td>
                         <div class="user-info">
                             ${avatarImg}
-                            <span>${u.nombre}</span>
+                            <span>${u.nombre || 'Sin nombre'}</span>
                         </div>
                     </td>
-                    <td class="pts-col">${u.puntos} PTS</td>
+                    <td class="pts-col">${ptsConPunto} PTS</td>
                 </tr>
                 `;
-            }).join('');
+            });
+
+            tbody.innerHTML = htmlFinal;
         }
+
         window.onload = load;
     </script>
 </body>
