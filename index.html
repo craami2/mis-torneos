@@ -16,7 +16,6 @@
 
         .container { width: 95%; max-width: 800px; padding: 20px 10px; box-sizing: border-box; }
         
-        /* MENÚ SUPERIOR */
         .nav-links { display: flex; justify-content: center; gap: 10px; margin-bottom: 30px; flex-wrap: wrap; }
         .nav-links a { 
             background: rgba(255,255,255,0.05); backdrop-filter: blur(10px);
@@ -51,7 +50,7 @@
         .has-event::after { content: ''; width: 6px; height: 6px; background: #00ff88; border-radius: 50%; position: absolute; bottom: 4px; left: 45%; box-shadow: 0 0 5px #00ff88; }
         .today { background: #00f2ff; color: black; font-weight: bold; box-shadow: 0 0 15px #00f2ff; }
 
-        /* VISOR DE EVENTOS RECONSTRUIDO */
+        /* VISOR DE DETALLES */
         #event-info { 
             margin-top: 20px; padding: 20px; border-radius: 15px; 
             background: rgba(0,255,136,0.05); color: #fff; 
@@ -61,7 +60,6 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .event-title { color: #00ff88; font-weight: bold; font-size: 1.1rem; margin-bottom: 8px; display: block; }
         .event-detail { color: #eee; font-size: 0.9rem; line-height: 1.4; }
-        .event-winners { color: #ffcc00; font-weight: bold; margin-top: 10px; font-size: 0.9rem; display: block; }
     </style>
 </head>
 <body>
@@ -110,7 +108,7 @@
         let eventosData = [];
 
         async function cargarTodo() {
-            // Cargar Podio Real
+            // Cargar Podio
             const { data: ranking } = await _supabase.from('ranking').select('*').order('puntos', { ascending: false }).limit(3);
             if (ranking) {
                 if (ranking[0]) { 
@@ -127,7 +125,7 @@
                 }
             }
 
-            // Cargar Eventos desde Supabase
+            // Cargar Eventos con nombres exactos: nombre, fecha, desc
             const { data: eventos } = await _supabase.from('eventos').select('*');
             eventosData = eventos || [];
             renderCalendar();
@@ -150,8 +148,6 @@
 
             for (let i = 1; i <= lastDay; i++) {
                 const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
-                
-                // Buscamos el evento para este día
                 const evIndex = eventosData.findIndex(e => e.fecha === dateStr);
                 const hasEvent = evIndex !== -1;
                 const isToday = i === today.getDate() && month === today.getMonth() && year === today.getFullYear();
@@ -166,11 +162,10 @@
             const info = document.getElementById('event-info');
             if (index !== -1) {
                 const ev = eventosData[index];
-                // Lógica rebobinada: Mostramos título, detalle y ganadores
+                // Usamos los nombres exactos: nombre y desc
                 info.innerHTML = `
-                    <span class="event-title">📌 ${ev.titulo || 'Evento'}</span>
-                    <div class="event-detail">${ev.detalle || 'No hay descripción disponible para este evento.'}</div>
-                    ${ev.ganadores ? `<span class="event-winners">🏆 Ganadores: ${ev.ganadores}</span>` : ''}
+                    <span class="event-title">📌 ${ev.nombre || 'Evento'}</span>
+                    <div class="event-detail">${ev.desc || 'Sin descripción disponible.'}</div>
                 `;
                 info.style.display = 'block';
             } else {
