@@ -24,6 +24,10 @@
 
         /* CALENDARIO */
         .card { background-color: #2a2a2a; padding: 25px; border-radius: 15px; border: 1px solid #444; margin-bottom: 25px; }
+        .header-calendario { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .btn-mes { background: none; border: 1px solid #00f2ff; color: #00f2ff; padding: 5px 15px; cursor: pointer; border-radius: 5px; font-weight: bold; }
+        .btn-mes:hover { background: #00f2ff; color: black; }
+        
         .grid-calendario { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; margin-top: 20px; }
         .dia { background-color: #333; border: 1px solid #444; min-height: 80px; padding: 10px; border-radius: 8px; cursor: pointer; transition: 0.3s; }
         .dia:hover { border-color: #00f2ff; background-color: #3d3d3d; }
@@ -44,12 +48,15 @@
             <a href="canje.html" class="nav-btn">💰 TIENDA DE CANJE</a>
         </div>
         
-        <div class="top-three" id="podio">
-            </div>
+        <div class="top-three" id="podio"></div>
 
         <div class="card">
-            <h2>CALENDARIO DE TORNEOS</h2>
-            <p style="color: #888;">Toca un día para ver los ganadores de ese torneo.</p>
+            <div class="header-calendario">
+                <button class="btn-mes" onclick="cambiarMes(-1)">◀ ANTERIOR</button>
+                <h2 id="mes-titulo" style="margin:0; color:#00f2ff;"></h2>
+                <button class="btn-mes" onclick="cambiarMes(1)">SIGUIENTE ▶</button>
+            </div>
+            <p style="color: #888; text-align: center;">Toca un día para ver los ganadores de ese torneo.</p>
             <div class="grid-calendario" id="calendario"></div>
             
             <div id="detalle-ganadores">
@@ -62,8 +69,13 @@
     <script>
         const _supabase = supabase.createClient('https://ekaiwrnvbpwaaoenwnnp.supabase.co', 'sb_publishable_YvgUfE8sAXfAUGvXMcNB4Q_aGC2GUMP');
 
+        // Variables globales para controlar el tiempo
+        let fechaActual = new Date();
+        let mesVisualizado = fechaActual.getMonth();
+        let anioVisualizado = fechaActual.getFullYear();
+
         async function init() {
-            // Cargar Podio (Top 3)
+            // Cargar Podio (Solo se carga una vez al inicio)
             const { data: n } = await _supabase.from('ranking').select('*').order('puntos', { ascending: false }).limit(3);
             if(n && n.length >= 3) {
                 document.getElementById('podio').innerHTML = `
@@ -71,20 +83,43 @@
                     <div class="spot spot-1">👑<strong>${n[0].nombre}</strong><span>${n[0].puntos} PTS</span></div>
                     <div class="spot spot-3">🥉<strong>${n[2].nombre}</strong><span>${n[2].puntos} PTS</span></div>`;
             }
+            renderizarCalendario();
+        }
 
-            // Cargar Calendario
+        async function renderizarCalendario() {
             const { data: e } = await _supabase.from('eventos').select('*');
-            const hoy = new Date();
-            const dias = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0).getDate();
+            
+            const nombresMeses = ["ENERO", "FEBRERO", "MARZO", "ABRIL", "MAYO", "JUNIO", "JULIO", "AGOSTO", "SEPTIEMBRE", "OCTUBRE", "NOVIEMBRE", "DICIEMBRE"];
+            document.getElementById('mes-titulo').innerText = `${nombresMeses[mesVisualizado]} ${anioVisualizado}`;
+
+            const diasEnMes = new Date(anioVisualizado, mesVisualizado + 1, 0).getDate();
             let html = '';
-            for(let i=1; i<=dias; i++) {
-                const fechaStr = `${hoy.getFullYear()}-${String(hoy.getMonth()+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
+            
+            for(let i=1; i<=diasEnMes; i++) {
+                const fechaStr = `${anioVisualizado}-${String(mesVisualizado+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
                 const evs = e.filter(ev => ev.fecha === fechaStr);
-                html += `<div class="dia ${i===hoy.getDate()?'hoy':''}" onclick="verGanadores('${fechaStr}', ${evs.length > 0 ? evs[0].id : null})">
+                
+                // Comprobar si es el día de hoy real
+                const hoyReal = new Date();
+                const esHoy = i === hoyReal.getDate() && mesVisualizado === hoyReal.getMonth() && anioVisualizado === hoyReal.getFullYear();
+
+                html += `<div class="dia ${esHoy ? 'hoy' : ''}" onclick="verGanadores('${fechaStr}', ${evs.length > 0 ? evs[0].id : null})">
                             ${i}${evs.map(ev=>`<div class="evento-tag">${ev.nombre}</div>`).join('')}
                          </div>`;
             }
             document.getElementById('calendario').innerHTML = html;
+        }
+
+        function cambiarMes(delta) {
+            mesVisualizado += delta;
+            if (mesVisualizado > 11) {
+                mesVisualizado = 0;
+                anioVisualizado++;
+            } else if (mesVisualizado < 0) {
+                mesVisualizado = 11;
+                anioVisualizado--;
+            }
+            renderizarCalendario();
         }
 
         async function verGanadores(fecha, eventoId) {
@@ -117,5 +152,3 @@
     </script>
 </body>
 </html>
-
-
