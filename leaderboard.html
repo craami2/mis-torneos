@@ -44,6 +44,41 @@
 
         tr:last-child td { border-bottom: none; }
         tr:hover { background: rgba(0, 242, 255, 0.05); }
+
+        /* --- ESTILOS EXCLUSIVOS PARA EL TOP 3 --- */
+
+        /* 1er LUGAR: ORO SUPREMO */
+        #full-ranking tr:nth-child(1) {
+            background: linear-gradient(90deg, rgba(255, 215, 0, 0.1) 0%, rgba(255, 215, 0, 0.2) 50%, rgba(255, 215, 0, 0.1) 100%) !important;
+            border-left: 4px solid #FFD700;
+        }
+        #full-ranking tr:nth-child(1) .rank-col { 
+            color: #FFD700; 
+            text-shadow: 0 0 15px #FFD700, 0 0 30px rgba(255,215,0,0.5); 
+            font-size: 1.4rem;
+        }
+        #full-ranking tr:nth-child(1) .user-info span { 
+            color: #FFD700; 
+            font-weight: 800; 
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.4);
+            text-transform: uppercase;
+        }
+        #full-ranking tr:nth-child(1) .mini-avatar { border-color: #FFD700; box-shadow: 0 0 10px #FFD700; }
+
+        /* 2do LUGAR: PLATA */
+        #full-ranking tr:nth-child(2) {
+            border-left: 4px solid #C0C0C0;
+            background: rgba(192, 192, 192, 0.05);
+        }
+        #full-ranking tr:nth-child(2) .rank-col { color: #C0C0C0; text-shadow: 0 0 10px #C0C0C0; }
+
+        /* 3er LUGAR: BRONCE */
+        #full-ranking tr:nth-child(3) {
+            border-left: 4px solid #CD7F32;
+            background: rgba(205, 127, 50, 0.03);
+        }
+        #full-ranking tr:nth-child(3) .rank-col { color: #CD7F32; text-shadow: 0 0 10px #CD7F32; }
+
     </style>
 </head>
 <body>
@@ -77,10 +112,7 @@
             let htmlFinal = "";
 
             data.forEach((u, i) => {
-                // 1. Limpiamos y convertimos a número (por si viene como texto o nulo)
                 const valorNumerico = parseInt(u.puntos) || 0;
-                
-                // 2. Formateamos manualmente a estilo español (con punto)
                 const ptsConPunto = valorNumerico.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
 
                 const avatarImg = u.avatar_url 
