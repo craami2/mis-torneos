@@ -95,25 +95,32 @@
         }
 
         async function save() {
-            const eid = document.getElementById('se').value;
-            const nom = document.getElementById('sn').value;
-            const pts = parseInt(document.getElementById('pg').value);
-            const pre = document.getElementById('pr').value;
+    const eid = document.getElementById('se').value;
+    const nom = document.getElementById('sn').value;
+    const pts = parseInt(document.getElementById('pg').value);
+    const pre = document.getElementById('pr').value;
 
-            await _supabase.from('ganadores').insert([{ evento_id: eid, nombre_jugador: nom, premio: pre }]);
-            const { data: u } = await _supabase.from('ranking').select('puntos').eq('nombre', nom).single();
-            const totalNuevo = (u ? u.puntos : 0) + pts;
-            await _supabase.from('ranking').update({ puntos: totalNuevo }).eq('nombre', nom);
-            await _supabase.from('logs').insert([{
-                ninja_nombre: nom,
-                puntos_cambiados: pts,
-                tipo_accion: "Torneo",
-                detalle: "Ganó torneo. Premio: " + (pre || "N/A")
-            }]);
+    // EL CAMBIO ESTÁ AQUÍ: Guardamos los puntos en la columna 'premio' para que no se pierdan
+    await _supabase.from('ganadores').insert([{ 
+        evento_id: eid, 
+        nombre_jugador: nom, 
+        premio: pts // <-- Ahora guardamos el número de puntos directamente aquí
+    }]);
 
-            alert("Puntos y Log registrados!"); 
-            refresh();
-        }
+    const { data: u } = await _supabase.from('ranking').select('puntos').eq('nombre', nom).single();
+    const totalNuevo = (u ? u.puntos : 0) + pts;
+    await _supabase.from('ranking').update({ puntos: totalNuevo }).eq('nombre', nom);
+    
+    await _supabase.from('logs').insert([{
+        ninja_nombre: nom,
+        puntos_cambiados: pts,
+        tipo_accion: "Torneo",
+        detalle: "Torneo ID: " + eid
+    }]);
+
+    alert("¡Puntos registrados correctamente!"); 
+    refresh();
+}
 
         async function editPuntos(id, nombre, puntosActuales) {
             const valor = prompt("Puntos actuales de " + nombre + ": " + puntosActuales + "\n¿Cuál es el NUEVO TOTAL?");
@@ -143,3 +150,4 @@
     </script>
 </body>
 </html>
+
