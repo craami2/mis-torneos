@@ -24,7 +24,7 @@
             min-height: 100vh;
         }
 
-        /* --- LOADER (Igual al tuyo) --- */
+        /* --- LOADER --- */
         #loader {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: #050505; z-index: 9999; display: flex;
@@ -32,16 +32,12 @@
             transition: opacity 0.8s ease, visibility 0.8s;
         }
         .loader-content { text-align: center; }
-        .loader-logo img {
-            width: 120px; height: 120px;
-            filter: drop-shadow(0 0 20px var(--accent-cyan));
-            margin-bottom: 20px;
-        }
+        .loader-logo img { width: 120px; height: 120px; filter: drop-shadow(0 0 20px var(--accent-cyan)); margin-bottom: 20px; }
         .loader-bar { width: 200px; height: 2px; background: rgba(255,255,255,0.1); margin: 0 auto; border-radius: 10px; overflow: hidden; }
         .loader-progress { width: 100%; height: 100%; background: var(--accent-cyan); box-shadow: 0 0 10px var(--accent-cyan); }
         .loader-hidden { opacity: 0; visibility: hidden; }
 
-        /* --- NAV PREMIUM (Tu diseño original) --- */
+        /* --- NAV PREMIUM --- */
         .premium-nav {
             position: sticky; top: 0; z-index: 1000;
             background: rgba(5, 5, 5, 0.75);
@@ -50,6 +46,8 @@
             display: flex; align-items: center; justify-content: space-between;
             padding: 0 40px; height: 64px;
         }
+        .nav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; color: white; }
+        .nav-logo-box { width: 28px; height: 28px; background: var(--accent-cyan); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: 900; color: #000; font-size: 0.9rem; }
         .nav-center { display: flex; gap: 25px; }
         .nav-link { color: #888; text-decoration: none; font-size: 0.8rem; font-weight: 600; transition: 0.2s; text-transform: uppercase; }
         .nav-link:hover, .nav-link.active { color: #fff; }
@@ -58,9 +56,26 @@
         /* --- CONTENIDO --- */
         .main-wrapper { display: flex; justify-content: center; padding: 40px 20px; }
         .container { width: 100%; max-width: 800px; }
-        h1 { color: #fff; text-align: center; text-transform: uppercase; letter-spacing: 4px; margin-bottom: 30px; font-size: 1.5rem; }
+        h1 { color: #fff; text-align: center; text-transform: uppercase; letter-spacing: 4px; margin-bottom: 10px; font-size: 1.5rem; }
         
         .glass-panel { background: rgba(255, 255, 255, 0.02); backdrop-filter: blur(10px); border: 1px solid var(--glass-border); border-radius: 16px; padding: 25px; }
+
+        /* BARRA DE BÚSQUEDA */
+        .search-container { margin-bottom: 25px; position: relative; }
+        .search-input {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--glass-border);
+            padding: 15px 20px;
+            border-radius: 12px;
+            color: #fff;
+            font-size: 0.8rem;
+            outline: none;
+            transition: 0.3s;
+            box-sizing: border-box;
+            letter-spacing: 1px;
+        }
+        .search-input:focus { border-color: var(--accent-cyan); background: rgba(0, 242, 255, 0.05); }
 
         /* LISTADO DE TORNEOS */
         .tournament-list { display: grid; gap: 12px; }
@@ -87,9 +102,7 @@
         th { text-align: left; font-size: 0.7rem; color: #444; text-transform: uppercase; padding: 12px; border-bottom: 1px solid #111; }
         td { padding: 15px 12px; font-size: 0.9rem; border-bottom: 1px solid rgba(255,255,255,0.02); }
 
-        .rank-tag {
-            padding: 4px 10px; border-radius: 4px; font-weight: 900; font-size: 0.7rem;
-        }
+        .rank-tag { padding: 4px 10px; border-radius: 4px; font-weight: 900; font-size: 0.7rem; }
         .pos-1 { background: #ffcc00; color: #000; }
         .pos-2 { background: #e5e5e5; color: #000; }
         .pos-3 { background: #cd7f32; color: #000; }
@@ -106,13 +119,15 @@
     </div>
 
     <nav class="premium-nav">
-        <div class="nav-logo">
-            <div style="font-weight: 900; letter-spacing: 2px; color: var(--accent-cyan);">URM</div>
-        </div>
+        <a href="index.html" class="nav-logo">
+            <div class="nav-logo-box">U</div>
+            <span style="font-weight: 700; margin-left:10px;">URM</span>
+        </a>
         <div class="nav-center">
             <a href="index.html" class="nav-link">Inicio</a>
             <a href="leaderboard.html" class="nav-link">Clasificación</a>
             <a href="torneos.html" class="nav-link active">Torneos</a>
+            <a href="canje.html" class="nav-link">Canje</a>
             <a href="historial.html" class="nav-link">Auditoría</a>
         </div>
         <div><a href="https://discord.gg/8hFxCK4CEM" target="_blank" class="btn-join">Unirse</a></div>
@@ -123,9 +138,13 @@
             
             <div id="list-view">
                 <h1>Historial de Torneos</h1>
+                <div class="search-container">
+                    <input type="text" id="tournamentSearch" class="search-input" placeholder="BUSCAR POR NOMBRE O FECHA (AAAA-MM-DD)..." onkeyup="filtrarTorneos()">
+                </div>
+                
                 <div class="glass-panel">
                     <div id="torneos-list" class="tournament-list">
-                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -153,30 +172,64 @@
 
     <script>
         const _supabase = supabase.createClient('https://ekaiwrnvbpwaaoenwnnp.supabase.co', 'sb_publishable_YvgUfE8sAXfAUGvXMcNB4Q_aGC2GUMP');
+        let torneosGlobal = [];
 
         async function cargarTorneos() {
+            // 1. Cargamos todos los eventos
             const { data: eventos } = await _supabase.from('eventos').select('*').order('fecha', { ascending: false });
             
-            const list = document.getElementById('torneos-list');
             if(eventos) {
-                list.innerHTML = eventos.map(e => `
-                    <div class="tournament-item" onclick="verDetalle(${e.id}, '${e.nombre}', '${e.fecha}')">
-                        <div>
-                            <div class="t-name">${e.nombre}</div>
-                            <div class="t-date">${e.fecha}</div>
-                        </div>
-                        <div style="color:var(--accent-cyan); font-weight:900;">❯</div>
-                    </div>
-                `).join('');
+                torneosGlobal = eventos;
+                renderizarLista(torneosGlobal);
+
+                // 2. LÓGICA DE REDIRECCIÓN DESDE CALENDARIO
+                // Revisamos si en la URL viene un parámetro "?eventoId=..."
+                const urlParams = new URLSearchParams(window.location.search);
+                const eventoIdRedir = urlParams.get('eventoId');
+
+                if (eventoIdRedir) {
+                    // Buscamos el evento en nuestra lista local para obtener nombre y fecha
+                    const eventoEncontrado = torneosGlobal.find(e => e.id == eventoIdRedir);
+                    if (eventoEncontrado) {
+                        verDetalle(eventoEncontrado.id, eventoEncontrado.nombre, eventoEncontrado.fecha);
+                    }
+                }
             }
 
             setTimeout(() => document.getElementById('loader').classList.add('loader-hidden'), 1000);
+        }
+
+        function renderizarLista(data) {
+            const list = document.getElementById('torneos-list');
+            if (data.length === 0) {
+                list.innerHTML = `<div style="text-align:center; font-size:0.7rem; opacity:0.5; padding:20px;">NO SE ENCONTRARON RESULTADOS</div>`;
+                return;
+            }
+            list.innerHTML = data.map(e => `
+                <div class="tournament-item" onclick="verDetalle(${e.id}, '${e.nombre}', '${e.fecha}')">
+                    <div>
+                        <div class="t-name">${e.nombre}</div>
+                        <div class="t-date">${e.fecha}</div>
+                    </div>
+                    <div style="color:var(--accent-cyan); font-weight:900;">❯</div>
+                </div>
+            `).join('');
+        }
+
+        function filtrarTorneos() {
+            const query = document.getElementById('tournamentSearch').value.toLowerCase();
+            const filtrados = torneosGlobal.filter(t => 
+                t.nombre.toLowerCase().includes(query) || 
+                t.fecha.includes(query)
+            );
+            renderizarLista(filtrados);
         }
 
         async function verDetalle(id, nombre, fecha) {
             document.getElementById('det-title').innerText = nombre;
             document.getElementById('det-date').innerText = "FECHA DEL EVENTO: " + fecha;
             
+            // Cargamos todos los ganadores (incluso los de 0 puntos para la tabla completa)
             const { data: ganadores } = await _supabase
                 .from('ganadores')
                 .select('*')
@@ -196,9 +249,12 @@
 
             document.getElementById('list-view').style.display = 'none';
             document.getElementById('detail-view').style.display = 'block';
+            window.scrollTo(0, 0);
         }
 
         function showList() {
+            // Limpiamos el parámetro de la URL por si el usuario quiere volver a filtrar
+            window.history.replaceState({}, document.title, window.location.pathname);
             document.getElementById('list-view').style.display = 'block';
             document.getElementById('detail-view').style.display = 'none';
         }

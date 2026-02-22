@@ -158,7 +158,8 @@
         <div class="nav-center">
             <a href="index.html" class="nav-link active">Inicio</a>
             <a href="leaderboard.html" class="nav-link">Clasificación</a>
-            <a href="torneos.html" class="nav-link">Historial de Torneos</a> <a href="canje.html" class="nav-link">Canje</a>
+            <a href="torneos.html" class="nav-link">Historial de Torneos</a> 
+            <a href="canje.html" class="nav-link">Canje</a>
             <a href="historial.html" class="nav-link">Auditoría</a>
         </div>
         <div><a href="https://discord.gg/8hFxCK4CEM" target="_blank" class="btn-join">Unirse</a></div>
@@ -272,15 +273,31 @@
             
             let html = "";
             for (const ev of evs) {
-                const { data: gans } = await _supabase.from('ganadores').select('nombre_jugador, premio').eq('evento_id', ev.id);
-                let gansHtml = gans && gans.length > 0 
-                    ? gans.map(g => `<span class="winner-line">🏆 ${g.nombre_jugador} (+${Number(g.premio).toLocaleString('es-ES')} PTS)</span>`).join('')
-                    : `<span style="color:#666; display:block; margin-top:5px; font-size:0.7rem;">Resultados en proceso...</span>`;
+                // CORRECCIÓN 1: Filtramos para que solo traiga a quienes tienen premio > 0
+                const { data: gans } = await _supabase
+                    .from('ganadores')
+                    .select('nombre_jugador, premio')
+                    .eq('evento_id', ev.id)
+                    .gt('premio', 0) // Solo ganadores reales
+                    .order('premio', { ascending: false })
+                    .limit(3);
+
+                let gansHtml = "";
+                if (gans && gans.length > 0) {
+                    gansHtml = gans.map((g, index) => {
+                        const icon = index === 0 ? '🥇' : (index === 1 ? '🥈' : '🥉');
+                        return `<span class="winner-line">${icon} ${g.nombre_jugador} (+${Number(g.premio).toLocaleString('es-ES')} PTS)</span>`;
+                    }).join('');
+                } else {
+                    gansHtml = `<span style="color:#666; display:block; margin-top:5px; font-size:0.7rem;">Sin ganadores registrados aún...</span>`;
+                }
                 
+                // CORRECCIÓN 2: El enlace ahora lleva el ID del evento para filtrar en torneos.html
                 html += `
                     <div style="margin-bottom:15px; text-align: left;">
-                        <strong style="color:var(--accent-cyan); font-size:0.9rem; display:block; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:5px;">${ev.nombre}</strong>
+                        <strong style="color:var(--accent-cyan); font-size:0.9rem; display:block; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:5px; text-transform:uppercase;">${ev.nombre}</strong>
                         ${gansHtml}
+                        <a href="torneos.html?eventoId=${ev.id}" style="font-size:0.6rem; color:#444; text-decoration:none; display:block; margin-top:8px; font-weight:800; letter-spacing:1px;">VER TABLA COMPLETA ❯</a>
                     </div>`;
             }
             info.innerHTML = html;
