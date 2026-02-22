@@ -24,7 +24,59 @@
             min-height: 100vh;
         }
 
-        /* --- NAV PREMIUM (CORREGIDO) --- */
+        /* --- ESTILOS DE LA INTRO (NUEVO) --- */
+        #loader {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: #050505;
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.8s ease, visibility 0.8s;
+        }
+        .loader-content { text-align: center; }
+        .loader-logo img {
+            width: 120px;
+            height: 120px;
+            filter: drop-shadow(0 0 20px var(--accent-cyan));
+            animation: pulseLogo 2s infinite ease-in-out;
+            margin-bottom: 20px;
+        }
+        .loader-bar {
+            width: 200px;
+            height: 2px;
+            background: rgba(255,255,255,0.1);
+            margin: 0 auto;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .loader-progress {
+            width: 0%;
+            height: 100%;
+            background: var(--accent-cyan);
+            box-shadow: 0 0 10px var(--accent-cyan);
+            animation: fillBar 1.5s forwards ease-in-out;
+        }
+        .loader-text {
+            margin-top: 15px;
+            font-size: 0.6rem;
+            letter-spacing: 3px;
+            color: #444;
+            font-weight: 800;
+        }
+        .loader-hidden { opacity: 0; visibility: hidden; }
+        @keyframes pulseLogo {
+            0%, 100% { transform: scale(1); opacity: 0.8; }
+            50% { transform: scale(1.05); opacity: 1; }
+        }
+        @keyframes fillBar {
+            0% { width: 0%; }
+            100% { width: 100%; }
+        }
+
+        /* --- NAV PREMIUM --- */
         .premium-nav {
             position: sticky; top: 0; z-index: 1000;
             background: rgba(5, 5, 5, 0.75);
@@ -92,18 +144,27 @@
         .winner-line { color: #ffcc00; font-weight: 600; font-size: 0.95rem; display: block; margin-top: 8px; }
 
         /* --- FOOTER --- */
-        .social-link { display: flex; align-items: center; justify-content: center; gap: 12px; text-decoration: none; margin-bottom: 20px; }
-        .social-link img { width: 45px; height: 45px; border-radius: 10px; }
-        .social-link span { color: #fff; font-weight: 700; font-size: 1rem; letter-spacing: 0.5px; }
         .live-dot { color: #ff4444; animation: blink 1.5s infinite; margin-right: 5px; font-size: 0.8rem; }
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
     </style>
 </head>
 <body>
 
+    <div id="loader">
+        <div class="loader-content">
+            <div class="loader-logo">
+                <img src="https://cdn.discordapp.com/icons/800184417666465792/d1684b778ddf9719a417ac8a40e6c2dd.png?size=256" alt="Logo URM">
+            </div>
+            <div class="loader-bar">
+                <div class="loader-progress"></div>
+            </div>
+            <div class="loader-text">INICIANDO UNIÓN REPUBLICANA MULTICULTURAL.</div>
+        </div>
+    </div>
+
     <nav class="premium-nav">
         <a href="index.html" class="nav-logo">
-            <span style="font-weight: 700; letter-spacing: -0.5px;"></span>
+            
         </a>
         <div class="nav-center">
             <a href="index.html" class="nav-link active">Inicio</a>
@@ -124,7 +185,6 @@
                         <span class="podium-name" id="name-2">---</span><span class="podium-pts" id="pts-2"></span>
                     </div>
                     <div class="podium-spot p1">
-                        <span class="crown"></span>
                         <div class="avatar-container"><div class="avatar-inner" id="img-1"></div></div>
                         <span class="podium-name" id="name-1">---</span><span class="podium-pts" id="pts-1"></span>
                     </div>
@@ -144,9 +204,8 @@
                 <div id="calendar-days" class="calendar-grid"></div>
                 <div id="event-info"></div>
             </div>
+
             <div class="glass-panel" style="text-align: center;">
-               
-                </a>
                 <div style="border-top: 1px solid rgba(255,255,255,0.05); padding-top: 20px;">
                     <p style="font-size: 0.7rem; color: #666; font-weight: 700; margin-bottom: 15px; letter-spacing: 1px;">
                         <span class="live-dot">●</span> APOYA LOS LIVES:
@@ -178,6 +237,11 @@
             const { data: eventos } = await _supabase.from('eventos').select('*');
             eventosData = eventos || [];
             renderCalendar();
+
+            // Ocultar pantalla de carga tras 2 segundos (NUEVO)
+            setTimeout(() => {
+                document.getElementById('loader').classList.add('loader-hidden');
+            }, 2000);
         }
 
         function changeMonth(dir) {
