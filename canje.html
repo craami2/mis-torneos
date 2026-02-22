@@ -9,12 +9,12 @@
             --bg-color: #050505;
             --accent-cyan: #00f2ff;
             --glass-border: rgba(255, 255, 255, 0.08);
+            --accent-purple: #a970ff;
         }
 
         body {
             margin: 0; padding: 0; font-family: 'Inter', 'Segoe UI', sans-serif; color: white;
             background-color: var(--bg-color);
-            /* Fondo estilo Supabase: Puntos y luces suaves */
             background-image: 
                 radial-gradient(at 0% 0%, rgba(0, 242, 255, 0.08) 0px, transparent 40%),
                 radial-gradient(at 100% 0%, rgba(169, 112, 255, 0.08) 0px, transparent 40%),
@@ -34,7 +34,6 @@
             padding: 0 40px; height: 64px;
         }
         .nav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; color: white; }
-        .nav-logo-box { width: 28px; height: 28px; background: var(--accent-cyan); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: 900; color: #000; font-size: 0.9rem; }
         .nav-center { display: flex; gap: 30px; }
         .nav-link { color: #888; text-decoration: none; font-size: 0.85rem; font-weight: 500; transition: 0.2s; letter-spacing: 0.3px; text-transform: uppercase; }
         .nav-link:hover, .nav-link.active { color: #fff; }
@@ -118,14 +117,44 @@
             color: #000;
             border-color: #fff;
         }
+
+        /* --- MODAL PERSONALIZADO --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(8px);
+            display: none; justify-content: center; align-items: center;
+            z-index: 2000; opacity: 0; transition: 0.3s;
+        }
+        .modal-content {
+            background: #0a0a0a;
+            border: 1px solid var(--accent-cyan);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 0 30px rgba(0, 242, 255, 0.15);
+        }
+        .modal-icon { font-size: 3rem; margin-bottom: 20px; display: block; }
+        .modal-title { font-size: 1.2rem; font-weight: 800; margin-bottom: 10px; color: #fff; }
+        .modal-text { color: #aaa; font-size: 0.9rem; line-height: 1.5; margin-bottom: 25px; }
+        .modal-btns { display: flex; flex-direction: column; gap: 10px; }
+        .btn-discord { 
+            background: #5865F2; color: white; border: none; padding: 12px; 
+            border-radius: 8px; font-weight: 700; cursor: pointer; text-decoration: none; 
+            font-size: 0.8rem;
+        }
+        .btn-close { 
+            background: transparent; color: #555; border: none; padding: 8px; 
+            font-size: 0.7rem; font-weight: 700; cursor: pointer; 
+        }
     </style>
 </head>
 <body>
 
     <nav class="premium-nav">
-        <a href="index.html" class="nav-logo">
-        
-        </a>
+        <a href="index.html" class="nav-logo"></a>
         <div class="nav-center">
             <a href="index.html" class="nav-link">Inicio</a>
             <a href="leaderboard.html" class="nav-link">Clasificación</a>
@@ -175,22 +204,53 @@
         </div>
     </div>
 
+    <div id="modalCanje" class="modal-overlay">
+        <div class="modal-content">
+            <span class="modal-icon"></span>
+            <div class="modal-title">¡SOLICITUD COPIADA!</div>
+            <p class="modal-text">Hemos copiado tu solicitud al portapapeles. Ahora ve al canal de Discord y **pégala** para que un admin la procese.</p>
+            <div class="modal-btns">
+                <button class="btn-discord" onclick="irADiscord()">ABRIR DISCORD</button>
+                <button class="btn-close" onclick="cerrarModal()">CERRAR</button>
+            </div>
+        </div>
+    </div>
+
     <script>
+        const idServidor = "800184417666465792"; 
+        const idCanal = "800184417666465795";
+
         function solicitar(item, precio) {
-            const idServidor = "800184417666465792"; 
-            const idCanal = "800184417666465795";
             const mensaje = `🥋 SOLICITUD DE CANJE 🥋\n----------------------------\n🎁 Recompensa: ${item}\n💰 Costo: ${precio} puntos\n👤 Usuario: [ESCRIBE TU NOMBRE AQUÍ]\n----------------------------\n@Craami revisa mi saldo!`;
 
             navigator.clipboard.writeText(mensaje).then(() => {
-                alert("✅ ¡Copiado!\n\nSe abrirá Discord. Pega el mensaje en el canal.");
-                window.location.href = `discord://discord.com/channels/${idServidor}/${idCanal}`;
-                
-                setTimeout(() => {
-                    if (document.hasFocus()) {
-                        window.open(`https://discord.com/channels/${idServidor}/${idCanal}`, '_blank');
-                    }
-                }, 3000);
+                mostrarModal();
             });
+        }
+
+        function mostrarModal() {
+            const modal = document.getElementById('modalCanje');
+            modal.style.display = 'flex';
+            setTimeout(() => modal.style.opacity = '1', 10);
+        }
+
+        function cerrarModal() {
+            const modal = document.getElementById('modalCanje');
+            modal.style.opacity = '0';
+            setTimeout(() => modal.style.display = 'none', 300);
+        }
+
+        function irADiscord() {
+            // Intenta abrir la App
+            window.location.href = `discord://discord.com/channels/${idServidor}/${idCanal}`;
+            
+            // Si en 1 segundo no se ha ido de la página (no tiene la app), abre el navegador
+            setTimeout(() => {
+                if (document.hasFocus()) {
+                    window.open(`https://discord.com/channels/${idServidor}/${idCanal}`, '_blank');
+                }
+                cerrarModal();
+            }, 1000);
         }
     </script>
 </body>

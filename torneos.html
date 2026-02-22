@@ -98,9 +98,7 @@
 <body>
 
     <nav class="premium-nav">
-        <a href="index.html" class="nav-logo">
-      
-        </a>
+        <a href="index.html" class="nav-logo"></a>
         <div class="nav-center">
             <a href="index.html" class="nav-link">Inicio</a>
             <a href="leaderboard.html" class="nav-link">Clasificación</a>
@@ -204,12 +202,18 @@
             const { data: ganadores } = await _supabase
                 .from('ganadores')
                 .select('*')
-                .eq('evento_id', id)
-                .order('premio', { ascending: false });
+                .eq('evento_id', id);
 
             const body = document.getElementById('det-body');
+            
             if(ganadores) {
-                body.innerHTML = ganadores.map((g, i) => `
+                // FORZAMOS EL ORDENAMIENTO NUMÉRICO EN EL FRONTEND
+                // Esto garantiza que 100 > 20 siempre.
+                const ganadoresOrdenados = ganadores.sort((a, b) => {
+                    return Number(b.premio) - Number(a.premio);
+                });
+
+                body.innerHTML = ganadoresOrdenados.map((g, i) => `
                     <tr>
                         <td><span class="rank-tag ${i < 3 ? 'pos-' + (i + 1) : ''}">${i + 1}</span></td>
                         <td style="font-weight:800; text-transform:uppercase;">${g.nombre_jugador}</td>

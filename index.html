@@ -151,9 +151,7 @@
     </div>
 
     <nav class="premium-nav">
-        <a href="index.html" class="nav-logo">
-            
-        </a>
+        <a href="index.html" class="nav-logo"></a>
         <div class="nav-center">
             <a href="index.html" class="nav-link active">Inicio</a>
             <a href="leaderboard.html" class="nav-link">Clasificación</a>
@@ -219,18 +217,22 @@
         let currentViewDate = new Date();
 
         async function cargarTodo() {
-            // Lógica de Loader por tiempo (10 minutos)
             const lastLoad = localStorage.getItem('urm_last_load');
             const now = new Date().getTime();
             const loader = document.getElementById('loader');
             
-            // Si cargó hace menos de 10 minutos, ocultar loader de golpe
             if (lastLoad && (now - lastLoad < 600000)) {
                 loader.classList.add('loader-hidden');
             }
 
-            const { data: top3 } = await _supabase.from('ranking').select('*').order('puntos', { ascending: false }).limit(3);
-            if (top3) {
+            // CORRECCIÓN DE ORDENAMIENTO EN EL PODIO
+            const { data: allPlayers } = await _supabase.from('ranking').select('*');
+            if (allPlayers) {
+                // Ordenamos manualmente para asegurar que 200 > 9
+                const top3 = allPlayers
+                    .sort((a, b) => Number(b.puntos) - Number(a.puntos))
+                    .slice(0, 3);
+
                 top3.forEach((user, index) => {
                     const i = index + 1;
                     const nameEl = document.getElementById(`name-${i}`);
@@ -247,7 +249,6 @@
             eventosData = eventos || [];
             renderCalendar();
 
-            // Guardar tiempo de carga y ocultar loader con suavidad
             localStorage.setItem('urm_last_load', now);
             setTimeout(() => {
                 loader.classList.add('loader-hidden');
@@ -288,13 +289,14 @@
                     .from('ganadores')
                     .select('nombre_jugador, premio')
                     .eq('evento_id', ev.id)
-                    .gt('premio', 0)
-                    .order('premio', { ascending: false })
-                    .limit(3);
+                    .gt('premio', 0);
 
                 let gansHtml = "";
                 if (gans && gans.length > 0) {
-                    gansHtml = gans.map((g, index) => {
+                    // Ordenamos también los ganadores del día por si acaso
+                    const gansOrdenados = gans.sort((a, b) => Number(b.premio) - Number(a.premio)).slice(0,3);
+                    
+                    gansHtml = gansOrdenados.map((g, index) => {
                         const icon = index === 0 ? '🥇' : (index === 1 ? '🥈' : '🥉');
                         return `<span class="winner-line">${icon} ${g.nombre_jugador} (+${Number(g.premio).toLocaleString('es-ES')} PTS)</span>`;
                     }).join('');
