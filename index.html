@@ -41,7 +41,7 @@
         .loader-bar { width: 200px; height: 2px; background: rgba(255,255,255,0.1); margin: 0 auto; border-radius: 10px; overflow: hidden; }
         .loader-progress { width: 0%; height: 100%; background: var(--accent-cyan); box-shadow: 0 0 10px var(--accent-cyan); animation: fillBar 1.5s forwards ease-in-out; }
         .loader-text { margin-top: 15px; font-size: 0.6rem; letter-spacing: 3px; color: #444; font-weight: 800; }
-        .loader-hidden { opacity: 0; visibility: hidden; }
+        .loader-hidden { opacity: 0 !important; visibility: hidden !important; transition: none !important; }
         
         @keyframes pulseLogo { 0%, 100% { transform: scale(1); opacity: 0.8; } 50% { transform: scale(1.05); opacity: 1; } }
         @keyframes fillBar { 0% { width: 0%; } 100% { width: 100%; } }
@@ -219,6 +219,16 @@
         let currentViewDate = new Date();
 
         async function cargarTodo() {
+            // Lógica de Loader por tiempo (10 minutos)
+            const lastLoad = localStorage.getItem('urm_last_load');
+            const now = new Date().getTime();
+            const loader = document.getElementById('loader');
+            
+            // Si cargó hace menos de 10 minutos, ocultar loader de golpe
+            if (lastLoad && (now - lastLoad < 600000)) {
+                loader.classList.add('loader-hidden');
+            }
+
             const { data: top3 } = await _supabase.from('ranking').select('*').order('puntos', { ascending: false }).limit(3);
             if (top3) {
                 top3.forEach((user, index) => {
@@ -237,8 +247,10 @@
             eventosData = eventos || [];
             renderCalendar();
 
+            // Guardar tiempo de carga y ocultar loader con suavidad
+            localStorage.setItem('urm_last_load', now);
             setTimeout(() => {
-                document.getElementById('loader').classList.add('loader-hidden');
+                loader.classList.add('loader-hidden');
             }, 1800);
         }
 
@@ -272,12 +284,11 @@
             
             let html = "";
             for (const ev of evs) {
-                // CORRECCIÓN 1: Filtramos para que solo traiga a quienes tienen premio > 0
                 const { data: gans } = await _supabase
                     .from('ganadores')
                     .select('nombre_jugador, premio')
                     .eq('evento_id', ev.id)
-                    .gt('premio', 0) // Solo ganadores reales
+                    .gt('premio', 0)
                     .order('premio', { ascending: false })
                     .limit(3);
 
@@ -291,7 +302,6 @@
                     gansHtml = `<span style="color:#666; display:block; margin-top:5px; font-size:0.7rem;">Sin ganadores registrados aún...</span>`;
                 }
                 
-                // CORRECCIÓN 2: El enlace ahora lleva el ID del evento para filtrar en torneos.html
                 html += `
                     <div style="margin-bottom:15px; text-align: left;">
                         <strong style="color:var(--accent-cyan); font-size:0.9rem; display:block; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:5px; text-transform:uppercase;">${ev.nombre}</strong>
