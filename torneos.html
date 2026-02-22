@@ -24,19 +24,6 @@
             min-height: 100vh;
         }
 
-        /* --- LOADER --- */
-        #loader {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #050505; z-index: 9999; display: flex;
-            justify-content: center; align-items: center;
-            transition: opacity 0.8s ease, visibility 0.8s;
-        }
-        .loader-content { text-align: center; }
-        .loader-logo img { width: 120px; height: 120px; filter: drop-shadow(0 0 20px var(--accent-cyan)); margin-bottom: 20px; }
-        .loader-bar { width: 200px; height: 2px; background: rgba(255,255,255,0.1); margin: 0 auto; border-radius: 10px; overflow: hidden; }
-        .loader-progress { width: 100%; height: 100%; background: var(--accent-cyan); box-shadow: 0 0 10px var(--accent-cyan); }
-        .loader-hidden { opacity: 0; visibility: hidden; }
-
         /* --- NAV PREMIUM --- */
         .premium-nav {
             position: sticky; top: 0; z-index: 1000;
@@ -110,23 +97,14 @@
 </head>
 <body>
 
-    <div id="loader">
-        <div class="loader-content">
-            <div class="loader-logo"><img src="https://cdn.discordapp.com/icons/800184417666465792/d1684b778ddf9719a417ac8a40e6c2dd.png?size=256"></div>
-            <div class="loader-bar"><div class="loader-progress"></div></div>
-            <div class="loader-text" style="color:#444; font-size:0.6rem; letter-spacing:3px; margin-top:15px; font-weight:800;">CARGANDO ARCHIVOS HISTÓRICOS</div>
-        </div>
-    </div>
-
     <nav class="premium-nav">
         <a href="index.html" class="nav-logo">
-            <div class="nav-logo-box">U</div>
-            <span style="font-weight: 700; margin-left:10px;">URM</span>
+      
         </a>
         <div class="nav-center">
             <a href="index.html" class="nav-link">Inicio</a>
             <a href="leaderboard.html" class="nav-link">Clasificación</a>
-            <a href="torneos.html" class="nav-link active">Torneos</a>
+            <a href="torneos.html" class="nav-link active">Historial de Torneos</a>
             <a href="canje.html" class="nav-link">Canje</a>
             <a href="historial.html" class="nav-link">Auditoría</a>
         </div>
@@ -175,28 +153,22 @@
         let torneosGlobal = [];
 
         async function cargarTorneos() {
-            // 1. Cargamos todos los eventos
             const { data: eventos } = await _supabase.from('eventos').select('*').order('fecha', { ascending: false });
             
             if(eventos) {
                 torneosGlobal = eventos;
                 renderizarLista(torneosGlobal);
 
-                // 2. LÓGICA DE REDIRECCIÓN DESDE CALENDARIO
-                // Revisamos si en la URL viene un parámetro "?eventoId=..."
                 const urlParams = new URLSearchParams(window.location.search);
                 const eventoIdRedir = urlParams.get('eventoId');
 
                 if (eventoIdRedir) {
-                    // Buscamos el evento en nuestra lista local para obtener nombre y fecha
                     const eventoEncontrado = torneosGlobal.find(e => e.id == eventoIdRedir);
                     if (eventoEncontrado) {
                         verDetalle(eventoEncontrado.id, eventoEncontrado.nombre, eventoEncontrado.fecha);
                     }
                 }
             }
-
-            setTimeout(() => document.getElementById('loader').classList.add('loader-hidden'), 1000);
         }
 
         function renderizarLista(data) {
@@ -229,7 +201,6 @@
             document.getElementById('det-title').innerText = nombre;
             document.getElementById('det-date').innerText = "FECHA DEL EVENTO: " + fecha;
             
-            // Cargamos todos los ganadores (incluso los de 0 puntos para la tabla completa)
             const { data: ganadores } = await _supabase
                 .from('ganadores')
                 .select('*')
@@ -253,7 +224,6 @@
         }
 
         function showList() {
-            // Limpiamos el parámetro de la URL por si el usuario quiere volver a filtrar
             window.history.replaceState({}, document.title, window.location.pathname);
             document.getElementById('list-view').style.display = 'block';
             document.getElementById('detail-view').style.display = 'none';
