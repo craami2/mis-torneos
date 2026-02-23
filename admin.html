@@ -6,7 +6,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root { --neon: #00f2ff; --bg: #0a0a0a; --card: #151515; --border: #333; --gold: #ffcc00; }
-        body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg); color: white; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg); color: white; margin: 0; padding: 0; overflow-x: hidden; }
         
         .navbar { background-color: #000; padding: 15px; display: flex; gap: 10px; border-bottom: 2px solid var(--neon); justify-content: center; position: sticky; top: 0; z-index: 100; }
         .nav-btn { background: none; border: 1px solid var(--border); color: #666; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; text-transform: uppercase; font-size: 0.7rem; }
@@ -33,7 +33,9 @@
         input, select { padding: 12px; background: #000; color: white; border: 1px solid var(--border); border-radius: 8px; width: 100%; margin-bottom: 15px; box-sizing: border-box; }
         label { font-size: 0.75rem; color: #888; margin-bottom: 5px; display: block; }
         
-        button.primary { background-color: var(--neon); border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; color: #000; }
+        button.primary { background-color: var(--neon); border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; color: #000; transition: 0.3s; }
+        button.primary:hover { box-shadow: 0 0 15px var(--neon); opacity: 0.9; }
+        
         .btn-status { padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; border: none; cursor: pointer; font-weight: bold; }
         .status-open { background: #44ff44; color: #000; }
         .status-closed { background: #ff4444; color: white; }
@@ -43,15 +45,47 @@
         .title-badge { display: flex; justify-content: space-between; align-items: center; background: #1a1a1a; padding: 8px; border-radius: 6px; margin-bottom: 5px; border-left: 2px solid var(--gold); font-size: 0.8rem; }
         .btn-del-mini { color: #ff4444; background: none; border: none; cursor: pointer; font-weight: bold; padding: 0 5px; }
 
-        /* ESTILOS NUEVOS PARA CARGA MASIVA */
-        .batch-container { background: #000; border: 1px solid var(--border); border-radius: 8px; max-height: 300px; overflow-y: auto; padding: 10px; margin-bottom: 15px; }
-        .batch-item { display: flex; align-items: center; gap: 10px; padding: 8px; border-bottom: 1px solid #111; cursor: pointer; }
-        .batch-item:hover { background: #0a0a0a; }
-        .batch-item input { width: auto; margin-bottom: 0; cursor: pointer; }
-        .batch-item label { margin-bottom: 0; cursor: pointer; flex-grow: 1; color: #ccc; }
+        /* SELECCIÓN RÁPIDA DE PUNTOS */
+        .quick-pts { display: flex; gap: 8px; margin-bottom: 10px; }
+        .btn-q { flex: 1; background: #222; border: 1px solid var(--border); color: var(--neon); padding: 8px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 0.8rem; transition: 0.2s; }
+        .btn-q:hover { background: var(--neon); color: black; }
+        .btn-q:active { transform: scale(0.95); }
+
+        /* ESTILOS DE CARGA MASIVA MEJORADOS */
+        .batch-container { 
+            background: #000; border: 1px solid var(--border); border-radius: 12px; 
+            max-height: 400px; overflow-y: auto; padding: 15px; margin-bottom: 20px;
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px;
+        }
+        .batch-item { 
+            display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 12px; 
+            background: #111; border: 1px solid #222; border-radius: 10px; 
+            cursor: pointer; transition: 0.2s; position: relative; text-align: center;
+        }
+        .batch-item:hover { border-color: #555; background: #1a1a1a; }
+        .batch-item input[type="checkbox"] { display: none; }
+        
+        .batch-item.selected { border-color: var(--neon); background: rgba(0, 242, 255, 0.05); box-shadow: 0 0 10px rgba(0, 242, 255, 0.2); }
+        
+        .batch-av { width: 45px; height: 45px; border-radius: 50%; border: 1px solid #333; object-fit: cover; }
+        .batch-item.selected .batch-av { border-color: var(--neon); }
+
+        .batch-item label { 
+            margin: 0; cursor: pointer; color: #eee; font-size: 0.75rem; font-weight: 500; line-height: 1.2;
+        }
+        .batch-item.selected label { color: var(--neon); font-weight: bold; }
+
+        #toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 9999; }
+        .toast { background: #111; border-left: 4px solid var(--neon); color: white; padding: 15px 25px; border-radius: 8px; margin-top: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); animation: slideIn 0.5s ease-out forwards; min-width: 250px; font-weight: 500; }
+        .toast.error { border-left-color: #ff4444; }
+        .toast.gold { border-left-color: var(--gold); }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes fadeOut { to { opacity: 0; transform: translateY(-20px); } }
     </style>
 </head>
 <body>
+
+    <div id="toast-container"></div>
 
     <div id="modalUser" class="modal">
         <div class="modal-box">
@@ -68,10 +102,10 @@
     </div>
 
     <div class="navbar">
-        <button class="nav-btn active" onclick="tab('n', event)">NINJAS</button>
-        <button class="nav-btn" onclick="tab('r', event)">RANKING</button>
-        <button class="nav-btn" onclick="tab('e', event)">TORNEOS</button>
-        <button class="nav-btn" onclick="tab('g', event)">PUNTOS</button>
+        <button class="nav-btn active" onclick="tab('n', event)">GESTION DE USUARIOS</button>
+        <button class="nav-btn" onclick="tab('r', event)">GESTIÓN DE PUNTOS</button>
+        <button class="nav-btn" onclick="tab('e', event)">GESTIÓN DE TORNEOS</button>
+        <button class="nav-btn" onclick="tab('g', event)">ASIGNACIÓN DE PUNTOS</button>
         <button class="nav-btn" onclick="tab('t', event)" style="border-color: var(--gold); color: var(--gold);">🏆 OTORGAR TÍTULO</button>
     </div>
 
@@ -107,13 +141,18 @@
             <label>1. Seleccionar Torneo (Abierto):</label>
             <select id="se"></select>
             
-            <label>2. Puntos a sumar a cada uno:</label>
+            <label>2. Puntos a sumar (Selección rápida o manual):</label>
+            <div class="quick-pts">
+                <button class="btn-q" onclick="quickPts(10)">+10</button>
+                <button class="btn-q" onclick="quickPts(25)">+25</button>
+                <button class="btn-q" onclick="quickPts(50)">+50</button>
+                <button class="btn-q" onclick="quickPts(100)">+100</button>
+                <button class="btn-q" onclick="quickPts(0)" style="color:#ff4444; border-color:#442222">Reset</button>
+            </div>
             <input type="number" id="pg" value="0">
             
             <label>3. Seleccionar Ninjas Participantes:</label>
-            <div class="batch-container" id="ninja-batch-list">
-                </div>
-            
+            <div class="batch-container" id="ninja-batch-list"></div>
             <button class="primary" onclick="saveBulkPoints()">SUMAR PUNTOS A SELECCIONADOS</button>
         </div>
 
@@ -132,12 +171,21 @@
         let cacheEventos = [];
         let cacheNinjas = [];
 
+        function showToast(text, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerText = text;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.animation = 'fadeOut 0.5s forwards';
+                setTimeout(() => toast.remove(), 500);
+            }, 3000);
+        }
+
         async function registrarLog(nombre, accion, puntos, detalle) {
             await _supabase.from('logs').insert([{
-                ninja_nombre: nombre,
-                tipo_accion: accion,
-                puntos_cambiados: puntos,
-                detalle: detalle
+                ninja_nombre: nombre, tipo_accion: accion, puntos_cambiados: puntos, detalle: detalle
             }]);
         }
 
@@ -149,6 +197,13 @@
         }
 
         function closeM(id) { document.getElementById(id).style.display = 'none'; }
+
+        // Función para selección rápida de puntos
+        function quickPts(val) {
+            const input = document.getElementById('pg');
+            if (val === 0) input.value = 0;
+            else input.value = parseInt(input.value) + val;
+        }
 
         async function refresh() {
             const { data: n } = await _supabase.from('ranking').select('*').order('puntos', { ascending: false });
@@ -173,17 +228,16 @@
                 </tr>
             `).join('');
 
-            // Llenar lista masiva de puntos
             document.getElementById('ninja-batch-list').innerHTML = n.map(u => `
-                <div class="batch-item">
+                <div class="batch-item" id="item-${u.id}" onclick="toggleBatchItem(${u.id})">
+                    <img src="${u.avatar_url || 'https://via.placeholder.com/45'}" class="batch-av" onerror="this.src='https://via.placeholder.com/45'">
                     <input type="checkbox" class="ninja-chk" value="${u.nombre}" id="chk-${u.id}">
-                    <label for="chk-${u.id}">${u.nombre} (${u.puntos} pts)</label>
+                    <label>${u.nombre}<br><small>${u.puntos} pts</small></label>
                 </div>
             `).join('');
 
             const ninjaOptions = n.map(u => `<option value="${u.nombre}">${u.nombre}</option>`).join('');
             document.getElementById('st_ninja').innerHTML = ninjaOptions;
-
             const torneoOptions = e.map(ev => `<option value="${ev.id}">${ev.nombre} (${ev.fecha})</option>`).join('');
             document.getElementById('se').innerHTML = e.filter(ev => ev.estado !== 'cerrado').map(ev => `<option value="${ev.id}">${ev.nombre} (${ev.fecha})</option>`).join('');
             document.getElementById('st_torneo').innerHTML = torneoOptions;
@@ -199,6 +253,14 @@
             `).join('');
         }
 
+        function toggleBatchItem(id) {
+            const chk = document.getElementById(`chk-${id}`);
+            const card = document.getElementById(`item-${id}`);
+            chk.checked = !chk.checked;
+            if(chk.checked) card.classList.add('selected');
+            else card.classList.remove('selected');
+        }
+
         async function openUserEdit(id, nombre, puntos, avatar) {
             document.getElementById('editTitle').innerText = nombre;
             document.getElementById('editName').value = nombre;
@@ -209,7 +271,6 @@
             document.getElementById('editTitlesList').innerHTML = titles.length > 0 
                 ? titles.map(t => `<div class="title-badge"><span>${t.titulo}</span><button class="btn-del-mini" onclick="deleteTitle(${t.id}, '${nombre}', '${t.titulo}')">X</button></div>`).join('')
                 : '<small style="color:#444">Sin títulos aún</small>';
-
             document.getElementById('modalUser').style.display = 'flex';
 
             document.getElementById('btnSaveUser').onclick = async () => {
@@ -217,13 +278,15 @@
                 const nuevoPts = parseInt(document.getElementById('editPts').value);
                 await _supabase.from('ranking').update({ nombre: nuevoNom, puntos: nuevoPts, avatar_url: document.getElementById('editAv').value }).eq('id', id);
                 await registrarLog("ADMIN", "Modificación", nuevoPts - puntos, `Perfil de ${nombre} editado manualmente.`);
+                showToast("Datos actualizados correctamente");
                 closeM('modalUser'); refresh();
             };
             
             document.getElementById('btnDelUser').onclick = async () => {
-                if(confirm('¿Seguro?')) {
+                if(confirm('¿Seguro que quieres eliminar a este ninja?')) {
                     await _supabase.from('ranking').delete().eq('id', id);
                     await registrarLog("ADMIN", "Eliminación", 0, `Se eliminó al ninja ${nombre} del sistema.`);
+                    showToast("Ninja eliminado", "error");
                     closeM('modalUser'); refresh();
                 }
             };
@@ -233,8 +296,8 @@
             if(confirm('¿Borrar este título?')) {
                 await _supabase.from('ganadores').delete().eq('id', titleId);
                 await registrarLog(ninjaName, "Eliminación", 0, `Título revocado: ${tituloTexto}`);
-                refresh();
-                closeM('modalUser'); 
+                showToast("Título revocado", "error");
+                refresh(); closeM('modalUser'); 
             }
         }
 
@@ -244,33 +307,19 @@
             const checkboxes = document.querySelectorAll('.ninja-chk:checked');
             const torneoInfo = cacheEventos.find(x => x.id == eid);
 
-            if(!eid) return alert("Selecciona un torneo abierto");
-            if(pts <= 0) return alert("Ingresa una cantidad de puntos válida");
-            if(checkboxes.length === 0) return alert("Selecciona al menos un ninja");
-
-            if(!confirm(`¿Sumar ${pts} puntos a los ${checkboxes.length} ninjas seleccionados?`)) return;
+            if(!eid) return showToast("Selecciona un torneo abierto", "error");
+            if(pts <= 0) return showToast("Ingresa puntos válidos", "error");
+            if(checkboxes.length === 0) return showToast("Selecciona al menos un ninja", "error");
 
             for (let chk of checkboxes) {
                 const nom = chk.value;
-                
-                // 1. Registrar en tabla ganadores
-                await _supabase.from('ganadores').insert([{ 
-                    evento_id: eid, 
-                    nombre_jugador: nom, 
-                    premio: pts, 
-                    titulo: null 
-                }]);
-
-                // 2. Obtener puntos actuales y actualizar ranking
+                await _supabase.from('ganadores').insert([{ evento_id: eid, nombre_jugador: nom, premio: pts, titulo: null }]);
                 const user = cacheNinjas.find(u => u.nombre === nom);
                 const nuevosPuntos = (user ? user.puntos : 0) + pts;
                 await _supabase.from('ranking').update({ puntos: nuevosPuntos }).eq('nombre', nom);
-
-                // 3. Registrar Log
                 await registrarLog(nom, "Torneo", pts, `Puntos obtenidos en: ${torneoInfo.nombre} (Carga masiva)`);
             }
-
-            alert(`✅ Se han sumado los puntos a ${checkboxes.length} ninjas.`);
+            showToast(`Puntos sumados a ${checkboxes.length} ninjas`);
             document.getElementById('pg').value = 0;
             refresh();
         }
@@ -279,11 +328,11 @@
             const ninja = document.getElementById('st_ninja').value;
             const eid = document.getElementById('st_torneo').value;
             const torneo = cacheEventos.find(ev => ev.id == eid);
-            if(!torneo || !torneo.titulo) return alert("Error: Este torneo no tiene un título definido.");
+            if(!torneo || !torneo.titulo) return showToast("Este torneo no tiene título", "error");
             const { error } = await _supabase.from('ganadores').insert([{ evento_id: eid, nombre_jugador: ninja, premio: 0, titulo: torneo.titulo }]);
             if(!error) {
                 await registrarLog(ninja, "Título", 0, `Título otorgado: ${torneo.titulo} (${torneo.nombre})`);
-                alert(`✅ Título "${torneo.titulo}" otorgado a ${ninja}.`);
+                showToast(`Título "${torneo.titulo}" otorgado`, "gold");
                 refresh(); 
             }
         }
@@ -291,6 +340,7 @@
         async function toggleE(id, current) {
             const next = current === 'cerrado' ? 'abierto' : 'cerrado';
             await _supabase.from('eventos').update({ estado: next }).eq('id', id);
+            showToast(`Estado del torneo: ${next.toUpperCase()}`);
             refresh();
         }
 
@@ -299,6 +349,7 @@
             if(n) { 
                 await _supabase.from('ranking').insert([{ nombre: n, puntos: 0 }]); 
                 await registrarLog("ADMIN", "Creación", 0, `Nuevo ninja registrado: ${n}`);
+                showToast("Ninja registrado con éxito");
                 document.getElementById('nn').value = ""; refresh(); 
             }
         }
@@ -307,15 +358,17 @@
             const n = document.getElementById('en').value, t = document.getElementById('et').value, f = document.getElementById('ef').value;
             if(n && t && f) { 
                 await _supabase.from('eventos').insert([{ nombre: n, titulo: t, fecha: f, estado: 'abierto' }]); 
-                await registrarLog("ADMIN", "Creación", 0, `Evento creado: ${n} (Título: ${t})`);
+                await registrarLog("ADMIN", "Creación", 0, `Evento creado: ${n}`);
+                showToast("Torneo creado con éxito");
                 document.getElementById('en').value = ""; document.getElementById('et').value = ""; refresh(); 
             }
         }
 
         async function delE(id, nombreTorneo) { 
-            if(confirm('¿Borrar?')) { 
+            if(confirm('¿Borrar torneo?')) { 
                 await _supabase.from('eventos').delete().eq('id', id); 
                 await registrarLog("ADMIN", "Eliminación", 0, `Torneo eliminado: ${nombreTorneo}`);
+                showToast("Torneo eliminado", "error");
                 refresh(); 
             } 
         }
