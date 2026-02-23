@@ -15,7 +15,6 @@
         .container { padding: 20px; max-width: 1000px; margin: auto; }
         .tab-content { background-color: var(--card); padding: 25px; border-radius: 15px; border: 1px solid var(--border); margin-top: 20px; }
         
-        /* GRID DE USUARIOS */
         .ninja-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 20px; margin-top: 20px; }
         .ninja-card { background: #111; border: 1px solid var(--border); border-radius: 12px; padding: 15px; text-align: center; cursor: pointer; transition: 0.3s; }
         .ninja-card:hover { border-color: var(--neon); transform: translateY(-5px); }
@@ -23,13 +22,11 @@
         .ninja-name { display: block; font-weight: bold; font-size: 0.9rem; margin-bottom: 5px; }
         .ninja-pts { color: var(--neon); font-size: 0.8rem; font-weight: bold; }
 
-        /* TABLA RANKING */
         .rank-table { width: 100%; border-collapse: collapse; }
         .rank-table th { text-align: left; color: var(--neon); padding: 10px; border-bottom: 2px solid var(--border); font-size: 0.8rem; }
         .rank-table td { padding: 12px 10px; border-bottom: 1px solid #222; }
         .mini-av { width: 30px; height: 30px; border-radius: 50%; vertical-align: middle; margin-right: 10px; border: 1px solid var(--neon); }
 
-        /* MODALES */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
         .modal-box { background: #111; border: 1px solid var(--neon); padding: 30px; border-radius: 20px; width: 90%; max-width: 400px; max-height: 85vh; overflow-y: auto; }
         
@@ -43,9 +40,15 @@
 
         .t-row { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid #222; }
 
-        /* NUEVO: ESTILO PARA ELIMINAR TITULOS */
         .title-badge { display: flex; justify-content: space-between; align-items: center; background: #1a1a1a; padding: 8px; border-radius: 6px; margin-bottom: 5px; border-left: 2px solid var(--gold); font-size: 0.8rem; }
         .btn-del-mini { color: #ff4444; background: none; border: none; cursor: pointer; font-weight: bold; padding: 0 5px; }
+
+        /* ESTILOS NUEVOS PARA CARGA MASIVA */
+        .batch-container { background: #000; border: 1px solid var(--border); border-radius: 8px; max-height: 300px; overflow-y: auto; padding: 10px; margin-bottom: 15px; }
+        .batch-item { display: flex; align-items: center; gap: 10px; padding: 8px; border-bottom: 1px solid #111; cursor: pointer; }
+        .batch-item:hover { background: #0a0a0a; }
+        .batch-item input { width: auto; margin-bottom: 0; cursor: pointer; }
+        .batch-item label { margin-bottom: 0; cursor: pointer; flex-grow: 1; color: #ccc; }
     </style>
 </head>
 <body>
@@ -56,10 +59,8 @@
             <label>Nombre:</label><input type="text" id="editName">
             <label>Puntos Totales:</label><input type="number" id="editPts">
             <label>URL Avatar:</label><input type="text" id="editAv">
-            
             <label style="color:var(--gold)">Títulos Obtenidos (Clic en X para borrar):</label>
             <div id="editTitlesList" style="margin-bottom: 15px;"></div>
-            
             <button class="primary" id="btnSaveUser">GUARDAR DATOS</button>
             <button class="btn-del-sec" id="btnDelUser" style="color:#ff4444; background:none; border:none; width:100%; cursor:pointer; margin-top:10px;">Eliminar Ninja</button>
             <button onclick="closeM('modalUser')" style="background:none; border:none; color:#555; width:100%; margin-top:10px; cursor:pointer;">Cerrar</button>
@@ -102,23 +103,26 @@
         </div>
 
         <div id="g" class="tab-content" style="display:none">
-            <h2>Asignación de Puntos</h2>
-            <label>Torneo (Abierto):</label><select id="se"></select>
-            <label>Ninja:</label><select id="sn"></select>
-            <label>Puntos a sumar:</label><input type="number" id="pg" value="0">
-            <button class="primary" onclick="savePoints()">SUMAR PUNTOS</button>
+            <h2>Asignación Masiva de Puntos</h2>
+            <label>1. Seleccionar Torneo (Abierto):</label>
+            <select id="se"></select>
+            
+            <label>2. Puntos a sumar a cada uno:</label>
+            <input type="number" id="pg" value="0">
+            
+            <label>3. Seleccionar Ninjas Participantes:</label>
+            <div class="batch-container" id="ninja-batch-list">
+                </div>
+            
+            <button class="primary" onclick="saveBulkPoints()">SUMAR PUNTOS A SELECCIONADOS</button>
         </div>
 
         <div id="t" class="tab-content" style="display:none">
             <h2 style="color: var(--gold)">Otorgar Título de Honor</h2>
-            <p style="font-size: 0.8rem; color: #888;">Aquí asignas manualmente el título configurado en el torneo al ganador seleccionado.</p>
-            
             <label>Seleccionar Ninja:</label>
             <select id="st_ninja"></select>
-            
             <label>Seleccionar Torneo:</label>
             <select id="st_torneo"></select>
-            
             <button class="primary" onclick="grantManualTitle()" style="background: var(--gold)">CONCEDER TÍTULO OFICIAL</button>
         </div>
     </div>
@@ -126,8 +130,8 @@
     <script>
         const _supabase = supabase.createClient('https://ekaiwrnvbpwaaoenwnnp.supabase.co', 'sb_publishable_YvgUfE8sAXfAUGvXMcNB4Q_aGC2GUMP');
         let cacheEventos = [];
+        let cacheNinjas = [];
 
-        // NUEVA FUNCIÓN: REGISTRAR LOG EN LA AUDITORÍA
         async function registrarLog(nombre, accion, puntos, detalle) {
             await _supabase.from('logs').insert([{
                 ninja_nombre: nombre,
@@ -150,6 +154,7 @@
             const { data: n } = await _supabase.from('ranking').select('*').order('puntos', { ascending: false });
             const { data: e } = await _supabase.from('eventos').select('*').order('fecha', { ascending: false });
             cacheEventos = e || [];
+            cacheNinjas = n || [];
 
             document.getElementById('ninja-grid').innerHTML = n.map(u => `
                 <div class="ninja-card" onclick="openUserEdit(${u.id}, '${u.nombre}', ${u.puntos}, '${u.avatar_url || ''}')">
@@ -168,8 +173,15 @@
                 </tr>
             `).join('');
 
+            // Llenar lista masiva de puntos
+            document.getElementById('ninja-batch-list').innerHTML = n.map(u => `
+                <div class="batch-item">
+                    <input type="checkbox" class="ninja-chk" value="${u.nombre}" id="chk-${u.id}">
+                    <label for="chk-${u.id}">${u.nombre} (${u.puntos} pts)</label>
+                </div>
+            `).join('');
+
             const ninjaOptions = n.map(u => `<option value="${u.nombre}">${u.nombre}</option>`).join('');
-            document.getElementById('sn').innerHTML = ninjaOptions;
             document.getElementById('st_ninja').innerHTML = ninjaOptions;
 
             const torneoOptions = e.map(ev => `<option value="${ev.id}">${ev.nombre} (${ev.fecha})</option>`).join('');
@@ -203,13 +215,7 @@
             document.getElementById('btnSaveUser').onclick = async () => {
                 const nuevoNom = document.getElementById('editName').value;
                 const nuevoPts = parseInt(document.getElementById('editPts').value);
-                
-                await _supabase.from('ranking').update({ 
-                    nombre: nuevoNom, 
-                    puntos: nuevoPts, 
-                    avatar_url: document.getElementById('editAv').value 
-                }).eq('id', id);
-                
+                await _supabase.from('ranking').update({ nombre: nuevoNom, puntos: nuevoPts, avatar_url: document.getElementById('editAv').value }).eq('id', id);
                 await registrarLog("ADMIN", "Modificación", nuevoPts - puntos, `Perfil de ${nombre} editado manualmente.`);
                 closeM('modalUser'); refresh();
             };
@@ -227,57 +233,54 @@
             if(confirm('¿Borrar este título?')) {
                 await _supabase.from('ganadores').delete().eq('id', titleId);
                 await registrarLog(ninjaName, "Eliminación", 0, `Título revocado: ${tituloTexto}`);
-                
-                const { data: titles } = await _supabase.from('ganadores').select('id, titulo').eq('nombre_jugador', ninjaName).not('titulo', 'is', null);
-                document.getElementById('editTitlesList').innerHTML = titles.map(t => `<div class="title-badge"><span>${t.titulo}</span><button class="btn-del-mini" onclick="deleteTitle(${t.id}, '${ninjaName}', '${t.titulo}')">X</button></div>`).join('');
+                refresh();
+                closeM('modalUser'); 
             }
         }
 
-        async function savePoints() {
+        async function saveBulkPoints() {
             const eid = document.getElementById('se').value;
-            const nom = document.getElementById('sn').value;
             const pts = parseInt(document.getElementById('pg').value);
+            const checkboxes = document.querySelectorAll('.ninja-chk:checked');
             const torneoInfo = cacheEventos.find(x => x.id == eid);
-            
+
             if(!eid) return alert("Selecciona un torneo abierto");
-            if(pts === 0) return alert("Ingresa una cantidad de puntos");
+            if(pts <= 0) return alert("Ingresa una cantidad de puntos válida");
+            if(checkboxes.length === 0) return alert("Selecciona al menos un ninja");
 
-            const { error: errorGanador } = await _supabase.from('ganadores').insert([{ 
-                evento_id: eid, 
-                nombre_jugador: nom, 
-                premio: pts, 
-                titulo: null 
-            }]);
+            if(!confirm(`¿Sumar ${pts} puntos a los ${checkboxes.length} ninjas seleccionados?`)) return;
 
-            if(errorGanador) return alert("Error al registrar los puntos.");
+            for (let chk of checkboxes) {
+                const nom = chk.value;
+                
+                // 1. Registrar en tabla ganadores
+                await _supabase.from('ganadores').insert([{ 
+                    evento_id: eid, 
+                    nombre_jugador: nom, 
+                    premio: pts, 
+                    titulo: null 
+                }]);
 
-            const { data: u } = await _supabase.from('ranking').select('puntos').eq('nombre', nom).single();
-            const nuevosPuntos = (u ? u.puntos : 0) + pts;
+                // 2. Obtener puntos actuales y actualizar ranking
+                const user = cacheNinjas.find(u => u.nombre === nom);
+                const nuevosPuntos = (user ? user.puntos : 0) + pts;
+                await _supabase.from('ranking').update({ puntos: nuevosPuntos }).eq('nombre', nom);
 
-            const { error: errorRanking } = await _supabase.from('ranking').update({ puntos: nuevosPuntos }).eq('nombre', nom);
-
-            if(!errorRanking) {
-                await registrarLog(nom, "Torneo", pts, `Puntos obtenidos en: ${torneoInfo.nombre}`);
-                document.getElementById('pg').value = 0;
-                refresh(); 
-                alert(`✅ Puntos sumados: +${pts} a ${nom}.`);
+                // 3. Registrar Log
+                await registrarLog(nom, "Torneo", pts, `Puntos obtenidos en: ${torneoInfo.nombre} (Carga masiva)`);
             }
+
+            alert(`✅ Se han sumado los puntos a ${checkboxes.length} ninjas.`);
+            document.getElementById('pg').value = 0;
+            refresh();
         }
 
         async function grantManualTitle() {
             const ninja = document.getElementById('st_ninja').value;
             const eid = document.getElementById('st_torneo').value;
             const torneo = cacheEventos.find(ev => ev.id == eid);
-
             if(!torneo || !torneo.titulo) return alert("Error: Este torneo no tiene un título definido.");
-
-            const { error } = await _supabase.from('ganadores').insert([{ 
-                evento_id: eid, 
-                nombre_jugador: ninja, 
-                premio: 0, 
-                titulo: torneo.titulo 
-            }]);
-
+            const { error } = await _supabase.from('ganadores').insert([{ evento_id: eid, nombre_jugador: ninja, premio: 0, titulo: torneo.titulo }]);
             if(!error) {
                 await registrarLog(ninja, "Título", 0, `Título otorgado: ${torneo.titulo} (${torneo.nombre})`);
                 alert(`✅ Título "${torneo.titulo}" otorgado a ${ninja}.`);
@@ -301,9 +304,7 @@
         }
 
         async function addE() {
-            const n = document.getElementById('en').value, 
-                  t = document.getElementById('et').value, 
-                  f = document.getElementById('ef').value;
+            const n = document.getElementById('en').value, t = document.getElementById('et').value, f = document.getElementById('ef').value;
             if(n && t && f) { 
                 await _supabase.from('eventos').insert([{ nombre: n, titulo: t, fecha: f, estado: 'abierto' }]); 
                 await registrarLog("ADMIN", "Creación", 0, `Evento creado: ${n} (Título: ${t})`);
