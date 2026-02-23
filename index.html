@@ -356,27 +356,41 @@
             
             let html = "";
             for (const ev of evs) {
+                // 1. Obtenemos los ganadores de este evento
                 const { data: gans } = await _supabase
                     .from('ganadores')
                     .select('nombre_jugador, premio')
                     .eq('evento_id', ev.id)
                     .gt('premio', 0);
 
+                // 2. Obtenemos los ninjas que existen actualmente en el ranking
+                const { data: actuales } = await _supabase
+                    .from('ranking')
+                    .select('nombre');
+                
+                const nombresActivos = actuales.map(a => a.nombre);
+
                 let gansHtml = "";
+                // 3. Filtramos: Solo mostramos ganadores que existan en la lista de ninjas actuales
                 if (gans && gans.length > 0) {
-                    const gansOrdenados = gans.sort((a, b) => Number(b.premio) - Number(a.premio)).slice(0,3);
+                    const gansFiltrados = gans.filter(g => nombresActivos.includes(g.nombre_jugador));
+                    const gansOrdenados = gansFiltrados.sort((a, b) => Number(b.premio) - Number(a.premio)).slice(0,3);
                     
-                    gansHtml = gansOrdenados.map((g, index) => {
-                        const icon = index === 0 ? '🥇' : (index === 1 ? '🥈' : '🥉');
-                        return `<span class="winner-line">${icon} ${g.nombre_jugador} (+${Number(g.premio).toLocaleString('es-ES')} PTS)</span>`;
-                    }).join('');
+                    if (gansOrdenados.length > 0) {
+                        gansHtml = gansOrdenados.map((g, index) => {
+                            const icon = index === 0 ? '🥇' : (index === 1 ? '🥈' : '🥉');
+                            return `<span class="winner-line">${icon} ${g.nombre_jugador} (+${Number(g.premio).toLocaleString('es-ES')} PTS)</span>`;
+                        }).join('');
+                    } else {
+                        gansHtml = `<span style="color:#666; display:block; margin-top:5px; font-size:0.7rem;">Los antiguos ganadores ya no existen.</span>`;
+                    }
                 } else {
                     gansHtml = `<span style="color:#666; display:block; margin-top:5px; font-size:0.7rem;">Sin ganadores registrados aún...</span>`;
                 }
                 
                 html += `
                     <div style="margin-bottom:15px; text-align: center;">
-                        <strong style="color:#fff;; font-size:0.9rem; display:block; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:5px; text-transform:uppercase;">${ev.nombre}</strong>
+                        <strong style="color:#fff; font-size:0.9rem; display:block; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:5px; text-transform:uppercase;">${ev.nombre}</strong>
                         ${gansHtml}
                         <a href="torneos.html?eventoId=${ev.id}" style="font-size:0.6rem; color:#444; text-decoration:none; display:block; margin-top:8px; font-weight:800; letter-spacing:1px;">VER TABLA COMPLETA ❯</a>
                     </div>`;

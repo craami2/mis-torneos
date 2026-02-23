@@ -335,19 +335,25 @@
         }
 
         // --- NUEVA FUNCIÓN: RESETEO TOTAL ---
-        async function resetAllPoints() {
-            if(confirm('¿ESTÁS SEGURO? Los puntos de TODOS los ninjas volverán a 0. Esta acción no se puede deshacer.')) {
-                // Actualizamos todos los registros donde el id sea mayor a 0 (truco para afectar a todos)
-                const { error } = await _supabase.from('ranking').update({ puntos: 0 }).neq('id', 0);
-                if(!error) {
-                    await registrarLog("ADMIN", "Reset General", 0, "Se resetearon los puntos de todos los usuarios a 0.");
-                    showToast("Ranking reseteado con éxito", "error");
-                    refresh();
-                } else {
-                    showToast("Error al resetear", "error");
-                }
-            }
+       async function resetAllPoints() {
+    if(confirm('¿ESTÁS SEGURO? Se borrarán los puntos del ranking Y el historial del calendario. Los títulos se mantendrán.')) {
+        
+        // 1. Ponemos a 0 el ranking
+        const { error: err1 } = await _supabase.from('ranking').update({ puntos: 0 }).neq('id', 0);
+        
+        // 2. Borramos los registros de puntos en 'ganadores' 
+        // Solo borramos los que tienen 'premio > 0' para NO borrar los Títulos otorgados
+        const { error: err2 } = await _supabase.from('ganadores').delete().gt('premio', 0);
+
+        if(!err1 && !err2) {
+            await registrarLog("ADMIN", "Reset General", 0, "Se limpió el ranking e historial de puntos.");
+            showToast("Todo reseteado con éxito", "error");
+            refresh();
+        } else {
+            showToast("Error en el reseteo", "error");
         }
+    }
+}
 
         async function grantManualTitle() {
             const ninja = document.getElementById('st_ninja').value;
