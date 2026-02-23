@@ -9,12 +9,12 @@
             --bg-color: #050505;
             --accent-cyan: #00f2ff;
             --glass-border: rgba(255, 255, 255, 0.08);
+            --gold: #ffcc00;
         }
 
         body { 
             margin: 0; padding: 0; font-family: 'Inter', 'Segoe UI', sans-serif; color: white;
             background-color: var(--bg-color);
-            /* Fondo estilo Supabase: Puntos y luces suaves */
             background-image: 
                 radial-gradient(at 0% 0%, rgba(0, 242, 255, 0.08) 0px, transparent 40%),
                 radial-gradient(at 100% 0%, rgba(169, 112, 255, 0.08) 0px, transparent 40%),
@@ -34,7 +34,6 @@
             padding: 0 40px; height: 64px;
         }
         .nav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; color: white; }
-        .nav-logo-box { width: 28px; height: 28px; background: var(--accent-cyan); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: 900; color: #000; font-size: 0.9rem; }
         .nav-center { display: flex; gap: 30px; }
         .nav-link { color: #888; text-decoration: none; font-size: 0.85rem; font-weight: 500; transition: 0.2s; letter-spacing: 0.3px; text-transform: uppercase; }
         .nav-link:hover, .nav-link.active { color: #fff; }
@@ -53,7 +52,7 @@
 
         table { width: 100%; border-collapse: collapse; }
         th { text-align: left; color: #888; padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); text-transform: uppercase; font-size: 0.75rem; letter-spacing: 1px; }
-        td { padding: 14px 15px; border-bottom: 1px solid rgba(255,255,255,0.03); font-size: 1rem; }
+        td { padding: 14px 15px; border-bottom: 1px solid rgba(255,255,255,0.03); font-size: 1rem; cursor: pointer; }
         
         .rank-col { color: #555; width: 40px; font-weight: bold; text-align: center; }
         .pts-col { text-align: right; color: var(--accent-cyan); font-weight: bold; }
@@ -67,15 +66,24 @@
         tr:last-child td { border-bottom: none; }
         tr:hover { background: rgba(255, 255, 255, 0.02); }
 
-        /* --- ESTILOS TOP 3 MANTENIDOS --- */
+        /* --- MODAL CARTA NINJA --- */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; justify-content: center; align-items: center; backdrop-filter: blur(8px); }
+        .card-box { background: #0a0a0a; border: 1px solid var(--accent-cyan); padding: 30px; border-radius: 20px; width: 90%; max-width: 350px; text-align: center; box-shadow: 0 0 30px rgba(0, 242, 255, 0.2); }
+        .card-avatar { width: 100px; height: 100px; border-radius: 50%; border: 3px solid var(--accent-cyan); margin-bottom: 15px; object-fit: cover; }
+        .card-name { font-size: 1.5rem; font-weight: bold; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 2px; }
+        .card-pts { color: var(--accent-cyan); font-size: 1.1rem; font-weight: bold; margin-bottom: 20px; }
+        .card-titles { border-top: 1px solid #222; padding-top: 15px; max-height: 150px; overflow-y: auto; }
+        .title-tag { display: block; color: var(--gold); font-size: 0.75rem; margin-bottom: 5px; font-weight: bold; text-transform: uppercase; }
+        .btn-close-card { margin-top: 20px; background: none; border: 1px solid #333; color: #666; padding: 8px 20px; border-radius: 8px; cursor: pointer; transition: 0.3s; }
+        .btn-close-card:hover { color: white; border-color: white; }
+
+        /* --- ESTILOS TOP 3 --- */
         #full-ranking tr:nth-child(1) { background: rgba(255, 215, 0, 0.05) !important; border-left: 3px solid #FFD700; }
         #full-ranking tr:nth-child(1) .rank-col { color: #FFD700; font-size: 1.2rem; }
         #full-ranking tr:nth-child(1) .user-info span { color: #FFD700; font-weight: 800; text-transform: uppercase; }
         #full-ranking tr:nth-child(1) .mini-avatar { border-color: #FFD700; }
-
         #full-ranking tr:nth-child(2) { border-left: 3px solid #C0C0C0; background: rgba(192, 192, 192, 0.03); }
         #full-ranking tr:nth-child(2) .rank-col { color: #C0C0C0; }
-
         #full-ranking tr:nth-child(3) { border-left: 3px solid #CD7F32; background: rgba(205, 127, 50, 0.02); }
         #full-ranking tr:nth-child(3) .rank-col { color: #CD7F32; }
 
@@ -83,10 +91,18 @@
 </head>
 <body>
 
+    <div id="cardModal" class="modal" onclick="closeCard()">
+        <div class="card-box" onclick="event.stopPropagation()">
+            <img id="cardAv" src="" class="card-avatar">
+            <div id="cardName" class="card-name"></div>
+            <div id="cardPts" class="card-pts"></div>
+            <div class="card-titles" id="cardTitles"></div>
+            <button class="btn-close-card" onclick="closeCard()">CERRAR</button>
+        </div>
+    </div>
+
     <nav class="premium-nav">
-        <a href="index.html" class="nav-logo">
-            
-        </a>
+        <a href="index.html" class="nav-logo"></a>
         <div class="nav-center">
             <a href="index.html" class="nav-link">Inicio</a>
             <a href="leaderboard.html" class="nav-link active">Clasificación</a>
@@ -100,7 +116,6 @@
     <div class="main-wrapper">
         <div class="container">
             <h1>Ranking Global</h1>
-            
             <div class="glass-panel">
                 <table>
                     <thead>
@@ -121,7 +136,6 @@
 
         async function load() {
             const { data, error } = await _supabase.from('ranking').select('*').order('puntos', { ascending: false });
-            
             if (error) return;
 
             const tbody = document.getElementById('full-ranking');
@@ -130,17 +144,14 @@
             data.forEach((u, i) => {
                 const valorNumerico = parseInt(u.puntos) || 0;
                 const ptsConPunto = valorNumerico.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-
-                const avatarImg = u.avatar_url 
-                    ? `<img src="${u.avatar_url}" class="mini-avatar">` 
-                    : `<div class="mini-avatar" style="display:flex; align-items:center; justify-content:center; font-size:8px; color:#444;">N/A</div>`;
+                const avatarUrl = u.avatar_url || 'https://via.placeholder.com/100';
 
                 htmlFinal += `
-                <tr>
+                <tr onclick="showCard('${u.nombre}', '${valorNumerico}', '${avatarUrl}')">
                     <td class="rank-col">${i + 1}</td>
                     <td>
                         <div class="user-info">
-                            ${avatarImg}
+                            <img src="${avatarUrl}" class="mini-avatar" onerror="this.src='https://via.placeholder.com/32'">
                             <span>${u.nombre || 'Sin nombre'}</span>
                         </div>
                     </td>
@@ -148,8 +159,43 @@
                 </tr>
                 `;
             });
-
             tbody.innerHTML = htmlFinal;
+        }
+
+        async function showCard(nombre, puntos, avatar) {
+            document.getElementById('cardName').innerText = nombre;
+            document.getElementById('cardPts').innerText = parseInt(puntos).toLocaleString('es-ES') + " PTS";
+            document.getElementById('cardAv').src = avatar;
+            
+            const titlesContainer = document.getElementById('cardTitles');
+            titlesContainer.innerHTML = '<small style="color:#444">Cargando títulos...</small>';
+            
+            document.getElementById('cardModal').style.display = 'flex';
+
+            const { data: titles } = await _supabase.from('ganadores')
+                .select('titulo')
+                .eq('nombre_jugador', nombre)
+                .not('titulo', 'is', null);
+
+            if (titles && titles.length > 0) {
+                // LÓGICA DE AGRUPACIÓN x2, x3...
+                const counts = {};
+                titles.forEach(t => {
+                    counts[t.titulo] = (counts[t.titulo] || 0) + 1;
+                });
+
+                titlesContainer.innerHTML = Object.entries(counts).map(([titulo, cantidad]) => {
+                    const multiplicador = cantidad > 1 ? ` <span style="color:white; font-size:0.65rem;">x${cantidad}</span>` : '';
+                    return `<span class="title-tag">🏆 ${titulo}${multiplicador}</span>`;
+                }).join('');
+                
+            } else {
+                titlesContainer.innerHTML = '<small style="color:#444">Sin títulos honoríficos</small>';
+            }
+        }
+
+        function closeCard() {
+            document.getElementById('cardModal').style.display = 'none';
         }
 
         window.onload = load;

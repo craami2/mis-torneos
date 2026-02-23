@@ -11,6 +11,7 @@
             --accent-cyan: #00f2ff;
             --accent-purple: #a970ff;
             --glass-border: rgba(255, 255, 255, 0.08);
+            --accent-gold: #ffcc00;
         }
 
         body {
@@ -72,7 +73,9 @@
             display: flex; flex-direction: column; align-items: center; 
             justify-content: flex-end; width: 120px; position: relative; 
             padding-bottom: 15px; border: 1px solid rgba(255,255,255,0.05);
+            cursor: pointer; transition: transform 0.2s;
         }
+        .podium-spot:hover { transform: translateY(-5px); border-color: var(--accent-cyan); }
 
         .medal {
             position: absolute;
@@ -124,6 +127,24 @@
         #event-info { margin-top: 20px; padding: 15px; border-radius: 12px; background: rgba(0, 0, 0, 0.03); border: 1px solid rgba(0,255,136,0.1); display: none; }
         .winner-line { color: #dad9d6; font-weight: 600; font-size: 0.85rem; display: block; margin-top: 8px; }
 
+        /* --- MODAL TITULOS (AÑADIDO) --- */
+        .modal-profile {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9); z-index: 2000; justify-content: center; align-items: center;
+            backdrop-filter: blur(8px);
+        }
+        .modal-content {
+            background: #0a0a0a; border: 1px solid var(--glass-border); border-radius: 20px;
+            width: 90%; max-width: 350px; padding: 30px; text-align: center; position: relative;
+        }
+        .modal-avatar { width: 100px; height: 100px; border-radius: 50%; border: 2px solid var(--accent-cyan); margin-bottom: 15px; object-fit: cover; }
+        .modal-name { font-weight: 800; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; display: block; }
+        .modal-pts { color: var(--accent-cyan); font-size: 0.8rem; font-weight: 700; margin-bottom: 20px; display: block; }
+        .titles-label { font-size: 0.6rem; color: #444; font-weight: 800; letter-spacing: 2px; margin-bottom: 15px; display: block; }
+        .titles-container { display: flex; flex-direction: column; gap: 8px; max-height: 200px; overflow-y: auto; }
+        .title-badge { background: rgba(255, 204, 0, 0.1); color: var(--accent-gold); padding: 8px; border-radius: 8px; font-size: 0.7rem; font-weight: 700; border: 1px solid rgba(255, 204, 0, 0.2); }
+        .close-modal { position: absolute; top: 15px; right: 15px; background: none; border: none; color: #555; cursor: pointer; font-size: 1.2rem; }
+
         /* --- MOBILE ADJUSTMENTS --- */
         @media (max-width: 600px) {
             .premium-nav { padding: 0 15px; }
@@ -150,6 +171,17 @@
         </div>
     </div>
 
+    <div id="modalProfile" class="modal-profile">
+        <div class="modal-content">
+            <button class="close-modal" onclick="closeProfile()">✕</button>
+            <img id="m-avatar" src="" class="modal-avatar">
+            <span id="m-name" class="modal-name"></span>
+            <span id="m-pts" class="modal-pts"></span>
+            <div class="titles-label">TÍTULOS OBTENIDOS</div>
+            <div id="m-titles" class="titles-container"></div>
+        </div>
+    </div>
+
     <nav class="premium-nav">
         <a href="index.html" class="nav-logo"></a>
         <div class="nav-center">
@@ -168,19 +200,19 @@
             <div class="glass-panel">
                 <div class="podium-title">TOP GLOBAL</div>
                 <div class="podium">
-                    <div class="podium-spot p2">
+                    <div class="podium-spot p2" id="spot-2">
                         <div class="avatar-container"><div class="avatar-inner" id="img-2"></div></div>
                         <div class="medal">🥈</div>
                         <span class="podium-name" id="name-2">Cargando...</span>
                         <span class="podium-pts" id="pts-2"></span>
                     </div>
-                    <div class="podium-spot p1">
+                    <div class="podium-spot p1" id="spot-1">
                         <div class="avatar-container"><div class="avatar-inner" id="img-1"></div></div>
                         <div class="medal">🥇</div>
                         <span class="podium-name" id="name-1">Cargando...</span>
                         <span class="podium-pts" id="pts-1"></span>
                     </div>
-                    <div class="podium-spot p3">
+                    <div class="podium-spot p3" id="spot-3">
                         <div class="avatar-container"><div class="avatar-inner" id="img-3"></div></div>
                         <div class="medal">🥉</div>
                         <span class="podium-name" id="name-3">Cargando...</span>
@@ -225,16 +257,15 @@
                 loader.classList.add('loader-hidden');
             }
 
-            // CORRECCIÓN DE ORDENAMIENTO EN EL PODIO
             const { data: allPlayers } = await _supabase.from('ranking').select('*');
             if (allPlayers) {
-                // Ordenamos manualmente para asegurar que 200 > 9
                 const top3 = allPlayers
                     .sort((a, b) => Number(b.puntos) - Number(a.puntos))
                     .slice(0, 3);
 
                 top3.forEach((user, index) => {
                     const i = index + 1;
+                    const spotEl = document.getElementById(`spot-${i}`);
                     const nameEl = document.getElementById(`name-${i}`);
                     const ptsEl = document.getElementById(`pts-${i}`);
                     const imgEl = document.getElementById(`img-${i}`);
@@ -242,6 +273,11 @@
                     if(nameEl) nameEl.innerText = user.nombre.toUpperCase();
                     if(ptsEl) ptsEl.innerText = Number(user.puntos).toLocaleString('es-ES') + " PTS";
                     if(imgEl && user.avatar_url) imgEl.innerHTML = `<img src="${user.avatar_url}">`;
+                    
+                    // Acción al hacer clic en el spot del podio
+                    if(spotEl) {
+                        spotEl.onclick = () => openProfile(user);
+                    }
                 });
             }
 
@@ -253,6 +289,41 @@
             setTimeout(() => {
                 loader.classList.add('loader-hidden');
             }, 1800);
+        }
+
+        // FUNCIÓN PARA ABRIR PERFIL Y MOSTRAR TÍTULOS
+        async function openProfile(user) {
+            const modal = document.getElementById('modalProfile');
+            document.getElementById('m-avatar').src = user.avatar_url || 'https://via.placeholder.com/100';
+            document.getElementById('m-name').innerText = user.nombre;
+            document.getElementById('m-pts').innerText = Number(user.puntos).toLocaleString('es-ES') + " PUNTOS TOTALES";
+            
+            const titlesContainer = document.getElementById('m-titles');
+            titlesContainer.innerHTML = '<span style="font-size:0.7rem; color:#444">Buscando títulos...</span>';
+            modal.style.display = 'flex';
+
+            const { data: winners } = await _supabase
+                .from('ganadores')
+                .select('titulo')
+                .eq('nombre_jugador', user.nombre)
+                .not('titulo', 'is', null)
+                .neq('titulo', '');
+
+            if (winners && winners.length > 0) {
+                // Lógica de agrupación (Título x2, etc)
+                const counts = {};
+                winners.forEach(w => counts[w.titulo] = (counts[w.titulo] || 0) + 1);
+                
+                titlesContainer.innerHTML = Object.entries(counts).map(([title, count]) => `
+                    <div class="title-badge">🏆 ${title} ${count > 1 ? `x${count}` : ''}</div>
+                `).join('');
+            } else {
+                titlesContainer.innerHTML = '<span style="font-size:0.7rem; color:#444">Este ninja aún no tiene títulos especiales.</span>';
+            }
+        }
+
+        function closeProfile() {
+            document.getElementById('modalProfile').style.display = 'none';
         }
 
         function renderCalendar() {
@@ -293,7 +364,6 @@
 
                 let gansHtml = "";
                 if (gans && gans.length > 0) {
-                    // Ordenamos también los ganadores del día por si acaso
                     const gansOrdenados = gans.sort((a, b) => Number(b.premio) - Number(a.premio)).slice(0,3);
                     
                     gansHtml = gansOrdenados.map((g, index) => {
