@@ -119,7 +119,10 @@
         </div>
 
         <div id="r" class="tab-content" style="display:none">
-            <h2>Leaderboard</h2>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h2>Leaderboard</h2>
+                <button onclick="resetAllPoints()" style="background: #ff4444; color: white; border: none; padding: 8px 15px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.7rem;">RESET TOTAL (0 PTS)</button>
+            </div>
             <table class="rank-table">
                 <thead><tr><th>POS</th><th>NINJA</th><th>PUNTOS</th><th style="text-align:right">ACCIÓN</th></tr></thead>
                 <tbody id="rank-body"></tbody>
@@ -166,14 +169,11 @@
     <script>
         const _supabase = supabase.createClient('https://ekaiwrnvbpwaaoenwnnp.supabase.co', 'sb_publishable_YvgUfE8sAXfAUGvXMcNB4Q_aGC2GUMP');
         
-        // --- PASO 2: FUNCIÓN DE PROTECCIÓN ---
         async function checkSession() {
             const { data: { session } } = await _supabase.auth.getSession();
             if (!session) {
-                // Si no hay sesión, rebota a login.html
                 window.location.href = 'login.html';
             } else {
-                // Si hay sesión, mostramos la página y cargamos datos
                 document.body.style.display = 'block';
                 refresh();
             }
@@ -318,7 +318,7 @@
             const torneoInfo = cacheEventos.find(x => x.id == eid);
 
             if(!eid) return showToast("Selecciona un torneo abierto", "error");
-            if(pts <= 0) return showToast("Ingresa puntos válidos", "error");
+            if(pts === 0) return showToast("Ingresa puntos válidos", "error");
             if(checkboxes.length === 0) return showToast("Selecciona al menos un ninja", "error");
 
             for (let chk of checkboxes) {
@@ -332,6 +332,21 @@
             showToast(`Puntos sumados a ${checkboxes.length} ninjas`);
             document.getElementById('pg').value = 0;
             refresh();
+        }
+
+        // --- NUEVA FUNCIÓN: RESETEO TOTAL ---
+        async function resetAllPoints() {
+            if(confirm('¿ESTÁS SEGURO? Los puntos de TODOS los ninjas volverán a 0. Esta acción no se puede deshacer.')) {
+                // Actualizamos todos los registros donde el id sea mayor a 0 (truco para afectar a todos)
+                const { error } = await _supabase.from('ranking').update({ puntos: 0 }).neq('id', 0);
+                if(!error) {
+                    await registrarLog("ADMIN", "Reset General", 0, "Se resetearon los puntos de todos los usuarios a 0.");
+                    showToast("Ranking reseteado con éxito", "error");
+                    refresh();
+                } else {
+                    showToast("Error al resetear", "error");
+                }
+            }
         }
 
         async function grantManualTitle() {
@@ -383,7 +398,6 @@
             } 
         }
 
-        // --- CAMBIO FINAL EN WINDOW.ONLOAD ---
         window.onload = checkSession;
     </script>
 </body>
