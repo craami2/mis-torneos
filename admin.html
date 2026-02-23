@@ -110,7 +110,7 @@
 
     <div class="container">
         <div id="n" class="tab-content">
-            <h2>Ninjas del Clan</h2>
+            <h2>Usuarios del Servidor</h2>
             <div style="display: flex; gap: 10px; margin-bottom: 20px;">
                 <input type="text" id="nn" placeholder="Nuevo Ninja..." style="margin-bottom:0">
                 <button class="primary" onclick="addN()" style="width: auto; padding: 0 20px;">+</button>
@@ -358,8 +358,8 @@
             const n = document.getElementById('nn').value;
             if(n) { 
                 await _supabase.from('ranking').insert([{ nombre: n, puntos: 0 }]); 
-                await registrarLog("ADMIN", "Creación", 0, `Nuevo ninja registrado: ${n}`);
-                showToast("Ninja registrado con éxito");
+                await registrarLog("ADMIN", "Creación", 0, `Nuevo usuario registrado: ${n}`);
+                showToast("Usuario registrado con éxito");
                 document.getElementById('nn').value = ""; refresh(); 
             }
         }
