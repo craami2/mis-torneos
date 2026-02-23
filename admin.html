@@ -224,25 +224,42 @@
         }
 
         async function savePoints() {
-            const eid = document.getElementById('se').value, 
-                  nom = document.getElementById('sn').value, 
-                  pts = parseInt(document.getElementById('pg').value);
-            
-            if(!eid) return;
-                  
-            await _supabase.from('ganadores').insert([{ 
-                evento_id: eid, 
-                nombre_jugador: nom, 
-                premio: pts, 
-                titulo: null 
-            }]);
-            
-            const { data: u } = await _supabase.from('ranking').select('puntos').eq('nombre', nom).single();
-            await _supabase.from('ranking').update({ puntos: (u ? u.puntos : 0) + pts }).eq('nombre', nom);
-            
-            document.getElementById('pg').value = 0;
-            refresh();
-        }
+    const eid = document.getElementById('se').value; // ID del Torneo
+    const nom = document.getElementById('sn').value; // Nombre del Ninja
+    const pts = parseInt(document.getElementById('pg').value); // Puntos a sumar
+    
+    if(!eid) return alert("Selecciona un torneo abierto");
+    if(pts === 0) return alert("Ingresa una cantidad de puntos");
+
+    // 1. Insertamos en la tabla de registros (Historial)
+    // Forzamos 'titulo: null' para que NO se asigne ningún logro automáticamente
+    const { error: errorGanador } = await _supabase.from('ganadores').insert([{ 
+        evento_id: eid, 
+        nombre_jugador: nom, 
+        premio: pts, 
+        titulo: null 
+    }]);
+
+    if(errorGanador) {
+        return alert("Error al registrar los puntos en el historial.");
+    }
+
+    // 2. Actualizamos el total en la tabla ranking
+    const { data: u } = await _supabase.from('ranking').select('puntos').eq('nombre', nom).single();
+    const nuevosPuntos = (u ? u.puntos : 0) + pts;
+
+    const { error: errorRanking } = await _supabase.from('ranking').update({ 
+        puntos: nuevosPuntos 
+    }).eq('nombre', nom);
+
+    if(!errorRanking) {
+        document.getElementById('pg').value = 0;
+        refresh(); 
+        alert(`✅ Puntos sumados: +${pts} a ${nom}. (Sin título asignado)`);
+    } else {
+        alert("Error al actualizar el ranking global.");
+    }
+}
 
         async function grantManualTitle() {
     const ninja = document.getElementById('st_ninja').value;
