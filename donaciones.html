@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URM | Donaciones</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #050505;
+            --accent-cyan: #00f2ff;
+            --accent-purple: #a970ff;
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --accent-gold: #ffcc00;
+        }
+
+        body {
+            margin: 0; padding: 0; font-family: 'Inter', 'Segoe UI', sans-serif; color: white;
+            background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(0, 242, 255, 0.08) 0px, transparent 40%),
+                radial-gradient(at 100% 0%, rgba(169, 112, 255, 0.08) 0px, transparent 40%),
+                radial-gradient(circle at 2px 2px, rgba(255, 255, 255, 0.03) 1px, transparent 0);
+            background-size: 100% 100%, 100% 100%, 30px 30px;
+            min-height: 100vh;
+        }
+
+        /* --- NAV PREMIUM (Centrada) --- */
+        .premium-nav {
+            position: sticky; top: 0; z-index: 1000;
+            background: rgba(5, 5, 5, 0.75);
+            backdrop-filter: blur(12px) saturate(180%);
+            border-bottom: 1px solid var(--glass-border);
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 40px; height: 64px;
+        }
+        .nav-logo-placeholder { width: 100px; }
+        .nav-center { display: flex; gap: 20px; justify-content: center; flex-grow: 1; }
+        .nav-link { color: #888; text-decoration: none; font-size: 0.75rem; font-weight: 600; transition: 0.2s; letter-spacing: 0.3px; text-transform: uppercase; }
+        .nav-link:hover, .nav-link.active { color: #fff; }
+        .btn-join { background: #fff; color: #000; padding: 7px 14px; border-radius: 6px; font-size: 0.8rem; font-weight: 700; text-decoration: none; transition: 0.2s; white-space: nowrap; }
+
+        /* --- CONTENEDORES --- */
+        .main-wrapper { display: flex; justify-content: center; padding: 40px 20px; }
+        .container { width: 100%; max-width: 900px; }
+        .glass-panel { background: rgba(255, 255, 255, 0.02); backdrop-filter: blur(10px); border: 1px solid var(--glass-border); border-radius: 16px; padding: 25px; margin-bottom: 30px; }
+        .section-title { text-align: center; color: #fff; letter-spacing: 2px; margin-bottom: 30px; font-size: 0.8rem; font-weight: 800; text-transform: uppercase; opacity: 0.5; }
+
+        /* --- PODIO CARDS --- */
+        .top-donors { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 10px; }
+        .donor-card {
+            background: linear-gradient(145deg, rgba(255,255,255,0.05), rgba(255,255,255,0.01));
+            border: 1px solid var(--glass-border);
+            border-radius: 20px; padding: 30px 15px; text-align: center; transition: 0.3s;
+        }
+        .donor-card:hover { transform: translateY(-10px); border-color: var(--accent-cyan); }
+        .card-rank-1 { border-color: rgba(255, 204, 0, 0.3); background: linear-gradient(145deg, rgba(255, 204, 0, 0.08), rgba(255, 204, 0, 0.02)); }
+
+        .medal-badge { width: 40px; height: 40px; background: rgba(0,0,0,0.5); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px; border: 1px solid var(--glass-border); font-size: 1.2rem; }
+        .card-rank-1 .medal-badge { border-color: var(--accent-gold); box-shadow: 0 0 15px rgba(255, 204, 0, 0.2); }
+
+        .donor-name { display: block; font-weight: 800; font-size: 0.8rem; letter-spacing: 1px; color: #fff; text-transform: uppercase; margin-bottom: 8px; }
+        .donor-val { font-size: 1.4rem; font-weight: 900; color: var(--accent-cyan); }
+        .card-rank-1 .donor-val { color: var(--accent-gold); }
+
+        /* --- FILTROS --- */
+        .search-container { display: flex; gap: 15px; margin-bottom: 20px; }
+        .search-input { flex: 1; background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); padding: 12px 15px; border-radius: 10px; color: white; font-size: 0.8rem; outline: none; cursor: pointer; }
+        .search-input:focus { border-color: var(--accent-cyan); }
+
+        /* --- TABLA --- */
+        .history-table { width: 100%; border-collapse: collapse; }
+        .history-table th { text-align: left; padding: 12px; font-size: 0.65rem; color: #444; text-transform: uppercase; border-bottom: 1px solid var(--glass-border); }
+        .history-table td { padding: 15px 12px; font-size: 0.8rem; border-bottom: 1px solid rgba(255,255,255,0.02); }
+        .td-amount { text-align: right; color: var(--accent-cyan); font-weight: 800; }
+
+        @media (max-width: 800px) {
+            .top-donors { grid-template-columns: 1fr; }
+            .premium-nav { padding: 0 15px; }
+            .nav-center { gap: 10px; overflow-x: auto; }
+            .nav-logo-placeholder { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="premium-nav">
+        <div class="nav-logo-placeholder"></div>
+        <div class="nav-center">
+            <a href="index.html" class="nav-link">Inicio</a>
+            <a href="leaderboard.html" class="nav-link">Clasificación</a>
+            <a href="torneos.html" class="nav-link">Historial</a> 
+            <a href="canje.html" class="nav-link">Canje</a>
+            <a href="historial.html" class="nav-link">Auditoría</a>
+            <a href="donaciones.html" class="nav-link active">Donaciones</a>
+        </div>
+        <div><a href="https://discord.gg/8hFxCK4CEM" target="_blank" class="btn-join">Unirse</a></div>
+    </nav>
+
+    <div class="main-wrapper">
+        <div class="container">
+            
+            <div class="glass-panel">
+                <div class="section-title">NINJAS CONTRIBUIDORES</div>
+                <div class="top-donors" id="top-donors-container"></div>
+            </div>
+
+            <div class="glass-panel">
+                <div class="section-title">REGISTRO DE APORTES</div>
+                
+                <div class="search-container">
+                    <input type="text" id="searchName" class="search-input" placeholder="BUSCAR POR NOMBRE..." onkeyup="filterData()">
+                    <input type="text" id="searchRange" class="search-input" placeholder="RANGO DE FECHAS (CALENDARIO)">
+                </div>
+
+                <table class="history-table">
+                    <thead>
+                        <tr>
+                            <th>USUARIO</th>
+                            <th>FECHA</th>
+                            <th style="text-align: right;">MONTO</th>
+                        </tr>
+                    </thead>
+                    <tbody id="history-body"></tbody>
+                </table>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const _supabase = supabase.createClient('https://ekaiwrnvbpwaaoenwnnp.supabase.co', 'sb_publishable_YvgUfE8sAXfAUGvXMcNB4Q_aGC2GUMP');
+        let rawData = [];
+        let dateRange = { start: null, end: null };
+
+        async function init() {
+            // Flatpickr configurado para rangos
+            flatpickr("#searchRange", {
+                mode: "range",
+                locale: "es",
+                dateFormat: "Y-m-d",
+                theme: "dark",
+                onChange: function(selectedDates) {
+                    if (selectedDates.length === 2) {
+                        dateRange.start = selectedDates[0];
+                        dateRange.end = selectedDates[1];
+                        filterData();
+                    } else if (selectedDates.length === 0) {
+                        dateRange.start = null;
+                        dateRange.end = null;
+                        filterData();
+                    }
+                }
+            });
+
+            const { data, error } = await _supabase
+                .from('ganadores')
+                .select('nombre_jugador, monto_dinero, created_at')
+                .gt('monto_dinero', 0)
+                .order('created_at', { ascending: false });
+
+            if (error) return;
+            rawData = data;
+
+            renderTop3();
+            renderTable(rawData);
+        }
+
+        function renderTop3() {
+            const sorted = [...rawData].sort((a, b) => b.monto_dinero - a.monto_dinero);
+            const top3 = sorted.slice(0, 3);
+            const container = document.getElementById('top-donors-container');
+            const visualOrder = [top3[1], top3[0], top3[2]];
+
+            container.innerHTML = visualOrder.map((d, i) => {
+                if(!d) return '<div class="donor-card" style="opacity:0.2"></div>';
+                const isTop1 = d.monto_dinero === top3[0].monto_dinero;
+                const medal = isTop1 ? '🥇' : (d.monto_dinero === top3[1]?.monto_dinero ? '🥈' : '🥉');
+                return `
+                    <div class="donor-card ${isTop1 ? 'card-rank-1' : ''}">
+                        <div class="medal-badge">${medal}</div>
+                        <span class="donor-name">${d.nombre_jugador}</span>
+                        <span class="donor-val">$${Number(d.monto_dinero).toFixed(2)}</span>
+                    </div>`;
+            }).join('');
+        }
+
+        function renderTable(list) {
+            const body = document.getElementById('history-body');
+            body.innerHTML = list.map(reg => `
+                <tr>
+                    <td style="font-weight:700;">${reg.nombre_jugador}</td>
+                    <td style="color:#555; font-size:0.7rem;">${new Date(reg.created_at).toLocaleDateString('es-ES')}</td>
+                    <td class="td-amount">$${Number(reg.monto_dinero).toFixed(2)}</td>
+                </tr>`).join('') || '<tr><td colspan="3" style="text-align:center; padding:20px; color:#444;">Sin registros</td></tr>';
+        }
+
+        function filterData() {
+            const name = document.getElementById('searchName').value.toLowerCase();
+            const filtered = rawData.filter(d => {
+                const matchName = d.nombre_jugador.toLowerCase().includes(name);
+                let matchDate = true;
+                if (dateRange.start && dateRange.end) {
+                    const dDate = new Date(d.created_at);
+                    dDate.setHours(0,0,0,0);
+                    matchDate = dDate >= dateRange.start && dDate <= dateRange.end;
+                }
+                return matchName && matchDate;
+            });
+            renderTable(filtered);
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
