@@ -6,7 +6,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root { --neon: #00f2ff; --bg: #0a0a0a; --card: #151515; --border: #333; --gold: #ffcc00; }
-        /* Se mantiene todo tu CSS igual */
+        
         body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg); color: white; margin: 0; padding: 0; overflow-x: hidden; }
         
         .navbar { background-color: #000; padding: 15px; display: flex; gap: 10px; border-bottom: 2px solid var(--neon); justify-content: center; position: sticky; top: 0; z-index: 100; }
@@ -100,11 +100,12 @@
         </div>
     </div>
 
-    <div class="navbar">
+   <div class="navbar">
         <button class="nav-btn active" onclick="tab('n', event)">GESTION DE USUARIOS</button>
         <button class="nav-btn" onclick="tab('r', event)">GESTIÓN DE PUNTOS</button>
         <button class="nav-btn" onclick="tab('e', event)">GESTIÓN DE TORNEOS</button>
         <button class="nav-btn" onclick="tab('g', event)">ASIGNACIÓN DE PUNTOS</button>
+        <button class="nav-btn" onclick="tab('d', event)" style="border-color: #00ff88; color: #00ff88;">💎 CONTRIBUCIONES</button>
         <button class="nav-btn" onclick="tab('t', event)" style="border-color: var(--gold); color: var(--gold);">🏆 OTORGAR TÍTULO</button>
     </div>
 
@@ -164,6 +165,21 @@
             <select id="st_torneo"></select>
             <button class="primary" onclick="grantManualTitle()" style="background: var(--gold)">CONCEDER TÍTULO OFICIAL</button>
         </div>
+
+        <div id="d" class="tab-content" style="display:none">
+            <h2 style="color: #00ff88; margin-top:0;">💎 Registro de Contribuciones</h2>
+            <div style="background: #000; padding: 20px; border-radius: 12px; border: 1px solid #222; margin-bottom: 25px;">
+                <label>Ninja que aporta:</label>
+                <select id="dn_ninja"></select>
+                <label>Monto ($):</label>
+                <input type="number" id="dn_monto" placeholder="0.00" step="0.01">
+                <button class="primary" onclick="addDonation()" style="background:#00ff88; color:#000; margin-top:10px;">REGISTRAR APORTE</button>
+            </div>
+            <h2 style="font-size: 1.1rem; border-bottom: 1px solid #333; padding-bottom: 10px;">🏆 Ranking de Donadores</h2>
+            <div id="donor-ranking-list" style="margin-top:15px; margin-bottom: 30px;"></div>
+            <h2 style="font-size: 1.1rem; border-bottom: 1px solid #333; padding-bottom: 10px;">📜 Historial de Registros (Borrar)</h2>
+            <div id="history-donations" style="margin-top:15px; max-height: 300px; overflow-y: auto;"></div>
+        </div>
     </div>
 
     <script>
@@ -205,6 +221,7 @@
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
             document.getElementById(id).style.display = 'block';
             ev.currentTarget.classList.add('active');
+            if(id === 'd') loadDonations();
         }
 
         function closeM(id) { document.getElementById(id).style.display = 'none'; }
@@ -248,6 +265,8 @@
 
             const ninjaOptions = n.map(u => `<option value="${u.nombre}">${u.nombre}</option>`).join('');
             document.getElementById('st_ninja').innerHTML = ninjaOptions;
+            document.getElementById('dn_ninja').innerHTML = ninjaOptions;
+
             const torneoOptions = e.map(ev => `<option value="${ev.id}">${ev.nombre} (${ev.fecha})</option>`).join('');
             document.getElementById('se').innerHTML = e.filter(ev => ev.estado !== 'cerrado').map(ev => `<option value="${ev.id}">${ev.nombre} (${ev.fecha})</option>`).join('');
             document.getElementById('st_torneo').innerHTML = torneoOptions;
@@ -334,26 +353,20 @@
             refresh();
         }
 
-        // --- NUEVA FUNCIÓN: RESETEO TOTAL ---
        async function resetAllPoints() {
-    if(confirm('¿ESTÁS SEGURO? Se borrarán los puntos del ranking Y el historial del calendario. Los títulos se mantendrán.')) {
-        
-        // 1. Ponemos a 0 el ranking
-        const { error: err1 } = await _supabase.from('ranking').update({ puntos: 0 }).neq('id', 0);
-        
-        // 2. Borramos los registros de puntos en 'ganadores' 
-        // Solo borramos los que tienen 'premio > 0' para NO borrar los Títulos otorgados
-        const { error: err2 } = await _supabase.from('ganadores').delete().gt('premio', 0);
+            if(confirm('¿ESTÁS SEGURO? Se borrarán los puntos del ranking Y el historial del calendario. Los títulos se mantendrán.')) {
+                const { error: err1 } = await _supabase.from('ranking').update({ puntos: 0 }).neq('id', 0);
+                const { error: err2 } = await _supabase.from('ganadores').delete().gt('premio', 0);
 
-        if(!err1 && !err2) {
-            await registrarLog("ADMIN", "Reset General", 0, "Se limpió el ranking e historial de puntos.");
-            showToast("Todo reseteado con éxito", "error");
-            refresh();
-        } else {
-            showToast("Error en el reseteo", "error");
+                if(!err1 && !err2) {
+                    await registrarLog("ADMIN", "Reset General", 0, "Se limpió el ranking e historial de puntos.");
+                    showToast("Todo reseteado con éxito", "error");
+                    refresh();
+                } else {
+                    showToast("Error en el reseteo", "error");
+                }
+            }
         }
-    }
-}
 
         async function grantManualTitle() {
             const ninja = document.getElementById('st_ninja').value;
@@ -365,6 +378,72 @@
                 await registrarLog(ninja, "Título", 0, `Título otorgado: ${torneo.titulo} (${torneo.nombre})`);
                 showToast(`Título "${torneo.titulo}" otorgado`, "gold");
                 refresh(); 
+            }
+        }
+
+        async function addDonation() {
+            const ninja = document.getElementById('dn_ninja').value;
+            const monto = parseFloat(document.getElementById('dn_monto').value);
+            if(!monto || monto <= 0) return showToast("Monto inválido", "error");
+
+            const { error } = await _supabase.from('ganadores').insert([{
+                nombre_jugador: ninja,
+                monto_dinero: monto,
+                titulo: "Aporte", 
+                premio: 0
+            }]);
+
+            if(!error) {
+                await registrarLog(ninja, "Donación", 0, `Aportó $${monto}`);
+                showToast("Aporte registrado", "success");
+                document.getElementById('dn_monto').value = "";
+                loadDonations();
+            }
+        }
+
+        async function loadDonations() {
+            const { data } = await _supabase.from('ganadores').select('id, nombre_jugador, monto_dinero').gt('monto_dinero', 0);
+            if(!data) return;
+
+            // Ranking
+            const totales = data.reduce((acc, curr) => {
+                acc[curr.nombre_jugador] = (acc[curr.nombre_jugador] || 0) + curr.monto_dinero;
+                return acc;
+            }, {});
+
+            const ranking = Object.entries(totales)
+                .map(([nombre, total]) => ({ nombre, total }))
+                .sort((a,b) => b.total - a.total);
+
+            document.getElementById('donor-ranking-list').innerHTML = ranking.map((d, i) => `
+                <div style="display:flex; justify-content:space-between; background:#111; padding:12px; border-radius:10px; margin-bottom:8px; border-left: 3px solid #00ff88;">
+                    <span><b>${i+1}.</b> ${d.nombre}</span>
+                    <span style="color:#00ff88; font-weight:bold;">$${d.total.toFixed(2)}</span>
+                </div>
+            `).join('') || '<small>Sin aportes</small>';
+
+            // Historial Borrable
+            document.getElementById('history-donations').innerHTML = data.map(reg => `
+                <div style="display:flex; justify-content:space-between; align-items:center; background:#0a0a0a; padding:10px; border-radius:8px; margin-bottom:5px; border:1px solid #222;">
+                    <span style="font-size:0.8rem;">${reg.nombre_jugador}: <b style="color:#00ff88;">$${reg.monto_dinero}</b></span>
+                    <button onclick="deleteDonation(${reg.id}, '${reg.nombre_jugador}', ${reg.monto_dinero})" 
+                            style="background:#ff4444; color:white; border:none; border-radius:4px; padding:2px 8px; cursor:pointer; font-weight:bold; font-size:0.7rem;">
+                        ELIMINAR
+                    </button>
+                </div>
+            `).sort((a,b) => -1).join('') || '<small>No hay registros que eliminar</small>';
+        }
+
+        async function deleteDonation(id, ninja, monto) {
+            if(confirm(`¿Deseas eliminar la donación de $${monto} de ${ninja}?`)) {
+                const { error } = await _supabase.from('ganadores').delete().eq('id', id);
+                if(!error) {
+                    await registrarLog(ninja, "Eliminación", 0, `Se borró registro de donación errónea de $${monto}`);
+                    showToast("Registro eliminado", "error");
+                    loadDonations();
+                } else {
+                    showToast("Error al borrar", "error");
+                }
             }
         }
 
