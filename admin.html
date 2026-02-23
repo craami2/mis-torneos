@@ -127,6 +127,16 @@
         const _supabase = supabase.createClient('https://ekaiwrnvbpwaaoenwnnp.supabase.co', 'sb_publishable_YvgUfE8sAXfAUGvXMcNB4Q_aGC2GUMP');
         let cacheEventos = [];
 
+        // NUEVA FUNCIÓN: REGISTRAR LOG EN LA AUDITORÍA
+        async function registrarLog(nombre, accion, puntos, detalle) {
+            await _supabase.from('logs').insert([{
+                ninja_nombre: nombre,
+                tipo_accion: accion,
+                puntos_cambiados: puntos,
+                detalle: detalle
+            }]);
+        }
+
         function tab(id, ev) {
             document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
@@ -141,7 +151,6 @@
             const { data: e } = await _supabase.from('eventos').select('*').order('fecha', { ascending: false });
             cacheEventos = e || [];
 
-            // Render Ninjas Grid
             document.getElementById('ninja-grid').innerHTML = n.map(u => `
                 <div class="ninja-card" onclick="openUserEdit(${u.id}, '${u.nombre}', ${u.puntos}, '${u.avatar_url || ''}')">
                     <img src="${u.avatar_url || 'https://via.placeholder.com/70'}" class="ninja-avatar" onerror="this.src='https://via.placeholder.com/70'">
@@ -150,7 +159,6 @@
                 </div>
             `).join('');
 
-            // Render Ranking Table
             document.getElementById('rank-body').innerHTML = n.map((u, i) => `
                 <tr>
                     <td>#${i+1}</td>
@@ -160,23 +168,20 @@
                 </tr>
             `).join('');
 
-            // Selects
             const ninjaOptions = n.map(u => `<option value="${u.nombre}">${u.nombre}</option>`).join('');
             document.getElementById('sn').innerHTML = ninjaOptions;
             document.getElementById('st_ninja').innerHTML = ninjaOptions;
 
-            // Selects con FECHA
             const torneoOptions = e.map(ev => `<option value="${ev.id}">${ev.nombre} (${ev.fecha})</option>`).join('');
             document.getElementById('se').innerHTML = e.filter(ev => ev.estado !== 'cerrado').map(ev => `<option value="${ev.id}">${ev.nombre} (${ev.fecha})</option>`).join('');
             document.getElementById('st_torneo').innerHTML = torneoOptions;
 
-            // Torneo List
             document.getElementById('torneo-list').innerHTML = e.map(ev => `
                 <div class="t-row">
                     <span><b>${ev.nombre}</b> <br> <small style="color:var(--gold)">Título: ${ev.titulo || 'Sin título'}</small></span>
                     <div>
                         <button onclick="toggleE(${ev.id}, '${ev.estado}')" class="btn-status ${ev.estado === 'cerrado' ? 'status-closed' : 'status-open'}">${ev.estado === 'cerrado' ? 'CERRADO' : 'ABIERTO'}</button>
-                        <button onclick="delE(${ev.id})" style="color:red; background:none; border:none; margin-left:10px; cursor:pointer">X</button>
+                        <button onclick="delE(${ev.id}, '${ev.nombre}')" style="color:red; background:none; border:none; margin-left:10px; cursor:pointer">X</button>
                     </div>
                 </div>
             `).join('');
@@ -188,107 +193,97 @@
             document.getElementById('editPts').value = puntos;
             document.getElementById('editAv').value = avatar;
             
-            // CARGAR TÍTULOS ESPECÍFICOS DEL NINJA
             const { data: titles } = await _supabase.from('ganadores').select('id, titulo').eq('nombre_jugador', nombre).not('titulo', 'is', null);
             document.getElementById('editTitlesList').innerHTML = titles.length > 0 
-                ? titles.map(t => `<div class="title-badge"><span>${t.titulo}</span><button class="btn-del-mini" onclick="deleteTitle(${t.id}, '${nombre}')">X</button></div>`).join('')
+                ? titles.map(t => `<div class="title-badge"><span>${t.titulo}</span><button class="btn-del-mini" onclick="deleteTitle(${t.id}, '${nombre}', '${t.titulo}')">X</button></div>`).join('')
                 : '<small style="color:#444">Sin títulos aún</small>';
 
             document.getElementById('modalUser').style.display = 'flex';
 
             document.getElementById('btnSaveUser').onclick = async () => {
+                const nuevoNom = document.getElementById('editName').value;
+                const nuevoPts = parseInt(document.getElementById('editPts').value);
+                
                 await _supabase.from('ranking').update({ 
-                    nombre: document.getElementById('editName').value, 
-                    puntos: parseInt(document.getElementById('editPts').value), 
+                    nombre: nuevoNom, 
+                    puntos: nuevoPts, 
                     avatar_url: document.getElementById('editAv').value 
                 }).eq('id', id);
+                
+                await registrarLog("ADMIN", "Modificación", nuevoPts - puntos, `Perfil de ${nombre} editado manualmente.`);
                 closeM('modalUser'); refresh();
             };
             
             document.getElementById('btnDelUser').onclick = async () => {
                 if(confirm('¿Seguro?')) {
                     await _supabase.from('ranking').delete().eq('id', id);
+                    await registrarLog("ADMIN", "Eliminación", 0, `Se eliminó al ninja ${nombre} del sistema.`);
                     closeM('modalUser'); refresh();
                 }
             };
         }
 
-        // ELIMINAR TÍTULO ESPECÍFICO
-        async function deleteTitle(titleId, ninjaName) {
+        async function deleteTitle(titleId, ninjaName, tituloTexto) {
             if(confirm('¿Borrar este título?')) {
                 await _supabase.from('ganadores').delete().eq('id', titleId);
-                // Refrescamos solo el modal para ver el cambio
+                await registrarLog(ninjaName, "Eliminación", 0, `Título revocado: ${tituloTexto}`);
+                
                 const { data: titles } = await _supabase.from('ganadores').select('id, titulo').eq('nombre_jugador', ninjaName).not('titulo', 'is', null);
-                document.getElementById('editTitlesList').innerHTML = titles.map(t => `<div class="title-badge"><span>${t.titulo}</span><button class="btn-del-mini" onclick="deleteTitle(${t.id}, '${ninjaName}')">X</button></div>`).join('');
+                document.getElementById('editTitlesList').innerHTML = titles.map(t => `<div class="title-badge"><span>${t.titulo}</span><button class="btn-del-mini" onclick="deleteTitle(${t.id}, '${ninjaName}', '${t.titulo}')">X</button></div>`).join('');
             }
         }
 
         async function savePoints() {
-    const eid = document.getElementById('se').value; // ID del Torneo
-    const nom = document.getElementById('sn').value; // Nombre del Ninja
-    const pts = parseInt(document.getElementById('pg').value); // Puntos a sumar
-    
-    if(!eid) return alert("Selecciona un torneo abierto");
-    if(pts === 0) return alert("Ingresa una cantidad de puntos");
+            const eid = document.getElementById('se').value;
+            const nom = document.getElementById('sn').value;
+            const pts = parseInt(document.getElementById('pg').value);
+            const torneoInfo = cacheEventos.find(x => x.id == eid);
+            
+            if(!eid) return alert("Selecciona un torneo abierto");
+            if(pts === 0) return alert("Ingresa una cantidad de puntos");
 
-    // 1. Insertamos en la tabla de registros (Historial)
-    // Forzamos 'titulo: null' para que NO se asigne ningún logro automáticamente
-    const { error: errorGanador } = await _supabase.from('ganadores').insert([{ 
-        evento_id: eid, 
-        nombre_jugador: nom, 
-        premio: pts, 
-        titulo: null 
-    }]);
+            const { error: errorGanador } = await _supabase.from('ganadores').insert([{ 
+                evento_id: eid, 
+                nombre_jugador: nom, 
+                premio: pts, 
+                titulo: null 
+            }]);
 
-    if(errorGanador) {
-        return alert("Error al registrar los puntos en el historial.");
-    }
+            if(errorGanador) return alert("Error al registrar los puntos.");
 
-    // 2. Actualizamos el total en la tabla ranking
-    const { data: u } = await _supabase.from('ranking').select('puntos').eq('nombre', nom).single();
-    const nuevosPuntos = (u ? u.puntos : 0) + pts;
+            const { data: u } = await _supabase.from('ranking').select('puntos').eq('nombre', nom).single();
+            const nuevosPuntos = (u ? u.puntos : 0) + pts;
 
-    const { error: errorRanking } = await _supabase.from('ranking').update({ 
-        puntos: nuevosPuntos 
-    }).eq('nombre', nom);
+            const { error: errorRanking } = await _supabase.from('ranking').update({ puntos: nuevosPuntos }).eq('nombre', nom);
 
-    if(!errorRanking) {
-        document.getElementById('pg').value = 0;
-        refresh(); 
-        alert(`✅ Puntos sumados: +${pts} a ${nom}. (Sin título asignado)`);
-    } else {
-        alert("Error al actualizar el ranking global.");
-    }
-}
+            if(!errorRanking) {
+                await registrarLog(nom, "Torneo", pts, `Puntos obtenidos en: ${torneoInfo.nombre}`);
+                document.getElementById('pg').value = 0;
+                refresh(); 
+                alert(`✅ Puntos sumados: +${pts} a ${nom}.`);
+            }
+        }
 
         async function grantManualTitle() {
-    const ninja = document.getElementById('st_ninja').value;
-    const eid = document.getElementById('st_torneo').value;
-    const torneo = cacheEventos.find(ev => ev.id == eid);
+            const ninja = document.getElementById('st_ninja').value;
+            const eid = document.getElementById('st_torneo').value;
+            const torneo = cacheEventos.find(ev => ev.id == eid);
 
-    if(!torneo || !torneo.titulo) {
-        return alert("Error: Este torneo no tiene un título definido en su configuración.");
-    }
+            if(!torneo || !torneo.titulo) return alert("Error: Este torneo no tiene un título definido.");
 
-    // Insertamos en la tabla ganadores
-    const { error } = await _supabase.from('ganadores').insert([{ 
-        evento_id: eid, 
-        nombre_jugador: ninja, 
-        premio: 0, 
-        titulo: torneo.titulo 
-    }]);
+            const { error } = await _supabase.from('ganadores').insert([{ 
+                evento_id: eid, 
+                nombre_jugador: ninja, 
+                premio: 0, 
+                titulo: torneo.titulo 
+            }]);
 
-    if(!error) {
-        // MENSAJE DE ÉXITO
-        alert(`✅ ¡ÉXITO! \n\nEl título "${torneo.titulo}" ha sido otorgado a ${ninja} correctamente.`);
-        
-        // Opcional: Refrescar para ver cambios si fuera necesario
-        refresh(); 
-    } else {
-        console.error(error);
-        alert("❌ Error al otorgar el título. Revisa la consola.");
-    }
-}
+            if(!error) {
+                await registrarLog(ninja, "Título", 0, `Título otorgado: ${torneo.titulo} (${torneo.nombre})`);
+                alert(`✅ Título "${torneo.titulo}" otorgado a ${ninja}.`);
+                refresh(); 
+            }
+        }
 
         async function toggleE(id, current) {
             const next = current === 'cerrado' ? 'abierto' : 'cerrado';
@@ -298,7 +293,11 @@
 
         async function addN() {
             const n = document.getElementById('nn').value;
-            if(n) { await _supabase.from('ranking').insert([{ nombre: n, puntos: 0 }]); document.getElementById('nn').value = ""; refresh(); }
+            if(n) { 
+                await _supabase.from('ranking').insert([{ nombre: n, puntos: 0 }]); 
+                await registrarLog("ADMIN", "Creación", 0, `Nuevo ninja registrado: ${n}`);
+                document.getElementById('nn').value = ""; refresh(); 
+            }
         }
 
         async function addE() {
@@ -307,11 +306,18 @@
                   f = document.getElementById('ef').value;
             if(n && t && f) { 
                 await _supabase.from('eventos').insert([{ nombre: n, titulo: t, fecha: f, estado: 'abierto' }]); 
+                await registrarLog("ADMIN", "Creación", 0, `Evento creado: ${n} (Título: ${t})`);
                 document.getElementById('en').value = ""; document.getElementById('et').value = ""; refresh(); 
             }
         }
 
-        async function delE(id) { if(confirm('¿Borrar?')) { await _supabase.from('eventos').delete().eq('id', id); refresh(); } }
+        async function delE(id, nombreTorneo) { 
+            if(confirm('¿Borrar?')) { 
+                await _supabase.from('eventos').delete().eq('id', id); 
+                await registrarLog("ADMIN", "Eliminación", 0, `Torneo eliminado: ${nombreTorneo}`);
+                refresh(); 
+            } 
+        }
 
         window.onload = refresh;
     </script>

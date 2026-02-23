@@ -177,7 +177,7 @@
             <img id="m-avatar" src="" class="modal-avatar">
             <span id="m-name" class="modal-name"></span>
             <span id="m-pts" class="modal-pts"></span>
-            <div class="titles-label">TÍTULOS OBTENIDOS</div>
+            <div class="titles-label">LOGROS OBTENIDOS</div>
             <div id="m-titles" class="titles-container"></div>
         </div>
     </div>
@@ -299,7 +299,7 @@
             document.getElementById('m-pts').innerText = Number(user.puntos).toLocaleString('es-ES') + " PUNTOS TOTALES";
             
             const titlesContainer = document.getElementById('m-titles');
-            titlesContainer.innerHTML = '<span style="font-size:0.7rem; color:#444">Buscando títulos...</span>';
+            titlesContainer.innerHTML = '<span style="font-size:0.7rem; color:#444">Buscando logros...</span>';
             modal.style.display = 'flex';
 
             const { data: winners } = await _supabase
@@ -318,7 +318,7 @@
                     <div class="title-badge">🏆 ${title} ${count > 1 ? `x${count}` : ''}</div>
                 `).join('');
             } else {
-                titlesContainer.innerHTML = '<span style="font-size:0.7rem; color:#444">Este ninja aún no tiene títulos especiales.</span>';
+                titlesContainer.innerHTML = '<span style="font-size:0.7rem; color:#444">Este usuario aún no tiene logros.</span>';
             }
         }
 
