@@ -31,7 +31,7 @@
             min-height: 100vh;
         }
 
-        /* --- NAV PREMIUM (Centrada) --- */
+        /* --- NAV PREMIUM --- */
         .premium-nav {
             position: sticky; top: 0; z-index: 1000;
             background: rgba(5, 5, 5, 0.75);
@@ -137,10 +137,10 @@
     <script>
         const _supabase = supabase.createClient('https://ekaiwrnvbpwaaoenwnnp.supabase.co', 'sb_publishable_YvgUfE8sAXfAUGvXMcNB4Q_aGC2GUMP');
         let rawData = [];
+        let aggregatedData = []; 
         let dateRange = { start: null, end: null };
 
         async function init() {
-            // Flatpickr configurado para rangos
             flatpickr("#searchRange", {
                 mode: "range",
                 locale: "es",
@@ -162,26 +162,56 @@
             const { data, error } = await _supabase
                 .from('ganadores')
                 .select('nombre_jugador, monto_dinero, created_at')
-                .gt('monto_dinero', 0)
-                .order('created_at', { ascending: false });
+                .gt('monto_dinero', 0);
 
             if (error) return;
             rawData = data;
+
+            processAndRender();
+        }
+
+        function processAndRender() {
+            const totals = {};
+
+            rawData.forEach(item => {
+                const name = item.nombre_jugador;
+                // CAMBIO AQUÍ: Usamos Number() para asegurar que sume matemáticamente
+                const amount = Number(item.monto_dinero) || 0;
+                
+                if (!totals[name]) {
+                    totals[name] = { nombre_jugador: name, monto_dinero: 0 };
+                }
+                totals[name].monto_dinero += amount;
+            });
+
+            aggregatedData = Object.values(totals);
 
             renderTop3();
             renderTable(rawData);
         }
 
         function renderTop3() {
-            const sorted = [...rawData].sort((a, b) => b.monto_dinero - a.monto_dinero);
-            const top3 = sorted.slice(0, 3);
-            const container = document.getElementById('top-donors-container');
-            const visualOrder = [top3[1], top3[0], top3[2]];
+            // Ordenamos la lista AGRUPADA de mayor a menor total
+            const sorted = [...aggregatedData].sort((a, b) => b.monto_dinero - a.monto_dinero);
+            
+            // Asignamos puestos únicos basados en la lista ordenada
+            const top1 = sorted[0] || null;
+            const top2 = sorted[1] || null;
+            const top3 = sorted[2] || null;
 
-            container.innerHTML = visualOrder.map((d, i) => {
+            const container = document.getElementById('top-donors-container');
+            const visualOrder = [top2, top1, top3];
+
+            container.innerHTML = visualOrder.map((d) => {
                 if(!d) return '<div class="donor-card" style="opacity:0.2"></div>';
-                const isTop1 = d.monto_dinero === top3[0].monto_dinero;
-                const medal = isTop1 ? '🥇' : (d.monto_dinero === top3[1]?.monto_dinero ? '🥈' : '🥉');
+                
+                let medal = '🥉';
+                let isTop1 = false;
+                
+                // Comparamos nombres para asignar la medalla correcta en el podio visual
+                if (top1 && d.nombre_jugador === top1.nombre_jugador) { medal = '🥇'; isTop1 = true; }
+                else if (top2 && d.nombre_jugador === top2.nombre_jugador) { medal = '🥈'; }
+                
                 return `
                     <div class="donor-card ${isTop1 ? 'card-rank-1' : ''}">
                         <div class="medal-badge">${medal}</div>
@@ -193,7 +223,9 @@
 
         function renderTable(list) {
             const body = document.getElementById('history-body');
-            body.innerHTML = list.map(reg => `
+            const sortedHistory = [...list].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+            body.innerHTML = sortedHistory.map(reg => `
                 <tr>
                     <td style="font-weight:700;">${reg.nombre_jugador}</td>
                     <td style="color:#555; font-size:0.7rem;">${new Date(reg.created_at).toLocaleDateString('es-ES')}</td>
