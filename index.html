@@ -350,56 +350,64 @@
             container.innerHTML = html;
         }
 
-        async function mostrarDetalleDia(fechaStr) {
-            const info = document.getElementById('event-info');
-            const evs = eventosData.filter(e => e.fecha === fechaStr);
-            if (evs.length === 0) { info.style.display = 'none'; return; }
-            
-            let html = "";
-            for (const ev of evs) {
-                // 1. Obtenemos los ganadores de este evento
-                const { data: gans } = await _supabase
-                    .from('ganadores')
-                    .select('nombre_jugador, premio')
-                    .eq('evento_id', ev.id)
-                    .gt('premio', 0);
+       async function mostrarDetalleDia(fechaStr) {
+    const info = document.getElementById('event-info');
+    const evs = eventosData.filter(e => e.fecha === fechaStr);
+    if (evs.length === 0) { info.style.display = 'none'; return; }
+    
+    let html = "";
+    for (const ev of evs) {
+        // 1. Obtenemos los puntos de este evento
+        const { data: gans } = await _supabase
+            .from('ganadores')
+            .select('nombre_jugador, premio')
+            .eq('evento_id', ev.id)
+            .gt('premio', 0);
 
-                // 2. Obtenemos los ninjas que existen actualmente en el ranking
-                const { data: actuales } = await _supabase
-                    .from('ranking')
-                    .select('nombre');
-                
-                const nombresActivos = actuales.map(a => a.nombre);
+        // 2. Obtenemos los ninjas activos
+        const { data: actuales } = await _supabase.from('ranking').select('nombre');
+        const nombresActivos = actuales.map(a => a.nombre);
 
-                let gansHtml = "";
-                // 3. Filtramos: Solo mostramos ganadores que existan en la lista de ninjas actuales
-                if (gans && gans.length > 0) {
-                    const gansFiltrados = gans.filter(g => nombresActivos.includes(g.nombre_jugador));
-                    const gansOrdenados = gansFiltrados.sort((a, b) => Number(b.premio) - Number(a.premio)).slice(0,3);
-                    
-                    if (gansOrdenados.length > 0) {
-                        gansHtml = gansOrdenados.map((g, index) => {
-                            const icon = index === 0 ? '🥇' : (index === 1 ? '🥈' : '🥉');
-                            return `<span class="winner-line">${icon} ${g.nombre_jugador} (+${Number(g.premio).toLocaleString('es-ES')} PTS)</span>`;
-                        }).join('');
-                    } else {
-                        gansHtml = `<span style="color:#666; display:block; margin-top:5px; font-size:0.7rem;">Los antiguos ganadores ya no existen.</span>`;
-                    }
-                } else {
-                    gansHtml = `<span style="color:#666; display:block; margin-top:5px; font-size:0.7rem;">Sin ganadores registrados aún...</span>`;
+        let gansHtml = "";
+
+        if (gans && gans.length > 0) {
+            // --- LÓGICA DE AGRUPACIÓN ---
+            // Sumamos todos los puntos por cada jugador
+            const puntosAgrupados = gans.reduce((acc, curr) => {
+                if (nombresActivos.includes(curr.nombre_jugador)) {
+                    acc[curr.nombre_jugador] = (acc[curr.nombre_jugador] || 0) + Number(curr.premio);
                 }
-                
-                html += `
-                    <div style="margin-bottom:15px; text-align: center;">
-                        <strong style="color:#fff; font-size:0.9rem; display:block; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:5px; text-transform:uppercase;">${ev.nombre}</strong>
-                        ${gansHtml}
-                        <a href="torneos.html?eventoId=${ev.id}" style="font-size:0.6rem; color:#444; text-decoration:none; display:block; margin-top:8px; font-weight:800; letter-spacing:1px;">VER TABLA COMPLETA ❯</a>
-                    </div>`;
-            }
-            info.innerHTML = html;
-            info.style.display = 'block';
-        }
+                return acc;
+            }, {});
 
+            // Convertimos a array, ordenamos de mayor a menor y sacamos el Top 3
+            const topRankingEvento = Object.entries(puntosAgrupados)
+                .map(([nombre, total]) => ({ nombre, total }))
+                .sort((a, b) => b.total - a.total)
+                .slice(0, 3);
+
+            if (topRankingEvento.length > 0) {
+                gansHtml = topRankingEvento.map((g, index) => {
+                    const icon = index === 0 ? '🥇' : (index === 1 ? '🥈' : '🥉');
+                    return `<span class="winner-line">${icon} ${g.nombre} (+${g.total.toLocaleString('es-ES')} PTS)</span>`;
+                }).join('');
+            } else {
+                gansHtml = `<span style="color:#666; display:block; margin-top:5px; font-size:0.7rem;">Los antiguos ganadores ya no existen.</span>`;
+            }
+        } else {
+            gansHtml = `<span style="color:#666; display:block; margin-top:5px; font-size:0.7rem;">Sin ganadores registrados aún...</span>`;
+        }
+        
+        html += `
+            <div style="margin-bottom:15px; text-align: center;">
+                <strong style="color:#fff; font-size:0.9rem; display:block; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:5px; text-transform:uppercase;">${ev.nombre}</strong>
+                ${gansHtml}
+                <a href="torneos.html?eventoId=${ev.id}" style="font-size:0.6rem; color:#444; text-decoration:none; display:block; margin-top:8px; font-weight:800; letter-spacing:1px;">VER TABLA COMPLETA ❯</a>
+            </div>`;
+    }
+    info.innerHTML = html;
+    info.style.display = 'block';
+}
         function changeMonth(dir) {
             currentViewDate.setMonth(currentViewDate.getMonth() + dir);
             renderCalendar();

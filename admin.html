@@ -342,14 +342,29 @@
 
             for (let chk of checkboxes) {
                 const nom = chk.value;
-                await _supabase.from('ganadores').insert([{ evento_id: eid, nombre_jugador: nom, premio: pts, titulo: null }]);
+                
+                // Registro de puntos estrictamente sin título
+                await _supabase.from('ganadores').insert([{ 
+                    evento_id: eid, 
+                    nombre_jugador: nom, 
+                    premio: pts, 
+                    titulo: null 
+                }]);
+
                 const user = cacheNinjas.find(u => u.nombre === nom);
                 const nuevosPuntos = (user ? user.puntos : 0) + pts;
+                
                 await _supabase.from('ranking').update({ puntos: nuevosPuntos }).eq('nombre', nom);
                 await registrarLog(nom, "Torneo", pts, `Puntos obtenidos en: ${torneoInfo.nombre} (Carga masiva)`);
             }
+            
             showToast(`Puntos sumados a ${checkboxes.length} ninjas`);
             document.getElementById('pg').value = 0;
+            
+            // Limpiar selección para evitar errores
+            document.querySelectorAll('.batch-item').forEach(item => item.classList.remove('selected'));
+            document.querySelectorAll('.ninja-chk').forEach(chk => chk.checked = false);
+            
             refresh();
         }
 

@@ -208,17 +208,33 @@
             const body = document.getElementById('det-body');
             
             if(ganadores) {
-                // FORZAMOS EL ORDENAMIENTO NUMÉRICO EN EL FRONTEND
-                // Esto garantiza que 100 > 20 siempre.
-                const ganadoresOrdenados = ganadores.sort((a, b) => {
-                    return Number(b.premio) - Number(a.premio);
-                });
+                // --- LÓGICA DE AGRUPACIÓN (CORRECCIÓN) ---
+                const puntosAgrupados = ganadores.reduce((acc, curr) => {
+                    const nombre = curr.nombre_jugador;
+                    const premio = Number(curr.premio) || 0;
+                    
+                    // Solo procesamos si hay puntos (evita filas vacías de donaciones)
+                    if (premio > 0) {
+                        acc[nombre] = (acc[nombre] || 0) + premio;
+                    }
+                    return acc;
+                }, {});
 
-                body.innerHTML = ganadoresOrdenados.map((g, i) => `
+                // Convertimos el objeto a un Array para ordenar por el total sumado
+                const listaFinal = Object.entries(puntosAgrupados).map(([nombre, total]) => ({
+                    nombre_jugador: nombre,
+                    premio: total
+                }));
+
+                // Ordenamos de mayor a menor puntuación acumulada
+                listaFinal.sort((a, b) => b.premio - a.premio);
+
+                // Renderizamos la tabla con los datos consolidados
+                body.innerHTML = listaFinal.map((g, i) => `
                     <tr>
                         <td><span class="rank-tag ${i < 3 ? 'pos-' + (i + 1) : ''}">${i + 1}</span></td>
                         <td style="font-weight:800; text-transform:uppercase;">${g.nombre_jugador}</td>
-                        <td style="text-align:right; color:var(--accent-cyan); font-weight:800;">+${Number(g.premio).toLocaleString('es-ES')}</td>
+                        <td style="text-align:right; color:var(--accent-cyan); font-weight:800;">+${g.premio.toLocaleString('es-ES')}</td>
                     </tr>
                 `).join('');
             }
